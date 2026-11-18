@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#04060a">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="VERITAS — a student-built deepfake forensics lab. How deepfakes are made, how they are caught, and a working offline detector. INFINIA 2026, Category IV.">
+<title>VERITAS — Seeing is no longer believing</title>
+<link rel="preload" href="./assets/fonts/instrument-serif-normal-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./assets/fonts/instrument-serif-italic-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./assets/fonts/ibm-plex-mono-normal-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="./css/tokens.css">
+<link rel="stylesheet" href="./vendor/lenis/lenis.css">
+<link rel="stylesheet" href="./css/story.css">
+<link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js" } }
+</script>
+</head>
+<body class="is-loading">
+<a class="skip" href="#threat">Skip the intro</a>
+
+<!-- ═══════════ Loader ═══════════ -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader__inner">
+    <div class="loader__tag mono">CASE FILE VX-2611-21 · OPENING EVIDENCE</div>
+    <div class="loader__word">VERITAS</div>
+    <div class="loader__bar"><i id="loader-bar"></i></div>
+    <div class="loader__row mono"><span id="loader-msg">INDEXING 468 LANDMARKS</span><span id="loader-pct">000</span></div>
+  </div>
+</div>
+
+<!-- ═══════════ Fixed layers ═══════════ -->
+<canvas id="face-gl" class="face-gl" aria-hidden="true"></canvas>
+<div class="face-vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="viewfinder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+<header class="hud" id="hud">
+  <a href="#opening" class="brand" aria-label="VERITAS — back to the opening">
+    <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 8l11 18L27 8"/><circle cx="16" cy="12.5" r="2.6"/></svg>
+    <span class="brand__word">VERITAS<small>DEEPFAKE FORENSICS LAB</small></span>
+  </a>
+  <div class="hud__case mono">CASE VX-2611-21 <b>·</b> INFINIA 2026 <b>·</b> CATEGORY IV</div>
+  <div class="hud__r">
+    <div class="hud__ch mono"><span id="hud-num">00</span><b>/</b><span id="hud-name">Opening</span></div>
+    <div class="hud__rec mono" aria-hidden="true"><i></i>REC <span id="hud-tc">00:00:00:00</span></div>
+  </div>
+</header>
+
+<nav class="rail" id="rail" aria-label="Chapters">
+  <ol>
+    <li><a href="#opening" data-go="0"><b>00</b><span>Opening</span></a></li>
+    <li><a href="#threat" data-go="1"><b>01</b><span>The Threat</span></a></li>
+    <li><a href="#forge" data-go="2"><b>02</b><span>How Fakes Are Made</span></a></li>
+    <li><a href="#challenge" data-go="3"><b>03</b><span>Can You Tell?</span></a></li>
+    <li><a href="#forensics" data-go="4"><b>04</b><span>The Forensics</span></a></li>
+    <li><a href="#system" data-go="5"><b>05</b><span>The System</span></a></li>
+    <li><a href="#results" data-go="6"><b>06</b><span>Results</span></a></li>
+    <li><a href="#limits" data-go="7"><b>07</b><span>Limits</span></a></li>
+    <li><a href="#lab" data-go="8"><b>08</b><span>Enter the Lab</span></a></li>
+  </ol>
+  <div class="rail__track" aria-hidden="true"><i id="rail-fill"></i></div>
+</nav>
+
+<div class="keys mono" id="keys" role="dialog" aria-modal="false" aria-label="Presenter controls" hidden>
+  <div class="keys__title">PRESENTER CONTROLS</div>
+  <dl>
+    <div><dt>→ · Space · PgDn</dt><dd>Next step</dd></div>
+    <div><dt>← · PgUp</dt><dd>Previous step</dd></div>
+    <div><dt>0 – 8</dt><dd>Jump to chapter</dd></div>
+    <div><dt>Home · End</dt><dd>First · last</dd></div>
+    <div><dt>F</dt><dd>Fullscreen</dd></div>
+    <div><dt>?</dt><dd>This panel</dd></div>
+  </dl>
+</div>
+<div class="step-hint mono" id="step-hint" aria-hidden="true"><span id="step-count">01 / 40</span><i>→</i></div>
+
+<main id="main">
+
+<!-- ════════════════════════════════════════════════════════════
+     00 · OPENING
+     ════════════════════════════════════════════════════════════ -->
+<section id="opening" class="ch hero" data-ch="0" data-title="Opening" aria-label="Opening">
+  <div class="hero__stage" id="hero-stage" data-stops="0,0.3,0.6,0.96">
+    <div class="hero__meta mono">
+      <span><i class="dot dot--rec"></i> EXHIBIT 00 — SUBJECT: UNIDENTIFIED</span>
+      <span class="hero__meta-r">MEDIAPIPE FACE MESH · 468 LANDMARKS · LIVE RENDER</span>
+    </div>
+
+    <div class="hero__beat hero__beat--1">
+      <p class="kicker mono">INFINIA 2026 · Intelligence Beyond Humans</p>
+      <h1 class="hero__title" id="hero-title" aria-label="Seeing is no longer believing.">
+        <span class="l">Seeing is</span>
+        <span class="l">no longer</span>
+        <span class="l"><em>believing.</em></span>
+      </h1>
+      <p class="hero__lede">AI can now forge a face, a voice, a whole video call. <b>VERITAS</b> is the lab we built to catch it — and the science of how.</p>
+    </div>
+
+    <div class="hero__beat hero__beat--2" aria-hidden="true">
+      <p class="kicker mono">FIG. 00·1 — MACHINE VISION</p>
+      <h2 class="display">This is how a machine<br>sees <em>your face.</em></h2>
+      <p class="lede">468 points. 898 triangles. No skin, no eyes, no person — just coordinates a computer can measure, compare, <em>and copy.</em></p>
+    </div>
+
+    <div class="hero__beat hero__beat--3" aria-hidden="true">
+      <p class="kicker mono">FIG. 00·2 — DECOMPOSITION</p>
+      <h2 class="display">Anything that is data<br>can be <em>rewritten.</em></h2>
+    </div>
+
+    <div class="hero__beat hero__beat--4" aria-hidden="true">
+      <p class="kicker mono">EXHIBIT A — FACE-SWAP, SCANNED</p>
+      <h2 class="display">So we built a machine<br>that <em>checks.</em></h2>
+      <ul class="legend mono">
+        <li><i class="sw sw--auth"></i>Authentic — original frame</li>
+        <li><i class="sw sw--synth"></i>Synthetic — swapped inner face</li>
+        <li><i class="sw sw--scan"></i>Scan plane</li>
+      </ul>
+    </div>
+
+    <dl class="telemetry mono" aria-hidden="true">
+      <div><dt>LANDMARKS</dt><dd id="tm-lm">468</dd></div>
+      <div><dt>TRIANGLES</dt><dd>898</dd></div>
+      <div><dt>YAW</dt><dd id="tm-yaw">+00.0°</dd></div>
+      <div><dt>PITCH</dt><dd id="tm-pitch">+00.0°</dd></div>
+      <div><dt>SCAN</dt><dd id="tm-scan">STANDBY</dd></div>
+      <div><dt>SWAPPED REGION</dt><dd id="tm-syn">—</dd></div>
+      <div class="telemetry__note"><span class="pill pill--illus">ILLUSTRATION</span>A SIMULATED SWAP ON A 3-D MESH</div>
+    </dl>
+
+    <div class="face-labels" id="face-labels" aria-hidden="true">
+      <span class="flabel" data-lm="1"><i></i><b>LM 001</b><em>NOSE TIP</em></span>
+      <span class="flabel" data-lm="33"><i></i><b>LM 033</b><em>R. EYE · OUTER</em></span>
+      <span class="flabel" data-lm="263"><i></i><b>LM 263</b><em>L. EYE · OUTER</em></span>
+      <span class="flabel" data-lm="61"><i></i><b>LM 061</b><em>MOUTH · CORNER</em></span>
+    </div>
+
+    <div class="hero__cue mono" aria-hidden="true"><i></i><span>SCROLL OR PRESS →</span></div>
+    <canvas class="face-2d" id="face-2d" aria-hidden="true"></canvas>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     01 · THE THREAT
+     ════════════════════════════════════════════════════════════ -->
+<section id="threat" class="ch threat" data-ch="1" data-title="The Threat" aria-labelledby="threat-h">
+  <div class="frame frame--split" data-stop>
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>01</b> The Threat</p>
+      <h2 class="display" id="threat-h" data-split>A video call with the boss.<br><em>Everyone on it was fake.</em></h2>
+      <p class="lede reveal">In January 2024 a finance employee at the engineering firm Arup in Hong Kong joined a video conference with the company’s CFO and several colleagues. He made the transfers they asked for. Every other face and voice on that call was a deepfake, pre-recorded from the executives’ public online videos. <sup class="cite"><a href="#ref-1">1</a></sup></p>
+    </div>
+    <article class="casefile reveal" aria-label="Case summary: Arup deepfake video-call fraud">
+      <header class="casefile__head mono"><span>CASE 01-A</span><span>VIDEO-CALL FRAUD</span><span class="stamp stamp--synth">DEEPFAKE</span></header>
+      <dl class="casefile__rows">
+        <div><dt class="mono">Location</dt><dd>Hong Kong</dd></div>
+        <div><dt class="mono">When</dt><dd>January 2024</dd></div>
+        <div><dt class="mono">Method</dt><dd><span class="redact">Deepfaked CFO and staff on a video call</span></dd></div>
+        <div><dt class="mono">Transfers</dt><dd><span class="redact">15 transfers to 5 bank accounts</span></dd></div>
+        <div><dt class="mono">Police</dt><dd><span class="redact">“Everyone [he saw] was fake.”</span></dd></div>
+      </dl>
+      <div class="casefile__loss">
+        <span class="mono">TOTAL LOSS</span>
+        <b><small>HK$</small><span data-count="200" data-suffix=" million">200 million</span></b>
+        <span class="mono casefile__conv">≈ US$25.6 MILLION · CONFIRMED BY ARUP, MAY 2024 <sup class="cite"><a href="#ref-1">1</a></sup></span>
+      </div>
+    </article>
+  </div>
+
+  <div class="frame frame--split frame--voice" data-stop>
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>01·2</b> Cloned voices</p>
+      <h2 class="display" data-split>It sounded exactly like him.<br><em>He never said it.</em></h2>
+      <p class="lede reveal">January 2024, New Hampshire, USA: voters received robocalls in a cloned voice of the U.S. President, telling them not to vote in the primary election. In February the U.S. Federal Communications Commission ruled that AI-generated voices count as “artificial” under its robocall law; in May it proposed a <b>US$6 million</b> fine against the consultant behind the calls (finalised September 2024). <sup class="cite"><a href="#ref-2">2</a></sup></p>
+    </div>
+    <div class="voicewall reveal">
+      <figure class="wavecard" aria-label="Illustration: a three-second voice sample being turned into a cloned voice">
+        <div class="wavecard__head mono"><span>VOICE SAMPLE</span><span class="is-synthetic">CLONE READY</span></div>
+        <canvas id="threat-wave" class="wavecard__wave" aria-hidden="true"></canvas>
+        <div class="wavecard__scale mono"><span>0.0 s</span><span>1.0</span><span>2.0</span><span>3.0 s</span></div>
+        <figcaption class="mono"><span class="pill pill--illus">ILLUSTRATION</span>3 S OF AUDIO</figcaption>
+      </figure>
+      <div class="bigstat">
+        <b><span data-count="3">3</span><small>sec</small></b>
+        <p>of recorded speech was enough for an <b>85%</b> voice match in McAfee researchers’ own tests. <sup class="cite"><a href="#ref-3">3</a></sup></p>
+      </div>
+      <div class="bigstat bigstat--india">
+        <b><span data-count="47">47</span><small>%</small></b>
+        <p>of Indian adults surveyed had experienced an AI voice scam, or knew someone who had — nearly double the global <b>25%</b>. <sup class="cite"><a href="#ref-3">3</a></sup></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame frame--stats" data-stop>
+    <p class="eyebrow mono"><b>01·3</b> The scale</p>
+    <div class="statwall">
+      <article class="stat reveal">
+        <b><span data-count="10">10</span><small>×</small></b>
+        <h3 class="mono">Deepfakes detected, 2022 → 2023</h3>
+        <p>Rise in deepfake incidents caught by one global identity-verification company in a single year.</p>
+        <span class="src mono"><span class="pill pill--vendor">VENDOR DATA</span>Sumsub Identity Fraud Report 2023 <sup class="cite"><a href="#ref-4">4</a></sup></span>
+      </article>
+      <article class="stat reveal">
+        <b><span data-count="5">5</span><small>min</small></b>
+        <h3 class="mono">One deepfake attempt, every…</h3>
+        <p>Average rate of deepfake attacks on identity checks seen in 2024 by one verification provider.</p>
+        <span class="src mono"><span class="pill pill--vendor">VENDOR DATA</span>Entrust / Onfido 2025 Identity Fraud Report <sup class="cite"><a href="#ref-5">5</a></sup></span>
+      </article>
+      <article class="stat reveal">
+        <b><small>US$</small><span data-count="40">40</span><small>B</small></b>
+        <h3 class="mono">Projected losses by 2027</h3>
+        <p>Deloitte projects that generative AI could push U.S. fraud losses to $40 billion, from $12.3 billion in 2023 (its high-adoption scenario).</p>
+        <span class="src mono"><span class="pill pill--vendor">PROJECTION</span>Deloitte Center for Financial Services, 2024 <sup class="cite"><a href="#ref-6">6</a></sup></span>
+      </article>
+    </div>
+    <p class="closer reveal" data-split>The danger isn’t that fakes exist.<br>It’s that our eyes have stopped being <em>evidence.</em></p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     02 · HOW FAKES ARE MADE
+     ════════════════════════════════════════════════════════════ -->
+<section id="forge" class="ch forge" data-ch="2" data-title="How Fakes Are Made" aria-labelledby="forge-h">
+  <div class="frame frame--intro" data-stop>
+    <p class="eyebrow mono"><b>02</b> How fakes are made</p>
+    <h2 class="display display--xl" id="forge-h" data-split>To catch a forger,<br>first learn to <em>forge.</em></h2>
+    <ol class="index4">
+      <li class="reveal"><a href="#gan"><b class="mono">A</b><span>Generative Adversarial Networks</span><small>Two networks duel until fakes look real.</small></a></li>
+      <li class="reveal"><a href="#swap"><b class="mono">B</b><span>Autoencoder Face-Swap</span><small>One encoder, two decoders, a stolen face.</small></a></li>
+      <li class="reveal"><a href="#diffusion"><b class="mono">C</b><span>Diffusion Models</span><small>Images sculpted out of pure noise.</small></a></li>
+      <li class="reveal"><a href="#voice"><b class="mono">D</b><span>Voice Cloning</span><small>Text in, someone else’s voice out.</small></a></li>
+    </ol>
+  </div>
+
+  <!-- A · GAN -->
+  <div class="frame frame--demo" id="gan" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>A</b> Generative Adversarial Network <span class="ref">Goodfellow et al., 2014 <sup class="cite"><a href="#ref-8">8</a></sup></span></p>
+      <h3 class="h-demo">Two networks. One forges, one judges. <em>Both get better.</em></h3>
+      <p>The <b class="t-gen">generator G</b> turns random noise <i class="v">z</i> into an image. The <b class="t-dis">discriminator D</b> sees real photos and G’s fakes and guesses which are real. Each learns from the other’s mistakes — until D can only guess, <i class="v">D</i> = ½, because the fakes look statistically real.</p>
+      <div class="eq" role="math" aria-label="min over G, max over D, of V of D and G, equals the expectation over real x of log D of x, plus the expectation over noise z of log of one minus D of G of z">
+        <span class="eq-l"><span class="eq-lim">min<sub><i>G</i></sub></span> <span class="eq-lim">max<sub><i>D</i></sub></span> <i>V</i>(<i>D</i>, <i>G</i>) <span class="rel">=</span></span>
+        <span class="eq-l eq-l--in">𝔼<sub><i>x</i>∼<i>p</i><sub>data</sub></sub>[ log <i>D</i>(<i>x</i>) ] <span class="rel">+</span> 𝔼<sub><i>z</i>∼<i>p</i><sub><i>z</i></sub></sub>[ log(1 − <i>D</i>(<i>G</i>(<i>z</i>))) ]</span>
+      </div>
+      <p class="eq-note mono">D WANTS THIS LARGE · G WANTS IT SMALL — A TWO-PLAYER MINIMAX GAME</p>
+    </div>
+    <figure class="col col--viz gan" aria-label="Animated diagram of a GAN training loop with a generator learning to produce a face">
+      <svg class="gan__svg" viewBox="0 0 640 430" aria-hidden="true">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1L9 5L0 9" fill="none" stroke="currentColor" stroke-width="1.4"/></marker>
+        </defs>
+        <g class="gan__links" fill="none" stroke-width="1.2">
+          <path id="gl-z" d="M70 300 H150" class="ln ln--scan" marker-end="url(#arr)"/>
+          <path id="gl-g" d="M262 300 H340" class="ln ln--synth" marker-end="url(#arr)"/>
+          <path id="gl-gd" d="M440 300 C490 300 470 220 512 214" class="ln ln--synth" marker-end="url(#arr)"/>
+          <path id="gl-real" d="M440 90 C490 90 470 180 512 190" class="ln ln--auth" marker-end="url(#arr)"/>
+          <path id="gl-fb" d="M514 236 C470 430 214 420 206 340" class="ln ln--evid ln--dash" marker-end="url(#arr)"/>
+        </g>
+        <g class="gan__nodes">
+          <g transform="translate(18 270)"><rect width="52" height="60" rx="4" class="node node--scan"/><text x="26" y="36" class="t-mono" text-anchor="middle">z</text><text x="26" y="80" class="t-cap" text-anchor="middle">NOISE</text></g>
+          <g transform="translate(150 262)"><path d="M0 0 L112 22 L112 54 L0 76 Z" class="node node--synth"/><text x="50" y="44" class="t-big" text-anchor="middle">G</text><text x="56" y="98" class="t-cap" text-anchor="middle">GENERATOR</text></g>
+          <g transform="translate(340 250)"><rect width="100" height="100" rx="4" class="node node--frame"/><text x="50" y="122" class="t-cap" text-anchor="middle">FAKE · G(z)</text></g>
+          <g transform="translate(340 40)"><rect width="100" height="100" rx="4" class="node node--frame"/><text x="50" y="-10" class="t-cap" text-anchor="middle">REAL PHOTO · x</text></g>
+          <g transform="translate(512 160)"><path d="M0 22 L96 0 L96 100 L0 78 Z" class="node node--dis"/><text x="50" y="58" class="t-big" text-anchor="middle">D</text><text x="48" y="122" class="t-cap" text-anchor="middle">DISCRIMINATOR</text></g>
+          <text x="384" y="426" class="t-cap t-evid" text-anchor="middle">GRADIENT FEEDBACK → G LEARNS TO FOOL D</text>
+        </g>
+        <g class="gan__real-face" transform="translate(340 40)"><path id="gan-real-path" class="mesh mesh--auth" d=""/></g>
+        <circle r="4" class="pulse pulse--scan"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#gl-z"/></animateMotion></circle>
+        <circle r="4" class="pulse pulse--synth"><animateMotion dur="2.4s" begin="0.6s" repeatCount="indefinite"><mpath href="#gl-g"/></animateMotion></circle>
+        <circle r="4" class="pulse pulse--synth"><animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite"><mpath href="#gl-gd"/></animateMotion></circle>
+        <circle r="4" class="pulse pulse--auth"><animateMotion dur="2.4s" begin="0.9s" repeatCount="indefinite"><mpath href="#gl-real"/></animateMotion></circle>
+        <circle r="3.5" class="pulse pulse--evid"><animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite"><mpath href="#gl-fb"/></animateMotion></circle>
+      </svg>
+      <canvas class="gan__out" id="gan-canvas" aria-hidden="true"></canvas>
+      <div class="gan__panel mono">
+        <div class="meter"><span>TRAINING STEP</span><b id="gan-step">0</b></div>
+        <div class="meter"><span>D(G(z)) — “IS THE FAKE REAL?”</span><b id="gan-d">0.02</b><div class="meter__bar"><i id="gan-dbar"></i><em class="meter__half"></em></div></div>
+        <label class="scrub"><span>SCRUB TRAINING</span><input type="range" id="gan-range" min="0" max="1000" value="0" aria-label="Training progress"></label>
+      </div>
+      <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>SIMULATED TRAINING · FACE POINTS FROM MEDIAPIPE MESH</figcaption>
+    </figure>
+  </div>
+
+  <!-- B · Autoencoder face swap -->
+  <div class="frame frame--demo frame--rev" id="swap" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>B</b> Autoencoder face-swap <span class="ref">“DeepFakes” method, FaceForensics++ <sup class="cite"><a href="#ref-21">21</a></sup></span></p>
+      <h3 class="h-demo">One encoder learns faces. Two decoders learn <em>people.</em></h3>
+      <p>A <b>shared encoder</b> squeezes any face into a small <b>latent code</b> — pose, expression, lighting. <b>Decoder A</b> learns to rebuild person A, <b>decoder B</b> person B. The trick: encode A’s face, decode it with B’s decoder — out comes <b>B’s identity wearing A’s expression</b>.</p>
+      <p class="callout mono"><b>FORENSIC CLUE</b> The blend boundary, mismatched skin tone and lighting, and a sharper or blurrier inner face are exactly what detectors hunt for.</p>
+    </div>
+    <figure class="col col--viz swap" aria-label="Diagram: face A goes through a shared encoder into a latent code, then decoder B produces face B with A's expression">
+      <svg class="swap__svg" id="swap-svg" viewBox="0 0 680 420" aria-hidden="true">
+        <g class="swap__lane swap__lane--train">
+          <text x="10" y="22" class="t-cap">TRAINING — EACH DECODER LEARNS ONE PERSON</text>
+          <g transform="translate(10 40)"><path class="mesh mesh--auth face-a" d=""/></g>
+          <g transform="translate(10 120)"><path class="mesh mesh--evid face-b" d=""/></g>
+          <path d="M100 80 L170 110 M100 160 L170 130" class="ln ln--dim"/>
+          <path d="M170 76 L270 100 L270 140 L170 164 Z" class="node node--scan"/>
+          <text x="220" y="125" class="t-mono" text-anchor="middle">ENC</text>
+          <g class="latent" transform="translate(286 104)"><rect width="14" height="32" class="lat"/><rect x="16" width="14" height="32" class="lat"/><rect x="32" width="14" height="32" class="lat"/><rect x="48" width="14" height="32" class="lat"/></g>
+          <path d="M350 112 L420 80 M350 128 L420 160" class="ln ln--dim"/>
+          <path d="M420 60 L500 44 L500 104 L420 88 Z" class="node node--auth"/><text x="462" y="79" class="t-mono" text-anchor="middle">DEC A</text>
+          <path d="M420 152 L500 136 L500 196 L420 180 Z" class="node node--evid"/><text x="462" y="171" class="t-mono" text-anchor="middle">DEC B</text>
+          <g transform="translate(520 30)"><path class="mesh mesh--auth face-a" d="" opacity=".55"/></g>
+          <g transform="translate(520 122)"><path class="mesh mesh--evid face-b" d="" opacity=".55"/></g>
+        </g>
+        <line x1="10" y1="226" x2="670" y2="226" class="ln ln--dim ln--dash"/>
+        <g class="swap__lane swap__lane--swap">
+          <text x="10" y="252" class="t-cap t-synth">THE SWAP — A’S FACE IN, DECODER B OUT</text>
+          <g transform="translate(10 272)"><path class="mesh mesh--auth face-a face-a--smile" d=""/></g>
+          <path id="sw-p1" d="M100 316 H170" class="ln ln--scan"/>
+          <path d="M170 292 L270 316 L270 340 L170 364 Z" class="node node--scan"/><text x="220" y="333" class="t-mono" text-anchor="middle">ENC</text>
+          <g class="latent latent--live" transform="translate(286 312)"><rect width="14" height="32" class="lat"/><rect x="16" width="14" height="32" class="lat"/><rect x="32" width="14" height="32" class="lat"/><rect x="48" width="14" height="32" class="lat"/></g>
+          <path id="sw-p2" d="M350 328 H420" class="ln ln--scan"/>
+          <path d="M420 306 L500 290 L500 366 L420 350 Z" class="node node--evid"/><text x="462" y="333" class="t-mono" text-anchor="middle">DEC B</text>
+          <path id="sw-p3" d="M500 328 H520" class="ln ln--synth"/>
+          <g transform="translate(520 272)"><path class="mesh mesh--synth face-b face-b--smile" d=""/><text x="72" y="140" class="t-cap t-synth" text-anchor="middle">B’S FACE · A’S SMILE</text></g>
+          <circle r="4" class="pulse pulse--scan"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#sw-p1"/></animateMotion></circle>
+          <circle r="4" class="pulse pulse--scan"><animateMotion dur="1.8s" begin=".6s" repeatCount="indefinite"><mpath href="#sw-p2"/></animateMotion></circle>
+        </g>
+      </svg>
+      <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>FACES ARE ABSTRACT MESHES, NOT REAL PEOPLE</figcaption>
+    </figure>
+  </div>
+
+  <!-- C · Diffusion -->
+  <div class="frame frame--demo" id="diffusion" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>C</b> Diffusion model <span class="ref">Ho, Jain &amp; Abbeel, 2020 <sup class="cite"><a href="#ref-9">9</a></sup></span></p>
+      <h3 class="h-demo">Start with pure static. Remove the noise, <em>one step at a time.</em></h3>
+      <p>Training adds Gaussian noise to real images over <i class="v">T</i> = 1000 small steps until nothing is left, and a network learns to predict that noise <i class="v">ε</i>. To <b>generate</b>, start from pure static and run it backwards — predict the noise, remove a little, repeat — until a <em>new</em> image appears.</p>
+      <div class="eq" role="math" aria-label="x t equals square root of alpha bar t times x zero plus square root of one minus alpha bar t times epsilon">
+        <i>x</i><sub><i>t</i></sub> <span class="rel">=</span>
+        <span class="sqrt"><span class="sqrt__s">√</span><span class="sqrt__b"><i class="ovl">α</i><sub><i>t</i></sub></span></span> <i>x</i><sub>0</sub> <span class="rel">+</span>
+        <span class="sqrt"><span class="sqrt__s">√</span><span class="sqrt__b">1 − <i class="ovl">α</i><sub><i>t</i></sub></span></span> <i>ε</i>,
+        <span class="eq__aside"><i>ε</i> ∼ 𝒩(0, <b>I</b>)</span>
+      </div>
+      <p class="eq-note mono"><span class="ovl">α</span><sub>t</sub> = HOW MUCH OF THE ORIGINAL SURVIVES AT STEP t</p>
+    </div>
+    <figure class="col col--viz diff" aria-label="Interactive: a photo of the Kerala backwaters dissolving into Gaussian noise as the timestep increases">
+      <div class="diff__screen">
+        <canvas id="diff-canvas" aria-hidden="true"></canvas>
+        <div class="diff__hud mono"><span>t = <b id="diff-t">0</b></span><span><span class="ovl">α</span><sub>t</sub> = <b id="diff-ab">1.000</b></span></div>
+        <div class="diff__mix mono"><span>SIGNAL <b id="diff-sig">100</b>%</span><i><b id="diff-sigbar"></b></i><span>NOISE <b id="diff-noi">0</b>%</span></div>
+      </div>
+      <div class="diff__controls mono">
+        <label class="scrub scrub--wide"><span>TIMESTEP t · DRAG ←→</span><input type="range" id="diff-range" min="0" max="1000" value="0" aria-label="Diffusion timestep"></label>
+        <button class="btn btn--small" id="diff-play" type="button">◀ Rewind the noise (t: 1000 → 0)</button>
+      </div>
+      <figcaption class="figcap mono"><span class="pill pill--real">COMPUTED LIVE</span>FORWARD PROCESS · LINEAR β 0.0001 → 0.02 · PHOTO: KERALA BACKWATERS, CC0<br><span class="pill pill--illus">NOTE</span>REWIND WORKS HERE ONLY BECAUSE WE KNOW x₀ AND ε. A REAL MODEL MUST PREDICT ε AT EVERY STEP — AND ENDS AT A NEW IMAGE.</figcaption>
+    </figure>
+  </div>
+
+  <!-- D · Voice -->
+  <div class="frame frame--demo frame--rev" id="voice" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>D</b> Voice cloning <span class="ref">SV2TTS, 2018 · VALL-E, 2023 · HiFi-GAN, 2020 <sup class="cite"><a href="#ref-22">22</a></sup></span></p>
+      <h3 class="h-demo">A few seconds of your voice can be <em>enough.</em></h3>
+      <p>A <b>speaker encoder</b> turns a short clip into a voice-print — a list of numbers. An <b>acoustic model</b> turns text plus that voice-print into a <b>mel-spectrogram</b>, a picture of sound. A <b>neural vocoder</b> turns the picture back into audio. That recipe is SV2TTS (2018). Newer systems such as VALL-E skip the spectrogram — a language model predicts audio-codec tokens directly — and cloned voices from a <b>3-second</b> sample.</p>
+      <p class="callout mono"><b>THE SCAM</b> “Hi, it’s me. I lost my phone — please send money to this number.” Hang up and call back on the number you already know.</p>
+    </div>
+    <figure class="col col--viz vox" aria-label="Animated pipeline: voice sample to speaker embedding, text to mel-spectrogram, vocoder to waveform">
+      <div class="vox__row">
+        <div class="vox__node"><span class="mono vox__k">01 · SAMPLE</span><canvas id="vox-sample" class="vox__wave" aria-hidden="true"></canvas><span class="mono vox__s">3 s of real speech</span></div>
+        <i class="vox__arr" aria-hidden="true"></i>
+        <div class="vox__node"><span class="mono vox__k">02 · SPEAKER ENCODER</span><div class="vox__emb" id="vox-emb" aria-hidden="true"></div><span class="mono vox__s">voice-print vector</span></div>
+      </div>
+      <div class="vox__row">
+        <div class="vox__node vox__node--text"><span class="mono vox__k">03 · TEXT</span><p class="vox__type" id="vox-text">“Hi, it’s me. I lost my phone — please send money.”</p></div>
+        <i class="vox__arr" aria-hidden="true"></i>
+        <div class="vox__node vox__node--wide"><span class="mono vox__k">04 · ACOUSTIC MODEL → MEL-SPECTROGRAM</span><canvas id="vox-mel" class="vox__mel" aria-hidden="true"></canvas></div>
+      </div>
+      <div class="vox__row">
+        <div class="vox__node vox__node--full"><span class="mono vox__k">05 · NEURAL VOCODER → WAVEFORM <em class="is-synthetic">SYNTHETIC</em></span><canvas id="vox-out" class="vox__wave vox__wave--out" aria-hidden="true"></canvas></div>
+      </div>
+      <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>PROCEDURAL SIGNALS, NOT A REAL VOICE</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     03 · CAN YOU TELL?
+     ════════════════════════════════════════════════════════════ -->
+<section id="challenge" class="ch challenge" data-ch="3" data-title="Can You Tell?" aria-labelledby="challenge-h">
+  <div class="frame frame--game" data-stop data-steps="3">
+    <div class="challenge__head">
+      <div>
+        <p class="eyebrow mono"><b>03</b> Can you tell?</p>
+        <h2 class="display" id="challenge-h" data-split>Real, or <em>fake?</em></h2>
+      </div>
+      <div class="coin">
+        <b><span data-count="48.2" data-decimals="1">48.2</span><small>%</small></b>
+        <p>In a 2022 study, people sorting real faces from StyleGAN2 faces were right <b>48.2%</b> of the time — no better than flipping a coin. AI faces were even rated <em>more trustworthy.</em> <sup class="cite"><a href="#ref-7">7</a></sup></p>
+      </div>
+    </div>
+    <div class="game" id="game" aria-live="polite">
+      <!-- filled by js/story/game.js from samples/game/manifest.json -->
+      <article class="gcard gcard--sealed"><div class="gcard__img"></div><div class="gcard__bar mono">EXHIBIT 03-A</div></article>
+      <article class="gcard gcard--sealed"><div class="gcard__img"></div><div class="gcard__bar mono">EXHIBIT 03-B</div></article>
+      <article class="gcard gcard--sealed"><div class="gcard__img"></div><div class="gcard__bar mono">EXHIBIT 03-C</div></article>
+    </div>
+    <div class="game__foot">
+      <p class="mono game__score" id="game-score">DECIDE: REAL OR FAKE? · PRESENTER: → REVEALS EACH ANSWER</p>
+      <a class="btn btn--line" href="lab.html#game"><span>Play the full challenge in the lab</span><i>↗</i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     04 · THE FORENSICS
+     ════════════════════════════════════════════════════════════ -->
+<section id="forensics" class="ch forensics" data-ch="4" data-title="The Forensics" aria-labelledby="forensics-h">
+  <div class="frame frame--intro" data-stop>
+    <p class="eyebrow mono"><b>04</b> The forensics</p>
+    <h2 class="display display--xl" id="forensics-h" data-split>Every fake leaves<br>a <em>fingerprint.</em></h2>
+    <p class="lede reveal">No single test is proof. Each one measures a law that real cameras, real faces and real voices obey — and generators often break. VERITAS runs them all. Honestly: on our test photos the classic tests alone scored AUC 0.50–0.65 (0.5 = guessing); the pretrained AI networks scored 0.93–0.98.</p>
+    <ol class="exhibits">
+      <li class="reveal"><a href="#ex-ela"><b class="mono">B</b><span>Error Level Analysis</span><small class="mono">COMPRESSION</small></a></li>
+      <li class="reveal"><a href="#ex-noise"><b class="mono">C</b><span>Noise Residuals</span><small class="mono">NOISE</small></a></li>
+      <li class="reveal"><a href="#ex-fft"><b class="mono">D</b><span>Frequency Domain</span><small class="mono">FREQUENCY</small></a></li>
+      <li class="reveal"><a href="#ex-jpeg"><b class="mono">E</b><span>JPEG Double Compression</span><small class="mono">COMPRESSION</small></a></li>
+      <li class="reveal"><a href="#ex-meta"><b class="mono">F</b><span>Metadata &amp; Provenance</span><small class="mono">METADATA</small></a></li>
+      <li class="reveal"><a href="#ex-blink"><b class="mono">G</b><span>Blink Rate · EAR</span><small class="mono">BIOMETRIC</small></a></li>
+      <li class="reveal"><a href="#ex-jitter"><b class="mono">H</b><span>Landmark Jitter</span><small class="mono">TEMPORAL</small></a></li>
+      <li class="reveal"><a href="#ex-audio"><b class="mono">I</b><span>Voice Spectrum</span><small class="mono">ACOUSTIC</small></a></li>
+    </ol>
+  </div>
+
+  <!-- B · ELA -->
+  <div class="frame frame--demo frame--wideviz" id="ex-ela" data-stop data-steps="2">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT B</b> Error Level Analysis <span class="ref">Krawetz, 2007 <sup class="cite"><a href="#ref-10">10</a></sup></span></p>
+      <h3 class="h-demo">Re-save the photo. <em>See what changes.</em></h3>
+      <p>JPEG throws away fine detail in 8×8 blocks. Regions that were already compressed barely change when you compress them again. A freshly pasted object hasn’t “settled” — so its <b>error level</b> glows.</p>
+      <div class="eq eq--sm" role="math" aria-label="ELA of x y equals k times the absolute value of I of x y minus JPEG q of I at x y">
+        ELA(<i>x</i>,<i>y</i>) <span class="rel">=</span> <i>k</i> · <span class="abs">|</span> <i>I</i>(<i>x</i>,<i>y</i>) − JPEG<sub><i>q</i></sub>(<i>I</i>)(<i>x</i>,<i>y</i>) <span class="abs">|</span>
+      </div>
+      <p class="callout mono"><b>TRY IT</b> One thing in this photo was pasted in by us. Find it before the slider moves.</p>
+      <p class="limit-note"><b>Limits.</b> Edges and fine texture glow too, and re-saving the whole picture hides the difference. ELA is a map for human eyes: on our 104 test images its score was at chance (AUC 0.50), and on a real splice we made, no score caught it.</p>
+    </div>
+    <figure class="col col--viz ela" aria-label="Before and after slider comparing a photo with its error level analysis map">
+      <div class="compare" id="ela-compare" style="--pos: 100%">
+        <img src="assets/story/forensics/ela-photo.webp" alt="Kerala backwaters: a houseboat on still water with palm trees behind it. One palm tree on the right was digitally pasted in." width="1600" height="1067" decoding="async" loading="lazy">
+        <div class="compare__top"><img src="assets/story/forensics/ela-map.webp" alt="Error level map: dark everywhere except textured edges, while the pasted palm tree glows bright amber and white inside a rectangular patch." width="1600" height="1067" decoding="async" loading="lazy"></div>
+        <div class="compare__box" id="ela-box"><span class="mono">PASTED · <b id="ela-ratio">2.5</b>× THE ERROR OF THE REAL PALM</span></div>
+        <div class="compare__handle" aria-hidden="true"><i></i></div>
+        <span class="compare__lab compare__lab--l mono">PHOTO</span>
+        <span class="compare__lab compare__lab--r mono">ERROR LEVEL</span>
+        <input class="compare__range" type="range" min="0" max="100" value="100" aria-label="Reveal error level map">
+      </div>
+      <figcaption class="figcap mono"><span class="pill pill--real">REAL COMPUTATION</span>ELA OF OUR OWN DEMO FORGERY · JPEG RE-SAVE AT Q80 · PHOTO CC0, WIKIMEDIA COMMONS</figcaption>
+    </figure>
+  </div>
+
+  <!-- C · Noise -->
+  <div class="frame frame--demo frame--rev frame--wideviz" id="ex-noise" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT C</b> Noise residuals</p>
+      <h3 class="h-demo">Every camera sensor has a <em>grain.</em></h3>
+      <p>Subtract a smoothed copy of a photo from itself and only the noise is left. In a genuine photo that noise is consistent across the frame, once you allow for brightness. Pasted or generated regions carry <b>different noise — or none.</b> Phone noise reduction removes grain too, so “too little grain” is weak evidence.</p>
+      <div class="eq eq--sm" role="math" aria-label="r equals I minus F of I, where F is a 3 by 3 median filter">
+        <i>r</i> <span class="rel">=</span> <i>I</i> − <i>F</i>(<i>I</i>), <span class="eq__aside"><i>F</i> = 3×3 median filter</span>
+      </div>
+      <dl class="readout mono">
+        <div><dt>NOISE UNDER LENS</dt><dd id="noise-val">—</dd></div>
+        <div><dt>VERDICT</dt><dd id="noise-verdict">MOVE THE LENS</dd></div>
+      </dl>
+    </div>
+    <figure class="col col--viz noise" aria-label="Interactive noise lens over the photo: the lens reveals the noise map underneath">
+      <div class="lens" id="noise-lens" style="--lx: 30%; --ly: 30%">
+        <img src="assets/story/forensics/ela-photo.webp" alt="" width="1600" height="1067" decoding="async" loading="lazy">
+        <div class="lens__map"><img src="assets/story/forensics/noise-map.webp" alt="Noise level map. Sky shows even camera noise; the pasted palm patch is a darker, quieter rectangle." width="1600" height="1067" decoding="async" loading="lazy"></div>
+        <div class="lens__ring" aria-hidden="true"><i class="lens__probe"></i><span class="mono">NOISE LENS · DASHED = MEASURED</span></div>
+      </div>
+      <figcaption class="figcap mono"><span class="pill pill--real">REAL COMPUTATION</span>LOCAL RMS OF <span class="nt">r</span> OVER 15×15 PX · FLAT PIXELS ONLY (TEXTURE IGNORED) · SENSOR NOISE SIMULATED AT <span class="nt">σ</span> ≈ 3.4</figcaption>
+    </figure>
+  </div>
+
+  <!-- D · FFT -->
+  <div class="frame frame--demo" id="ex-fft" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT D</b> Frequency domain <span class="ref">Odena 2016 · Frank 2020 <sup class="cite"><a href="#ref-11">11</a></sup></span></p>
+      <h3 class="h-demo">Generators leave a <em>grid</em> in the spectrum.</h3>
+      <p>The 2-D Fourier transform rewrites an image as a sum of waves. Natural photos fade smoothly from low to high frequencies. Many GANs enlarge images with <b>transposed convolutions</b>, which stamp a faint repeating pattern on every pixel — it shows up as bright, evenly spaced <b class="t-evid">peaks</b>.</p>
+      <p class="limit-note"><b>Limits.</b> Newer generators (StyleGAN3, many diffusion models) leave weaker peaks, and JPEG’s 8×8 blocks put peaks at multiples of N/8 too. On our test images this test alone scored AUC 0.62.</p>
+      <div class="eq" role="math" aria-label="F of u v equals the sum over x from 0 to M minus 1, sum over y from 0 to N minus 1, of f of x y times e to the minus i 2 pi times u x over M plus v y over N">
+        <i>F</i>(<i>u</i>,<i>v</i>) <span class="rel">=</span>
+        <span class="bigop"><span class="bigop__t"><i>M</i>−1</span><span class="bigop__s">∑</span><span class="bigop__b"><i>x</i>=0</span></span>
+        <span class="bigop"><span class="bigop__t"><i>N</i>−1</span><span class="bigop__s">∑</span><span class="bigop__b"><i>y</i>=0</span></span>
+        <i>f</i>(<i>x</i>,<i>y</i>) · <i>e</i><sup class="sup-big">−<i>i</i>2π(<i>ux</i>/<i>M</i> + <i>vy</i>/<i>N</i>)</sup>
+      </div>
+    </div>
+    <figure class="col col--viz fft" aria-label="Live computation: image tile and its Fourier spectrum, toggling between a camera photo and a GAN-style upsampled version">
+      <div class="fft__toggle seg mono" role="radiogroup" aria-label="Image source">
+        <button type="button" role="radio" aria-checked="true" data-mode="real" class="is-on">Camera photo</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="gan">GAN-style upsampled</button>
+      </div>
+      <div class="fft__pair">
+        <div class="fft__cell"><span class="mono fft__k">IMAGE f(x, y) · 256 × 256</span><canvas id="fft-img" width="256" height="256" aria-hidden="true"></canvas></div>
+        <div class="fft__cell"><span class="mono fft__k">SPECTRUM log|F(u, v)|</span><canvas id="fft-spec" width="256" height="256" aria-hidden="true"></canvas><div class="fft__peaks" id="fft-peaks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      </div>
+      <p class="fft__read mono" id="fft-read">DIAGONAL PEAKS AT f = N/4 vs BACKGROUND: —</p>
+      <figcaption class="figcap mono"><span class="pill pill--real">COMPUTED LIVE</span>2-D FFT IN YOUR BROWSER · GAN-STYLE ARTEFACT SIMULATED ON OUR PHOTO (STRIDE-2 TRANSPOSED CONVOLUTION, 3×3)</figcaption>
+    </figure>
+  </div>
+
+  <!-- E · JPEG double compression -->
+  <div class="frame frame--demo frame--rev" id="ex-jpeg" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT E</b> JPEG quantisation <span class="ref">Lukáš &amp; Fridrich 2003 · Popescu &amp; Farid 2004 <sup class="cite"><a href="#ref-26">26</a></sup></span></p>
+      <h3 class="h-demo">Compress twice, and the numbers <em>remember.</em></h3>
+      <p>JPEG splits an image into 8×8 blocks, turns each into 64 frequency coefficients (the <b>DCT</b>), divides by a step <i class="v">q</i> and rounds. Saved once, the histogram is smooth. Edited and saved again at another quality, double rounding leaves <b class="t-evid">periodic gaps and spikes</b>.</p>
+      <div class="eq eq--sm" role="math" aria-label="c double prime equals round of round of c over q1 times q1 over q2">
+        <i>c</i>″ <span class="rel">=</span> round( round(<span class="frac"><span><i>c</i></span><span><i>q</i><sub>1</sub></span></span>) · <span class="frac"><span><i>q</i><sub>1</sub></span><span><i>q</i><sub>2</sub></span></span> )
+      </div>
+    </div>
+    <figure class="col col--viz jpeg" aria-label="Histogram of DCT coefficients from the sample photo, compressed once versus twice">
+      <div class="jpeg__top">
+        <div class="jpeg__block"><span class="mono fft__k">ONE 8×8 BLOCK · DCT</span><canvas id="jpeg-block" width="8" height="8" aria-hidden="true"></canvas></div>
+        <div class="jpeg__q mono" id="jpeg-q" aria-hidden="true"></div>
+      </div>
+      <div class="seg mono" role="radiogroup" aria-label="Compression history">
+        <button type="button" role="radio" aria-checked="true" data-mode="single" class="is-on">Saved once (q = 3)</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="double">Saved twice (q₁ = 5 → q₂ = 3)</button>
+      </div>
+      <div class="jpeg__hist"><span class="mono fft__k">HISTOGRAM · DCT COEFFICIENT (0,1) · ALL BLOCKS</span><canvas id="jpeg-hist" aria-hidden="true"></canvas></div>
+      <figcaption class="figcap mono"><span class="pill pill--real">COMPUTED LIVE</span>6,144 BLOCKS OF THE SAMPLE PHOTO · QUANTISATION SIMULATED IN THE DCT DOMAIN</figcaption>
+    </figure>
+  </div>
+
+  <!-- F · Metadata & provenance -->
+  <div class="frame frame--demo" id="ex-meta" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT F</b> Metadata &amp; provenance <span class="ref">C2PA, 2021 <sup class="cite"><a href="#ref-14">14</a></sup></span></p>
+      <h3 class="h-demo">Who made this file — and <em>can it prove it?</em></h3>
+      <p>Cameras write <b>EXIF</b> data: make, model, lens, exposure, time. AI images usually have none — but metadata is easy to strip or fake. <b>C2PA Content Credentials</b> add a cryptographically <b>signed manifest</b> containing a SHA-256 hash of the image data: change one pixel and the hash no longer matches, so verification fails.</p>
+      <p class="callout mono"><b>NOTE</b> A missing credential doesn’t prove a fake — it just means there’s no proof of origin.</p>
+    </div>
+    <figure class="col col--viz meta" aria-label="Two evidence cards comparing camera metadata with an AI image, and a signed provenance chain">
+      <div class="meta__cards">
+        <article class="exif exif--auth">
+          <header class="mono"><span>F-1 · CAMERA JPEG</span><span class="stamp stamp--auth">EXIF FOUND</span></header>
+          <dl class="mono">
+            <div><dt>Make</dt><dd>Canon</dd></div>
+            <div><dt>Model</dt><dd>EOS Digital Rebel XT</dd></div>
+            <div><dt>Focal length</dt><dd>55 mm</dd></div>
+            <div><dt>Exposure</dt><dd>1/250 s · f/11 · ISO 400</dd></div>
+            <div><dt>Captured</dt><dd>2010-05-12 20:26:13</dd></div>
+            <div><dt>Size</dt><dd>3456 × 2304</dd></div>
+          </dl>
+          <p class="exif__src mono"><span class="pill pill--real">REAL DATA</span>EXIF OF OUR CC0 SAMPLE PHOTO</p>
+        </article>
+        <article class="exif exif--synth">
+          <header class="mono"><span>F-2 · AI-GENERATED PNG</span><span class="stamp stamp--evid">FLAGS 3</span></header>
+          <dl class="mono">
+            <div><dt>Make</dt><dd class="nil">— missing —</dd></div>
+            <div><dt>Model</dt><dd class="nil">— missing —</dd></div>
+            <div><dt>Exposure</dt><dd class="nil">— missing —</dd></div>
+            <div><dt>Software</dt><dd class="flag">image-generator v2</dd></div>
+            <div><dt>Captured</dt><dd class="nil">— missing —</dd></div>
+            <div><dt>Size</dt><dd class="flag">1024 × 1024</dd></div>
+          </dl>
+          <p class="exif__src mono"><span class="pill pill--illus">ILLUSTRATION</span></p>
+        </article>
+      </div>
+      <ol class="chain mono" id="c2pa-chain" aria-label="C2PA provenance chain">
+        <li><b>CAPTURE</b><span>signed by camera</span><code>sha256 9f2c…a1e0</code></li>
+        <li><b>EDIT</b><span>crop · exposure</span><code>sha256 41bd…77c3</code></li>
+        <li><b>PUBLISH</b><span>newsroom</span><code>sha256 c08e…5d19</code></li>
+        <li class="chain__verdict"><b class="ok">✓ SIGNATURE VALID</b><b class="bad">× HASH MISMATCH</b><span class="ok">manifest matches pixels</span><span class="bad">1 pixel changed after signing</span></li>
+      </ol>
+    </figure>
+  </div>
+
+  <!-- G · Blink / EAR -->
+  <div class="frame frame--demo frame--rev" id="ex-blink" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT G</b> Blink rate · Eye Aspect Ratio <span class="ref">Soukupová &amp; Čech 2016 · Li et al. 2018 <sup class="cite"><a href="#ref-12">12</a></sup></span></p>
+      <h3 class="h-demo">Real people <em>blink.</em> Early deepfakes forgot to.</h3>
+      <p>Six landmarks around each eye give the <b>Eye Aspect Ratio</b>. It sits near 0.3 when the eye is open and drops toward 0 during a blink. A resting person blinks about <b>17 times a minute</b>; early deepfakes, trained mostly on photos with open eyes, blinked far less.</p>
+      <p class="limit-note"><b>Modern deepfakes learned to blink.</b> In our test the blink score found nothing unusual in any of the six research deepfakes: every clip, real or fake, got the same 15/100. Today it only catches lazy fakes such as an animated still photo, and a normal blink rate proves nothing.</p>
+      <div class="eq" role="math" aria-label="EAR equals the norm of p2 minus p6 plus the norm of p3 minus p5, all over two times the norm of p1 minus p4">
+        EAR <span class="rel">=</span> <span class="frac"><span>‖<i>p</i><sub>2</sub> − <i>p</i><sub>6</sub>‖ + ‖<i>p</i><sub>3</sub> − <i>p</i><sub>5</sub>‖</span><span>2 ‖<i>p</i><sub>1</sub> − <i>p</i><sub>4</sub>‖</span></span>
+      </div>
+      <dl class="readout mono">
+        <div><dt>EAR NOW</dt><dd id="ear-now">0.30</dd></div>
+        <div><dt>BLINKS / MIN</dt><dd id="ear-rate">—</dd></div>
+      </dl>
+    </div>
+    <figure class="col col--viz blink" aria-label="Animated eye with six landmarks and a live chart of the eye aspect ratio over time">
+      <div class="seg mono" role="radiogroup" aria-label="Video source">
+        <button type="button" role="radio" aria-checked="true" data-mode="real" class="is-on">Real video</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="fake">Early deepfake</button>
+      </div>
+      <svg class="eye" id="eye-svg" viewBox="0 0 600 300" aria-hidden="true">
+        <path id="eye-white" class="eye__white" d=""/>
+        <clipPath id="eye-clip"><path id="eye-clip-path" d=""/></clipPath>
+        <g clip-path="url(#eye-clip)"><circle cx="300" cy="150" r="62" class="eye__iris"/><circle cx="300" cy="150" r="26" class="eye__pupil"/><circle cx="318" cy="134" r="8" class="eye__glint"/></g>
+        <path id="eye-lid" class="eye__lid" d=""/>
+        <line id="ear-v1" class="ear-line ear-line--v"/><line id="ear-v2" class="ear-line ear-line--v"/><line id="ear-h" class="ear-line ear-line--h"/>
+        <g id="eye-pts"></g>
+      </svg>
+      <div class="ear-chart"><span class="mono fft__k">EAR · LAST 10 SECONDS · THRESHOLD 0.21</span><canvas id="ear-chart" aria-hidden="true"></canvas></div>
+      <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>SAME FORMULA VERITAS RUNS ON MEDIAPIPE EYE LANDMARKS</figcaption>
+    </figure>
+  </div>
+
+  <!-- H · Jitter -->
+  <div class="frame frame--demo" id="ex-jitter" data-stop>
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT H</b> Landmark jitter &amp; temporal flicker</p>
+      <h3 class="h-demo">Frame by frame, a fake face <em>can’t hold still.</em></h3>
+      <p>Many face-swaps are generated one frame at a time. Each frame looks fine on its own — but between frames the landmarks <b>wobble</b> and the skin <b>flickers</b>. We track 478 landmarks about 12 times a second, cancel the head’s overall motion, and measure the shake that is left, as a % of the distance between the eyes:</p>
+      <div class="eq" role="math" aria-label="J of t equals the median over i of the norm of q i at t minus 1 plus q i at t plus 1 minus 2 p i at t, divided by the eye distance, times 100 percent">
+        <i>J</i>(<i>t</i>) <span class="rel">=</span> median<sub><i>i</i></sub>
+        <span class="frac"><span>‖ <i>q</i><sub><i>i</i></sub>(<i>t</i>−1) + <i>q</i><sub><i>i</i></sub>(<i>t</i>+1) − 2<i>p</i><sub><i>i</i></sub>(<i>t</i>) ‖</span><span><i>d</i><sub>eye</sub></span></span> × 100%
+      </div>
+      <p class="eq-note mono"><i>q</i> = NEIGHBOURING FRAME’S POINTS ALIGNED ONTO FRAME <i>t</i> (HEAD MOTION REMOVED) · <i>i</i> = 32 RIGID POINTS (EYE CORNERS, BROWS, NOSE)</p>
+      <p class="limit-note"><b>Honest result.</b> The flicker test fired on the FaceForensics++ face-swap (88/100), but landmark jitter stayed at its floor on all ten research clips. It only fired on our animated still photos, for being too still.</p>
+    </div>
+    <figure class="col col--viz jit" aria-label="Two animated face meshes: a steady authentic one and a jittering synthetic one, with live jitter graphs">
+      <div class="jit__pair">
+        <div class="jit__cell jit__cell--auth"><span class="mono fft__k"><i class="sw sw--auth"></i>AUTHENTIC · SMOOTH MOTION</span><canvas id="jit-a" aria-hidden="true"></canvas><canvas id="jit-ga" class="jit__graph" aria-hidden="true"></canvas><span class="mono jit__val">J = <b id="jit-va">0.0</b> %</span></div>
+        <div class="jit__cell jit__cell--synth"><span class="mono fft__k"><i class="sw sw--synth"></i>SYNTHETIC · PER-FRAME WOBBLE</span><canvas id="jit-b" aria-hidden="true"></canvas><canvas id="jit-gb" class="jit__graph" aria-hidden="true"></canvas><span class="mono jit__val">J = <b id="jit-vb">0.0</b> %</span></div>
+      </div>
+      <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>MEDIAPIPE MESH WITH SIMULATED HEAD MOTION &amp; JITTER</figcaption>
+    </figure>
+  </div>
+
+  <!-- I · Audio -->
+  <div class="frame frame--demo frame--rev" id="ex-audio" data-stop data-steps="1">
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT I</b> Voice spectrum · prosody</p>
+      <h3 class="h-demo">Some cloned voices hit a <em>ceiling.</em></h3>
+      <p>A <b>spectrogram</b> shows frequency (up) over time (across). Some cloning systems output audio at a 16 kHz sample rate, so energy stops sharply at 8 kHz — the <b>Nyquist limit</b> — while a real microphone still records breath and hiss above it. Clones may also have flatter <b>pitch (F0)</b> and fewer breaths.</p>
+      <p class="limit-note"><b>But</b> phone calls and voice-note apps cut off at 4–8 kHz too. In our test the cut-off scored below chance (AUC 0.42), pitch at chance (0.52) and breaths barely above (0.53). So VERITAS shows cut-off and pitch as pictures only and gives breaths a small weight: the AI-voice network does the real work.</p>
+      <div class="eq eq--sm" role="math" aria-label="f max equals f s over 2">
+        <i>f</i><sub>max</sub> <span class="rel">=</span> <span class="frac"><span><i>f</i><sub>s</sub></span><span>2</span></span> <span class="eq__aside"><i>f</i><sub>s</sub> = 16 kHz ⇒ nothing above 8 kHz</span>
+      </div>
+    </div>
+    <figure class="col col--viz spec" aria-label="Spectrogram illustration comparing a real voice and a cloned voice with a high-frequency cutoff and flatter pitch">
+      <div class="seg mono" role="radiogroup" aria-label="Voice source">
+        <button type="button" role="radio" aria-checked="true" data-mode="real" class="is-on">Real microphone</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="fake">Cloned voice</button>
+      </div>
+      <div class="spec__wrap">
+        <div class="spec__axis mono" aria-hidden="true"><span>16 kHz</span><span>12</span><span>8</span><span>4</span><span>0</span></div>
+        <canvas id="spec-canvas" aria-hidden="true"></canvas>
+        <div class="spec__cut mono" aria-hidden="true"><span>8 kHz CEILING</span></div>
+      </div>
+      <div class="spec__legend mono"><span><i class="sw sw--scan"></i>ENERGY</span><span><i class="sw sw--evid"></i>PITCH CONTOUR F0</span><span id="spec-flag">BREATHS: 3 · F0 RANGE: WIDE</span></div>
+      <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>SYNTHESISED HARMONICS, NOT A RECORDING</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     05 · THE SYSTEM
+     ════════════════════════════════════════════════════════════ -->
+<section id="system" class="ch system" data-ch="5" data-title="The System" aria-labelledby="system-h">
+  <div class="system__stage" id="system-stage" data-stops="0,0.2,0.4,0.6,0.8,1" data-state="0">
+    <div class="system__head">
+      <p class="eyebrow mono"><b>05</b> The system</p>
+      <h2 class="display" id="system-h">Fourteen tests. Three pipelines. <em>One verdict.</em></h2>
+    </div>
+    <div class="pipe" id="pipe">
+      <svg class="pipe__wires" id="pipe-wires" aria-hidden="true"></svg>
+      <div class="pipe__col pipe__col--in" data-s="1">
+        <span class="pipe__k mono">01 · EVIDENCE IN</span>
+        <ul class="pipe__files mono">
+          <li><i>IMG</i>photo.jpg</li>
+          <li class="is-sel"><i>VID</i>face-swap.mp4</li>
+          <li><i>AUD</i>voicenote.m4a</li>
+        </ul>
+        <p class="pipe__note mono">SHA-256 HASHED ON ARRIVAL · EACH KIND OF FILE HAS ITS OWN PIPELINE</p>
+      </div>
+      <div class="pipe__col pipe__col--pre" data-s="2">
+        <span class="pipe__k mono">02 · PREPROCESS</span>
+        <ul class="pipe__steps">
+          <li><b>Face detection</b><span class="mono">YuNet · OpenCV</span></li>
+          <li><b>Face landmarks</b><span class="mono">MediaPipe · 478 points</span></li>
+          <li><b>Frame sampling</b><span class="mono">≤ 48 frames · ≤ 20 s</span></li>
+          <li><b>Audio</b><span class="mono">resampled · ≤ 30 s</span></li>
+        </ul>
+      </div>
+      <div class="pipe__col pipe__col--det" data-s="3">
+        <span class="pipe__k mono">03 · DETECTORS · VIDEO PIPELINE</span>
+        <div class="det">
+          <ul id="det-video"></ul>
+          <div class="det__lanes">
+            <p><b class="mono">IMAGE · 7 TESTS</b> <span>AI-image model, AI-face model, error level, noise, frequency, JPEG tables, metadata</span></p>
+            <p><b class="mono">AUDIO · 4 TESTS, 2 SCORED</b> <span>AI-voice model, breaths &amp; silence (scored); spectral cut-off, pitch (shown only)</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="pipe__col pipe__col--fuse" data-s="4">
+        <span class="pipe__k mono">04 · FUSION</span>
+        <div class="eq eq--fuse" role="math" aria-label="S equals 100 times sigma of z, where z equals a times the sum over i of w i times the natural log of s i over 100 minus s i, plus b">
+          <span class="eq-l"><i>S</i> <span class="rel">=</span> 100 · <i>σ</i>(<i>z</i>)</span>
+          <span class="eq-l"><i>z</i> <span class="rel">=</span> <i>a</i> <span class="bigop bigop--in"><span class="bigop__s">∑</span><span class="bigop__b"><i>i</i></span></span> <i>w</i><sub><i>i</i></sub> ln <span class="frac frac--sm"><span><i>s</i><sub><i>i</i></sub></span><span>100 − <i>s</i><sub><i>i</i></sub></span></span> <span class="rel">+</span> <i>b</i></span>
+        </div>
+        <p class="pipe__note">Each score becomes <b>log-odds</b>, so a confident 95 counts more than a lukewarm 60. Weights <i>w<sub>i</sub></i> sum to 1 over the tests that ran; AI models carry the biggest.<span class="fuse-more"> Only specific anomalies (a grain mismatch, a periodic grid, an AI tag, blink, jitter, flicker) get up to 3× weight. Photos: <i>a</i> = 1.67, <i>b</i> = 0.5 (fitted on our calibration files, <i>b</i> capped at ±0.5); video and voice: <i>a</i> = 1, <i>b</i> = 0.</span></p>
+      </div>
+      <div class="pipe__col pipe__col--out" data-s="5">
+        <span class="pipe__k mono">05 · VERDICT + REPORT</span>
+        <div class="gauge" id="gauge" aria-label="Example verdict gauge">
+          <svg viewBox="0 0 220 130" aria-hidden="true">
+            <path d="M20 115 A90 90 0 0 1 200 115" class="gauge__track"/>
+            <path d="M20 115 A90 90 0 0 1 200 115" class="gauge__band gauge__band--a" pathLength="100" stroke-dasharray="35 100"/>
+            <path d="M20 115 A90 90 0 0 1 200 115" class="gauge__band gauge__band--s" pathLength="100" stroke-dasharray="0 35 30 100"/>
+            <path d="M20 115 A90 90 0 0 1 200 115" class="gauge__band gauge__band--f" pathLength="100" stroke-dasharray="0 65 35 100"/>
+            <g id="gauge-needle" class="gauge__needle"><line x1="110" y1="115" x2="110" y2="38"/><circle cx="110" cy="115" r="6"/></g>
+          </svg>
+          <div class="gauge__read"><b id="gauge-val">0</b><span class="mono" id="gauge-verdict">AWAITING EVIDENCE</span></div>
+          <div class="gauge__scale mono"><span>0 · REAL</span><span>35</span><span>65</span><span>FAKE · 100</span></div>
+        </div>
+        <p class="pipe__note mono"><span class="pill pill--real">REAL ENGINE OUTPUT</span>FF++ FACE-SWAP, A RESEARCH DATASET CLIP · CONFIDENCE = AN AGREEMENT INDEX, NOT A PROBABILITY</p>
+      </div>
+    </div>
+    <div class="stack">
+      <span class="mono stack__k">BUILT WITH</span>
+      <ul class="mono"><li>Python</li><li>FastAPI</li><li>PyTorch</li><li>Hugging Face Transformers</li><li>MediaPipe</li><li>OpenCV</li><li>NumPy</li></ul>
+      <span class="mono stack__off"><i class="dot dot--auth"></i>100% OFFLINE · RUNS ON THIS LAPTOP’S CPU · NOTHING IS UPLOADED</span>
+      <p class="stack__credit"><b class="mono">PRETRAINED AI · NOT TRAINED BY US</b> The two AI networks are open models we chose by experiment (best of 12 image and 7 voice candidates on our calibration files): CommunityForensics ViT (Park &amp; Owens, CVPR 2025) <sup class="cite"><a href="#ref-23">23</a></sup> and a wav2vec2 network fine-tuned on In-the-Wild deepfake speech <sup class="cite"><a href="#ref-24">24</a></sup>; faces are found by YuNet <sup class="cite"><a href="#ref-25">25</a></sup> and MediaPipe <sup class="cite"><a href="#ref-13">13</a></sup>. <b>Our own work:</b> the classic tests, the voice probe on top of wav2vec2, calibration, fusion and the whole evaluation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     06 · RESULTS
+     ════════════════════════════════════════════════════════════ -->
+<section id="results" class="ch results" data-ch="6" data-title="Results" aria-labelledby="results-h">
+  <div class="frame frame--results" id="results-img" data-stop>
+    <div class="results__head">
+      <p class="eyebrow mono"><b>06</b> Results · our experiment</p>
+      <h2 class="display" id="results-h" data-split>We tested it. <em>Here’s the evidence.</em></h2>
+      <div class="results__ds mono" id="res-dataset">LOADING data/results.json …</div>
+    </div>
+    <div class="results__body" id="results-body" aria-live="polite">
+      <!-- js/story/results.js renders the image experiment (metrics, confusion matrix, ROC, per-test AUC), or a pending state -->
+    </div>
+  </div>
+
+  <div class="frame frame--results frame--results2" id="results-more" data-stop>
+    <div class="results__head">
+      <p class="eyebrow mono"><b>06·2</b> Voices, video &amp; the hard cases</p>
+      <h2 class="display" data-split>Beyond photos — <em>and where it fails.</em></h2>
+      <div class="results__ds mono" id="res-dataset2"></div>
+    </div>
+    <div class="results__body" id="results-body2" aria-live="polite">
+      <!-- js/story/results.js renders the voice + video experiments and the honest caveats -->
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     07 · LIMITS & THE ARMS RACE
+     ════════════════════════════════════════════════════════════ -->
+<section id="limits" class="ch limits" data-ch="7" data-title="Limits" aria-labelledby="limits-h">
+  <div class="frame frame--limits" data-stop>
+    <p class="eyebrow mono"><b>07</b> Limits &amp; the arms race</p>
+    <h2 class="display" id="limits-h" data-split>Every detector is <em>temporary.</em></h2>
+    <div class="limits__grid">
+      <article class="lim reveal">
+        <span class="lim__n mono">LIMIT 01</span>
+        <h3>New generators</h3>
+        <div class="lim__viz lim__viz--gen" aria-hidden="true">
+          <div class="bars"><span style="--h:.92"><i></i><b class="mono">SEEN</b></span><span style="--h:.58"><i></i><b class="mono">UNSEEN</b></span></div>
+        </div>
+        <p>A detector learns the fingerprints of the generators it trained on. A brand-new architecture can leave different fingerprints, and accuracy can fall sharply. <sup class="cite"><a href="#ref-19">19</a></sup></p>
+        <span class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span></span>
+      </article>
+      <article class="lim reveal">
+        <span class="lim__n mono">LIMIT 02</span>
+        <h3>Compression erases evidence</h3>
+        <div class="lim__viz lim__viz--blur">
+          <canvas id="lim-fft" width="256" height="256" aria-hidden="true"></canvas>
+          <label class="scrub"><span>RE-COMPRESS / RESIZE</span><input type="range" id="lim-range" min="0" max="100" value="0" aria-label="Amount of re-compression"></label>
+        </div>
+        <p>Every re-share on a messaging app blurs and re-compresses. The faint spectral peaks and ELA differences that betray a fake <b>fade away</b>.</p>
+        <span class="figcap mono"><span class="pill pill--real">COMPUTED LIVE</span>FFT OF THE GAN TILE AFTER BLUR + RE-SAVE</span>
+      </article>
+      <article class="lim reveal">
+        <span class="lim__n mono">LIMIT 03</span>
+        <h3>Adversarial attacks</h3>
+        <div class="lim__viz lim__viz--adv" aria-hidden="true">
+          <div class="adv"><span class="adv__img"></span><b>+</b><span class="adv__noise"></span><b>=</b><span class="adv__img adv__img--b"></span></div>
+          <div class="adv__verdicts mono"><span class="is-synthetic">SYNTHETIC 94</span><span>→</span><span class="is-authentic">AUTHENTIC 11</span></div>
+        </div>
+        <p>Noise designed against a specific model can flip its answer while looking identical to us. <sup class="cite"><a href="#ref-18">18</a></sup></p>
+        <div class="eq eq--xs" role="math" aria-label="x prime equals x plus epsilon times sign of the gradient of the loss with respect to x"><i>x</i>′ <span class="rel">=</span> <i>x</i> + <i>ε</i> · sign(∇<sub><i>x</i></sub> <i>L</i>)</div>
+        <span class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>WE DID NOT RUN AN ATTACK ON VERITAS</span>
+      </article>
+    </div>
+  </div>
+
+  <div class="frame frame--future" data-stop>
+    <p class="eyebrow mono"><b>07·2</b> What comes next</p>
+    <h2 class="display" data-split>No single fix. <em>Layers of trust.</em></h2>
+    <ol class="pillars">
+      <li class="reveal"><b class="mono">01</b><h3>Provenance</h3><p>C2PA Content Credentials: signed history from camera to screen. Founded 2021 by Adobe, Arm, BBC, Intel, Microsoft and Truepic. <sup class="cite"><a href="#ref-14">14</a></sup></p></li>
+      <li class="reveal"><b class="mono">02</b><h3>Watermarks</h3><p>Invisible marks woven into AI output. Google says over <b>10 billion</b> pieces of content had been watermarked with SynthID by May 2025. <sup class="cite"><a href="#ref-15">15</a></sup></p></li>
+      <li class="reveal"><b class="mono">03</b><h3>Detection</h3><p>Explainable, multi-test forensics like VERITAS — for everything without credentials or watermarks.</p></li>
+      <li class="reveal"><b class="mono">04</b><h3>Literacy &amp; law</h3><p>India’s IT Amendment Rules, notified 10 Feb 2026, require labels on synthetic media; the EU AI Act’s deepfake-labelling duty has applied since 2 Aug 2026. <sup class="cite"><a href="#ref-16">16</a></sup> <sup class="cite"><a href="#ref-17">17</a></sup></p></li>
+    </ol>
+    <div class="ethics reveal">
+      <h3 class="mono">OUR ETHICS RULES</h3>
+      <ul>
+        <li><b>No one famous, no one we know.</b> We never faked a celebrity, a politician or anyone at school. Our test fakes use people from public research datasets (photos, paid actors, audiobook readers) and AI faces of people who don’t exist, only to test the detector.</li>
+        <li><b>A score is evidence, not a verdict.</b> Every result says which tests fired and how sure it is.</li>
+        <li><b>Private by design.</b> Analysis runs offline on this laptop. Nothing is uploaded.</li>
+        <li><b>A human decides.</b> VERITAS assists judgement; it never replaces it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     08 · ENTER THE LAB
+     ════════════════════════════════════════════════════════════ -->
+<section id="lab" class="ch finale" data-ch="8" data-title="Enter the Lab" aria-labelledby="lab-h">
+  <div class="frame frame--finale" data-stop>
+    <p class="eyebrow mono"><b>08</b> Enter the lab</p>
+    <h2 class="display display--xxl" id="lab-h" data-split>Your turn,<br><em>detective.</em></h2>
+    <div class="doors">
+      <a class="door reveal" href="lab.html#analyze">
+        <span class="door__n mono">LAB 01</span>
+        <span class="door__t">Analyze</span>
+        <span class="door__d">Drop in a photo, video or voice note. Get a full forensic report in seconds.</span>
+        <span class="door__go mono">OPEN ↗</span>
+      </a>
+      <a class="door reveal" href="lab.html#live">
+        <span class="door__n mono">LAB 02</span>
+        <span class="door__t">Live Cam</span>
+        <span class="door__d">Watch the machine map your face — 478 landmarks (468 mesh + 10 iris), blinks and head pose, in real time.</span>
+        <span class="door__go mono">OPEN ↗</span>
+      </a>
+      <a class="door reveal" href="lab.html#game">
+        <span class="door__n mono">LAB 03</span>
+        <span class="door__t">Spot the Fake</span>
+        <span class="door__d">Can you beat a coin toss? In one study people scored 48% on AI faces. Then see what the machine saw.</span>
+        <span class="door__go mono">OPEN ↗</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="credits" data-stop>
+    <div class="credits__team">
+      <p class="mono credits__k">INVESTIGATORS</p>
+      <p class="credits__names"><span>Khais Mohammed</span><span>Prithvi</span></p>
+      <p class="mono credits__school" data-placeholder="school">[School Name]</p>
+    </div>
+    <div class="credits__event mono">
+      <p>INFINIA 2026 — SOUTH ZONE SAHODAYA</p>
+      <p>CATEGORY IV · CLASSES XI–XII</p>
+      <p>SCIENCE FOR TOMORROW: IMAGINE – INNOVATE – TRANSFORM</p>
+      <p>SUB-THEME: INTELLIGENCE BEYOND HUMANS</p>
+    </div>
+    <div class="refs" id="refs">
+      <p class="mono credits__k">SOURCES</p>
+      <ol class="mono">
+        <li id="ref-1">SCMP, 17 May 2024, “UK multinational Arup confirmed as victim of HK$200 million deepfake scam”; Hong Kong Police briefing, Feb 2024 (via CNN, 4 Feb 2024).</li>
+        <li id="ref-2">FCC Declaratory Ruling FCC 24-17, 8 Feb 2024; NPR, 23 May 2024, “FCC proposes $6 million fine…”.</li>
+        <li id="ref-3">McAfee, “Beware the Artificial Impostor” survey (7,054 adults, 7 countries), May 2023; McAfee India release via Business Today, 2 May 2023.</li>
+        <li id="ref-4">Sumsub, Identity Fraud Report 2023 — press release 28 Nov 2023.</li>
+        <li id="ref-5">Entrust Cybersecurity Institute (Onfido), 2025 Identity Fraud Report — press release Nov 2024.</li>
+        <li id="ref-6">Deloitte Center for Financial Services, “Generative AI is expected to magnify the risk of deepfakes and other fraud in banking”, May 2024.</li>
+        <li id="ref-7">S. J. Nightingale &amp; H. Farid, “AI-synthesized faces are indistinguishable from real faces and more trustworthy”, PNAS 119(8), 2022.</li>
+        <li id="ref-8">I. Goodfellow et al., “Generative Adversarial Nets”, NeurIPS 2014.</li>
+        <li id="ref-9">J. Ho, A. Jain, P. Abbeel, “Denoising Diffusion Probabilistic Models”, NeurIPS 2020.</li>
+        <li id="ref-10">N. Krawetz, “A Picture’s Worth: Digital Image Analysis and Forensics”, Black Hat 2007.</li>
+        <li id="ref-11">A. Odena, V. Dumoulin, C. Olah, “Deconvolution and Checkerboard Artifacts”, Distill 2016; J. Frank et al., “Leveraging Frequency Analysis for Deep Fake Image Recognition”, ICML 2020.</li>
+        <li id="ref-12">T. Soukupová &amp; J. Čech, “Real-Time Eye Blink Detection using Facial Landmarks”, CVWW 2016; Y. Li, M.-C. Chang, S. Lyu, “In Ictu Oculi”, IEEE WIFS 2018.</li>
+        <li id="ref-13">Y. Kartynnik et al., “Real-time Facial Surface Geometry from Monocular Video on Mobile GPUs”, 2019 (MediaPipe Face Mesh, 468 landmarks; the Face Landmarker adds 10 iris points = 478; Apache-2.0).</li>
+        <li id="ref-14">C2PA formation announcement, 22 Feb 2021 (Microsoft / Adobe news releases); C2PA Technical Specification.</li>
+        <li id="ref-15">Google, “SynthID Detector — a new portal to help identify AI-generated content”, 20 May 2025.</li>
+        <li id="ref-16">MeitY, IT (Intermediary Guidelines and Digital Media Ethics Code) Amendment Rules, 2026 — notified 10 Feb 2026, in force 20 Feb 2026.</li>
+        <li id="ref-17">Regulation (EU) 2024/1689 (AI Act), Article 50 — transparency obligations apply from 2 Aug 2026.</li>
+        <li id="ref-18">I. Goodfellow, J. Shlens, C. Szegedy, “Explaining and Harnessing Adversarial Examples”, ICLR 2015.</li>
+        <li id="ref-19">U. Ojha, Y. Li, Y. J. Lee, “Towards Universal Fake Image Detectors that Generalize Across Generative Models”, CVPR 2023.</li>
+        <li id="ref-20">Photo: “A Houseboat in Backwaters of Kerala”, Wikimedia Commons, CC0. Palm splice, sensor noise and re-compression added by the team for the demo.</li>
+        <li id="ref-21">A. Rössler et al., “FaceForensics++: Learning to Detect Manipulated Facial Images”, ICCV 2019.</li>
+        <li id="ref-22">Y. Jia et al., “Transfer Learning from Speaker Verification to Multispeaker Text-To-Speech Synthesis” (SV2TTS), NeurIPS 2018; C. Wang et al., “Neural Codec Language Models are Zero-Shot Text to Speech Synthesizers” (VALL-E), 2023; J. Kong et al., “HiFi-GAN”, NeurIPS 2020.</li>
+        <li id="ref-23">J. Park &amp; A. Owens, “Community Forensics: Using Thousands of Generators to Train Fake Image Detectors”, CVPR 2025 (weights: buildborderless/CommunityForensics-DeepfakeDet-ViT, MIT licence). Pretrained; used as-is with our calibration.</li>
+        <li id="ref-24">A. Baevski et al., “wav2vec 2.0”, NeurIPS 2020; N. Müller et al., “Does Audio Deepfake Detection Generalize?”, Interspeech 2022 (In-the-Wild dataset); checkpoint abhishtagatya/wav2vec2-base-960h-itw-deepfake (Apache-2.0). We trained only a small probe on its layer-4 features.</li>
+        <li id="ref-25">YuNet face detector (face_detection_yunet_2023mar), OpenCV Zoo, MIT licence.</li>
+        <li id="ref-26">J. Lukáš &amp; J. Fridrich, “Estimation of Primary Quantization Matrix in Double Compressed JPEG Images”, DFRWS 2003; A. C. Popescu &amp; H. Farid, “Statistical Tools for Digital Forensics”, Information Hiding Workshop 2004 (double JPEG compression).</li>
+      </ol>
+    </div>
+    <p class="credits__end mono">VERITAS · BUILT TO RUN OFFLINE · NO DEEPFAKES OF PUBLIC FIGURES OR ANYONE WE KNOW · TEST FAKES USE RESEARCH DATASETS ONLY</p>
+  </footer>
+</section>
+
+</main>
+
+<noscript><p class="noscript">VERITAS needs JavaScript for its animations. All text content is still readable above.</p></noscript>
+
+<script src="./vendor/gsap/gsap.min.js"></script>
+<script src="./vendor/gsap/ScrollTrigger.min.js"></script>
+<script src="./vendor/gsap/SplitText.min.js"></script>
+<script src="./vendor/lenis/lenis.min.js"></script>
+<script type="module" src="./js/story/main.js"></script>
+</body>
+</html>

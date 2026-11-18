@@ -1,0 +1,1352 @@
+{
+ "metrics": {
+  "accuracy": 0.9135,
+  "precision": 1.0,
+  "recall": 0.8364,
+  "f1": 0.9109,
+  "auc": 0.9705,
+  "mean_latency_ms": 929
+ },
+ "confusion": {
+  "tp": 46,
+  "fp": 0,
+  "tn": 49,
+  "fn": 9
+ },
+ "roc": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.0,
+   0.4
+  ],
+  [
+   0.0,
+   0.5455
+  ],
+  [
+   0.0,
+   0.5636
+  ],
+  [
+   0.0,
+   0.5818
+  ],
+  [
+   0.0,
+   0.6
+  ],
+  [
+   0.0,
+   0.6182
+  ],
+  [
+   0.0,
+   0.6364
+  ],
+  [
+   0.0,
+   0.6727
+  ],
+  [
+   0.0,
+   0.6909
+  ],
+  [
+   0.0,
+   0.7273
+  ],
+  [
+   0.0,
+   0.7455
+  ],
+  [
+   0.0,
+   0.7636
+  ],
+  [
+   0.0,
+   0.8
+  ],
+  [
+   0.0,
+   0.8182
+  ],
+  [
+   0.0,
+   0.8364
+  ],
+  [
+   0.0204,
+   0.8364
+  ],
+  [
+   0.0408,
+   0.8364
+  ],
+  [
+   0.0408,
+   0.8545
+  ],
+  [
+   0.0408,
+   0.8727
+  ],
+  [
+   0.0408,
+   0.8909
+  ],
+  [
+   0.0408,
+   0.9091
+  ],
+  [
+   0.0612,
+   0.9091
+  ],
+  [
+   0.0612,
+   0.9273
+  ],
+  [
+   0.0816,
+   0.9273
+  ],
+  [
+   0.102,
+   0.9273
+  ],
+  [
+   0.1224,
+   0.9273
+  ],
+  [
+   0.1224,
+   0.9455
+  ],
+  [
+   0.1429,
+   0.9636
+  ],
+  [
+   0.2041,
+   0.9636
+  ],
+  [
+   0.3061,
+   0.9636
+  ],
+  [
+   0.4898,
+   0.9818
+  ],
+  [
+   1.0,
+   1.0
+  ]
+ ],
+ "per_test": [
+  {
+   "id": "ai_generated",
+   "name": "AI-Generated Image Detector",
+   "auc": 0.9772,
+   "n": 104
+  },
+  {
+   "id": "ai_face",
+   "name": "AI Face Analysis",
+   "auc": 0.9315,
+   "n": 66
+  },
+  {
+   "id": "ela",
+   "name": "Error Level Analysis",
+   "auc": 0.5026,
+   "n": 104
+  },
+  {
+   "id": "noise",
+   "name": "Noise Residual Consistency",
+   "auc": 0.6544,
+   "n": 104
+  },
+  {
+   "id": "fft",
+   "name": "Frequency Spectrum (FFT)",
+   "auc": 0.6217,
+   "n": 104
+  },
+  {
+   "id": "jpeg_quant",
+   "name": "JPEG Quantisation Tables",
+   "auc": 0.6536,
+   "n": 104
+  },
+  {
+   "id": "metadata",
+   "name": "Metadata & Provenance",
+   "auc": 0.5,
+   "n": 104
+  }
+ ],
+ "dataset": {
+  "real": 78,
+  "fake": 93,
+  "sources": [
+   "audio: 24 fake - asvspoof_tts_vc (13 systems) - huggingface.co/datasets/SpeechAntiSpoofingBenchmarks/ASVspoo [ODC-BY (ASVspoof 2019)]",
+   "audio: 2 fake - classic_tts (macOS say) - generated locally (macOS speech synthesis) [own recording]",
+   "audio: 16 fake - neural_tts (Meta MMS-TTS, Microsoft SpeechT5 + HiFi-GAN) - generated locally with huggingface.co/facebook/mms-tts-eng [CC BY-NC 4.0 (model)]",
+   "audio: 24 fake - vocoded_speech (HiFi-GAN vocoder resynthesis) - made by scripts/build_eval_data.py from librispeech_1221-135 [derived from LibriSpeech (CC BY 4.0)]",
+   "audio: 40 fake - voice_clone - huggingface.co/datasets/UniDataPro/real-vs-fake-human-voice- [CC BY-NC-ND 4.0 (evaluation only, not redistribu]",
+   "audio: 24 real - everyday_speech - FLEURS en_us dev (google/fleurs) [CC BY 4.0]",
+   "audio: 20 real - original_voice - huggingface.co/datasets/UniDataPro/real-vs-fake-human-voice- [CC BY-NC-ND 4.0 (evaluation only, not redistribu]",
+   "audio: 36 real - read_speech - LibriSpeech test-clean (openslr/librispeech_asr) [CC BY 4.0]",
+   "audio: 20 real - vctk_bonafide - huggingface.co/datasets/SpeechAntiSpoofingBenchmarks/ASVspoo [ODC-BY (ASVspoof 2019)]",
+   "images: 20 fake - diffusion (dalle-3, flux, mj, stable_diffusion) - huggingface.co/datasets/Rapidata/700k_Human_Preference_Datas [CDLA-Permissive-2.0]",
+   "images: 24 fake - diffusion_people (dalle-3, flux, mj, stable_diffusion) - huggingface.co/datasets/Rapidata/700k_Human_Preference_Datas [CDLA-Permissive-2.0]",
+   "images: 13 fake - face_swap (classic landmark face-swap) - made by scripts/make_faceswap.py [derived from the two source images (see their li]",
+   "images: 36 fake - gan_face (StyleGAN2) - huggingface.co/datasets/javi22/this-person-does-not-exist-10 [MIT (dataset card)]",
+   "images: 36 real - face - FFHQ [Images: Flickr CC BY / CC BY-NC / PD (per image)]",
+   "images: 10 real - phone - commons.wikimedia.org [CC BY-SA 4.0]",
+   "images: 16 real - scene - COCO val2017 [Flickr CC licences per image (COCO terms: CC BY ]",
+   "images: 16 real - scene_people - COCO val2017 [Flickr CC licences per image (COCO terms: CC BY ]",
+   "video: 3 fake - animated_gan_face (StyleGAN2 face animated by scripts/make_synthetic_video.py) - made by our team from a thispersondoesnotexist face [MIT (source dataset)]",
+   "video: 3 real - talking_video - NASA Image and Video Library (images.nasa.gov) [Public domain (NASA media, not copyrighted)]"
+  ],
+  "split": "group-aware ~40% calibration / ~60% held-out test (no prompt, person or face-swap source on both sides); held-out = 49 real + 55 fake; headline numbers are on laundered files (JPEG q90 re-encode, metadata stripped)"
+ },
+ "image_details": {
+  "verdicts": {
+   "authentic": 55,
+   "suspicious": 5,
+   "synthetic": 44
+  },
+  "by_group": [
+   {
+    "group": "diffusion",
+    "label": "fake",
+    "n": 12,
+    "flagged_pct": 91.7,
+    "mean_score": 83.2
+   },
+   {
+    "group": "diffusion_people",
+    "label": "fake",
+    "n": 12,
+    "flagged_pct": 91.7,
+    "mean_score": 83.2
+   },
+   {
+    "group": "face",
+    "label": "real",
+    "n": 25,
+    "flagged_pct": 0.0,
+    "mean_score": 4.3
+   },
+   {
+    "group": "face_swap",
+    "label": "fake",
+    "n": 9,
+    "flagged_pct": 22.2,
+    "mean_score": 31.6
+   },
+   {
+    "group": "gan_face",
+    "label": "fake",
+    "n": 22,
+    "flagged_pct": 100.0,
+    "mean_score": 99.8
+   },
+   {
+    "group": "phone",
+    "label": "real",
+    "n": 7,
+    "flagged_pct": 0.0,
+    "mean_score": 2.3
+   },
+   {
+    "group": "scene",
+    "label": "real",
+    "n": 8,
+    "flagged_pct": 0.0,
+    "mean_score": 3.9
+   },
+   {
+    "group": "scene_people",
+    "label": "real",
+    "n": 9,
+    "flagged_pct": 0.0,
+    "mean_score": 9.7
+   }
+  ],
+  "as_found": {
+   "metrics": {
+    "accuracy": 0.9135,
+    "precision": 1.0,
+    "recall": 0.8364,
+    "f1": 0.9109,
+    "auc": 0.9725,
+    "mean_latency_ms": 683
+   },
+   "confusion": {
+    "tp": 46,
+    "fp": 0,
+    "tn": 49,
+    "fn": 9
+   },
+   "per_test": [
+    {
+     "id": "ai_generated",
+     "name": "AI-Generated Image Detector",
+     "auc": 0.9755,
+     "n": 104
+    },
+    {
+     "id": "ai_face",
+     "name": "AI Face Analysis",
+     "auc": 0.9441,
+     "n": 66
+    },
+    {
+     "id": "ela",
+     "name": "Error Level Analysis",
+     "auc": 0.4939,
+     "n": 104
+    },
+    {
+     "id": "noise",
+     "name": "Noise Residual Consistency",
+     "auc": 0.7686,
+     "n": 104
+    },
+    {
+     "id": "fft",
+     "name": "Frequency Spectrum (FFT)",
+     "auc": 0.6568,
+     "n": 104
+    },
+    {
+     "id": "jpeg_quant",
+     "name": "JPEG Quantisation Tables",
+     "auc": 0.6777,
+     "n": 73
+    },
+    {
+     "id": "metadata",
+     "name": "Metadata & Provenance",
+     "auc": 0.602,
+     "n": 104
+    }
+   ],
+   "verdicts": {
+    "authentic": 56,
+    "suspicious": 8,
+    "synthetic": 40
+   }
+  },
+  "whatsapp_phone_photos": {
+   "n": 7,
+   "flagged": 0,
+   "max_score": 6,
+   "mean_score": 2.4,
+   "split": "held-out phone photos only"
+  },
+  "condition": "laundered",
+  "robustness": [
+   {
+    "condition": "webcam",
+    "n_real": 49,
+    "n_fake": 55,
+    "real_flagged": 1,
+    "real_synthetic_verdict": 1,
+    "fake_caught": 38,
+    "auc": 0.949,
+    "accuracy": 0.8269
+   },
+   {
+    "condition": "denoise",
+    "n_real": 49,
+    "n_fake": 55,
+    "real_flagged": 4,
+    "real_synthetic_verdict": 4,
+    "fake_caught": 46,
+    "auc": 0.9382,
+    "accuracy": 0.875
+   },
+   {
+    "condition": "h264",
+    "n_real": 49,
+    "n_fake": 55,
+    "real_flagged": 2,
+    "real_synthetic_verdict": 0,
+    "fake_caught": 39,
+    "auc": 0.9219,
+    "accuracy": 0.8269
+   },
+   {
+    "condition": "small",
+    "n_real": 49,
+    "n_fake": 55,
+    "real_flagged": 1,
+    "real_synthetic_verdict": 1,
+    "fake_caught": 42,
+    "auc": 0.9599,
+    "accuracy": 0.8654
+   },
+   {
+    "condition": "whatsapp",
+    "n_real": 49,
+    "n_fake": 55,
+    "real_flagged": 0,
+    "real_synthetic_verdict": 0,
+    "fake_caught": 43,
+    "auc": 0.9664,
+    "accuracy": 0.8846
+   }
+  ],
+  "external_video_stills": {
+   "frames": 30,
+   "note": "3 stills per clip from the incoming research videos; never used for tuning.",
+   "real_as_photo": {
+    "n": 12,
+    "flagged": 5,
+    "synthetic_verdict": 3,
+    "suspicious_verdict": 5,
+    "mean_score": 47.3
+   },
+   "real_as_live_capture": {
+    "n": 12,
+    "flagged": 5,
+    "synthetic_verdict": 3,
+    "suspicious_verdict": 3,
+    "mean_score": 42.1
+   },
+   "fake_as_photo": {
+    "n": 18,
+    "flagged": 11,
+    "synthetic_verdict": 10,
+    "suspicious_verdict": 2,
+    "mean_score": 61.1
+   },
+   "fake_as_live_capture": {
+    "n": 18,
+    "flagged": 11,
+    "synthetic_verdict": 10,
+    "suspicious_verdict": 1,
+    "mean_score": 58.4
+   },
+   "stills": [
+    {
+     "clip": "ffpp_original_069",
+     "label": "real",
+     "as_photo": 67,
+     "as_live_capture": 67
+    },
+    {
+     "clip": "ffpp_original_069",
+     "label": "real",
+     "as_photo": 56,
+     "as_live_capture": 52
+    },
+    {
+     "clip": "ffpp_original_069",
+     "label": "real",
+     "as_photo": 94,
+     "as_live_capture": 97
+    },
+    {
+     "clip": "ffpp_deepfakes_069",
+     "label": "fake",
+     "as_photo": 96,
+     "as_live_capture": 98
+    },
+    {
+     "clip": "ffpp_deepfakes_069",
+     "label": "fake",
+     "as_photo": 93,
+     "as_live_capture": 96
+    },
+    {
+     "clip": "ffpp_deepfakes_069",
+     "label": "fake",
+     "as_photo": 95,
+     "as_live_capture": 97
+    },
+    {
+     "clip": "ffpp_face2face_069",
+     "label": "fake",
+     "as_photo": 67,
+     "as_live_capture": 67
+    },
+    {
+     "clip": "ffpp_face2face_069",
+     "label": "fake",
+     "as_photo": 55,
+     "as_live_capture": 51
+    },
+    {
+     "clip": "ffpp_face2face_069",
+     "label": "fake",
+     "as_photo": 88,
+     "as_live_capture": 92
+    },
+    {
+     "clip": "ffpp_neuraltextures_069",
+     "label": "fake",
+     "as_photo": 91,
+     "as_live_capture": 94
+    },
+    {
+     "clip": "ffpp_neuraltextures_069",
+     "label": "fake",
+     "as_photo": 91,
+     "as_live_capture": 94
+    },
+    {
+     "clip": "ffpp_neuraltextures_069",
+     "label": "fake",
+     "as_photo": 94,
+     "as_live_capture": 96
+    },
+    {
+     "clip": "dfd_original_09",
+     "label": "real",
+     "as_photo": 17,
+     "as_live_capture": 8
+    },
+    {
+     "clip": "dfd_original_09",
+     "label": "real",
+     "as_photo": 12,
+     "as_live_capture": 5
+    },
+    {
+     "clip": "dfd_original_09",
+     "label": "real",
+     "as_photo": 17,
+     "as_live_capture": 8
+    },
+    {
+     "clip": "dfd_faceswap_09_13",
+     "label": "fake",
+     "as_photo": 20,
+     "as_live_capture": 10
+    },
+    {
+     "clip": "dfd_faceswap_09_13",
+     "label": "fake",
+     "as_photo": 18,
+     "as_live_capture": 8
+    },
+    {
+     "clip": "dfd_faceswap_09_13",
+     "label": "fake",
+     "as_photo": 21,
+     "as_live_capture": 12
+    },
+    {
+     "clip": "celebdf_real_id2_0000",
+     "label": "real",
+     "as_photo": 64,
+     "as_live_capture": 63
+    },
+    {
+     "clip": "celebdf_real_id2_0000",
+     "label": "real",
+     "as_photo": 90,
+     "as_live_capture": 94
+    },
+    {
+     "clip": "celebdf_real_id2_0000",
+     "label": "real",
+     "as_photo": 47,
+     "as_live_capture": 42
+    },
+    {
+     "clip": "celebdf_synthesis_id2_id16_0000",
+     "label": "fake",
+     "as_photo": 38,
+     "as_live_capture": 30
+    },
+    {
+     "clip": "celebdf_synthesis_id2_id16_0000",
+     "label": "fake",
+     "as_photo": 93,
+     "as_live_capture": 96
+    },
+    {
+     "clip": "celebdf_synthesis_id2_id16_0000",
+     "label": "fake",
+     "as_photo": 82,
+     "as_live_capture": 86
+    },
+    {
+     "clip": "dfd_original_07",
+     "label": "real",
+     "as_photo": 24,
+     "as_live_capture": 13
+    },
+    {
+     "clip": "dfd_original_07",
+     "label": "real",
+     "as_photo": 40,
+     "as_live_capture": 28
+    },
+    {
+     "clip": "dfd_original_07",
+     "label": "real",
+     "as_photo": 40,
+     "as_live_capture": 28
+    },
+    {
+     "clip": "wav2lip_lipsync_dfd07",
+     "label": "fake",
+     "as_photo": 18,
+     "as_live_capture": 7
+    },
+    {
+     "clip": "wav2lip_lipsync_dfd07",
+     "label": "fake",
+     "as_photo": 25,
+     "as_live_capture": 12
+    },
+    {
+     "clip": "wav2lip_lipsync_dfd07",
+     "label": "fake",
+     "as_photo": 14,
+     "as_live_capture": 5
+    }
+   ]
+  }
+ },
+ "generated": "2026-11-18T21:04:30+00:00",
+ "notes": [
+  "Image numbers are on group-aware ~40% calibration / ~60% held-out test (no prompt, person or face-swap source on both sides); held-out = 49 real + 55 fake; headline numbers are on laundered files (JPEG q90 re-encode, metadata stripped). Calibration curves and the fusion gain/bias were fitted on the calibration split only (plus degraded copies of it: webcam, phone denoise, H.264 video still, small web copy). No number was fitted on the held-out files, but we looked at earlier test runs while improving the system, so treat these results as slightly optimistic.",
+  "On the original files (metadata intact) held-out accuracy was 91.3% and AUC 0.973.",
+  "Robustness, held-out webcam-like copies: 1 of 49 real images flagged (1 with a 'synthetic' verdict); 38 of 55 fakes still caught; AUC 0.95.",
+  "Robustness, held-out phone 'beauty/denoise' copies: 4 of 49 real images flagged (4 with a 'synthetic' verdict); 46 of 55 fakes still caught; AUC 0.94.",
+  "Robustness, held-out H.264 video-still copies: 2 of 49 real images flagged (0 with a 'synthetic' verdict); 39 of 55 fakes still caught; AUC 0.92.",
+  "Robustness, held-out WhatsApp-style copies: 0 of 49 real images flagged (0 with a 'synthetic' verdict); 43 of 55 fakes still caught; AUC 0.97.",
+  "External false-alarm check: stills of REAL people from research videos (never used to fit any number): 5 of 12 flagged as an uploaded photo, 5 of 12 in Live Cam mode. Compressed video frames remain the engine's weakest spot for false alarms.",
+  "False-alarm check: 0 of 7 held-out real smartphone photos were flagged after WhatsApp-style recompression (1600 px, JPEG q75); highest fused score 6.",
+  "The AI-image network (CommunityForensics ViT, Park & Owens, CVPR 2025; pretrained, not trained by us) was trained on millions of images from thousands of generators. FFHQ and COCO are listed among its training datasets (Community Forensics dataset card), so the real-photo numbers are optimistic; our 7 phone photos (0 flagged) are the fairest real-photo test. Real-world accuracy on brand-new generators will be lower than these numbers. It is a general AI-image detector: it was not trained on face-swaps, reenactment or lip-sync.",
+  "95% confidence ranges (exact binomial): accuracy 84-96%, fakes caught 71-92%, false-alarm rate 0-7.3%.",
+  "The dataset is small (171 images, 206 voice clips): one file changing class moves held-out accuracy by about 1 percentage point. Treat the numbers as a school-scale experiment, not a benchmark.",
+  "Classic forensic tests (ELA, noise, FFT, JPEG tables, metadata) are weak on whole AI-generated images (held-out AUC 0.50-0.65) and carry small weights. We also tried them on a hand-made splice (an AI region pasted into a real phone photo): the ELA map shows the pasted square to the eye, but no test's score caught it. Their thresholds and the fusion weights were set by hand, not fitted. Part of the JPEG-table signal is a dataset artefact: our real FFHQ faces were PNG originals.",
+  "Voice, outside clips (generators never used for tuning: F5-TTS, Chatterbox, WaveGlow, ASVspoof A10; not fully unseen: LibriSpeech speaker 260, in 4 clips, and the HiFi-GAN vocoder type were in our tuning set): fakes caught 2 of 6, real voices cleared 4 of 4, AUC 0.92 from only 4 real and 6 fake clips. In the lab none of the fakes gets a 'synthetic' verdict (0 of 6 above 65). Only 10 clips - a spot check.",
+  "Voice stress test - a whole source family left out of training: ASVspoof 2019: AUC 0.85; FLEURS everyday speech: 75% of real voices flagged; LibriSpeech vs our own TTS: AUC 0.60; UniData: AUC 0.50. An AUC near 0.5 on a left-out dataset means what the probe learned does not transfer: it partly learned dataset quirks (microphones, rooms) rather than signs of synthesis.",
+  "Voice, in-distribution (held-out speakers, but the SAME datasets and generators as tuning): accuracy 75.7%, AUC 0.813. This is the optimistic number. The voice test is a pretrained wav2vec2 network's layer-4 features plus a logistic-regression probe trained on our calibration clips; speakers never appear on both sides of the split.",
+  "Video, external research deepfakes (never used to fit any number): 1 of 6 get a 'synthetic' verdict (2 score above 50); 3 of 4 real clips are called authentic. The engine catches generated faces but misses most face-swaps, reenactments and lip-syncs.",
+  "Video tuning clips (our 6, thresholds set by hand while looking at them - not a test): 6 of 6 correct.",
+  "Threshold for accuracy/precision/recall: fused score above 50 counts as 'synthetic'. In the lab, scores 35-65 are shown as 'suspicious' rather than forcing a yes/no answer."
+ ],
+ "audio": {
+  "metrics": {
+   "accuracy": 0.7574,
+   "precision": 0.8393,
+   "recall": 0.662,
+   "f1": 0.7402,
+   "auc": 0.8134,
+   "mean_latency_ms": 617
+  },
+  "confusion": {
+   "tp": 47,
+   "fp": 9,
+   "tn": 56,
+   "fn": 24
+  },
+  "roc": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    0.0423
+   ],
+   [
+    0.0,
+    0.0845
+   ],
+   [
+    0.0,
+    0.0986
+   ],
+   [
+    0.0,
+    0.1408
+   ],
+   [
+    0.0,
+    0.1549
+   ],
+   [
+    0.0,
+    0.2254
+   ],
+   [
+    0.0,
+    0.2535
+   ],
+   [
+    0.0,
+    0.2958
+   ],
+   [
+    0.0,
+    0.3239
+   ],
+   [
+    0.0,
+    0.3662
+   ],
+   [
+    0.0,
+    0.3803
+   ],
+   [
+    0.0,
+    0.4507
+   ],
+   [
+    0.0154,
+    0.4648
+   ],
+   [
+    0.0308,
+    0.507
+   ],
+   [
+    0.0462,
+    0.5211
+   ],
+   [
+    0.0923,
+    0.5352
+   ],
+   [
+    0.0923,
+    0.5493
+   ],
+   [
+    0.0923,
+    0.5634
+   ],
+   [
+    0.1077,
+    0.5915
+   ],
+   [
+    0.1231,
+    0.6056
+   ],
+   [
+    0.1385,
+    0.6338
+   ],
+   [
+    0.1385,
+    0.6479
+   ],
+   [
+    0.3385,
+    0.7042
+   ],
+   [
+    0.3538,
+    0.7042
+   ],
+   [
+    0.3538,
+    0.7606
+   ],
+   [
+    0.3692,
+    0.7606
+   ],
+   [
+    0.4,
+    0.7887
+   ],
+   [
+    0.4154,
+    0.7887
+   ],
+   [
+    0.4462,
+    0.8028
+   ],
+   [
+    0.4462,
+    0.8169
+   ],
+   [
+    0.5077,
+    0.8592
+   ],
+   [
+    0.5385,
+    0.8592
+   ],
+   [
+    0.5538,
+    0.8592
+   ],
+   [
+    0.5846,
+    0.8873
+   ],
+   [
+    0.6,
+    0.8873
+   ],
+   [
+    0.6154,
+    0.9437
+   ],
+   [
+    0.6308,
+    0.9437
+   ],
+   [
+    0.6308,
+    0.9718
+   ],
+   [
+    0.6462,
+    0.9718
+   ],
+   [
+    0.6769,
+    0.9718
+   ],
+   [
+    0.7077,
+    0.9718
+   ],
+   [
+    0.7538,
+    0.9718
+   ],
+   [
+    0.8,
+    0.9718
+   ],
+   [
+    0.8615,
+    0.9718
+   ],
+   [
+    0.8769,
+    0.9718
+   ],
+   [
+    0.9231,
+    0.9718
+   ],
+   [
+    0.9385,
+    0.9718
+   ],
+   [
+    0.9692,
+    0.9718
+   ],
+   [
+    1.0,
+    1.0
+   ]
+  ],
+  "per_test": [
+   {
+    "id": "ai_voice",
+    "name": "AI Voice Detector",
+    "auc": 0.8521,
+    "n": 122
+   },
+   {
+    "id": "breath_silence",
+    "name": "Breaths & Silence",
+    "auc": 0.5279,
+    "n": 122
+   }
+  ],
+  "verdicts": {
+   "authentic": 42,
+   "suspicious": 57,
+   "synthetic": 37
+  },
+  "by_group": [
+   {
+    "group": "asvspoof_tts_vc",
+    "label": "fake",
+    "n": 17,
+    "flagged_pct": 76.5,
+    "mean_score": 72.7
+   },
+   {
+    "group": "classic_tts",
+    "label": "fake",
+    "n": 1,
+    "flagged_pct": 100.0,
+    "mean_score": 87.0
+   },
+   {
+    "group": "everyday_speech",
+    "label": "real",
+    "n": 16,
+    "flagged_pct": 0.0,
+    "mean_score": 37.9
+   },
+   {
+    "group": "neural_tts",
+    "label": "fake",
+    "n": 11,
+    "flagged_pct": 63.6,
+    "mean_score": 64.1
+   },
+   {
+    "group": "original_voice",
+    "label": "real",
+    "n": 15,
+    "flagged_pct": 26.7,
+    "mean_score": 32.6
+   },
+   {
+    "group": "read_speech",
+    "label": "real",
+    "n": 24,
+    "flagged_pct": 20.8,
+    "mean_score": 35.9
+   },
+   {
+    "group": "vctk_bonafide",
+    "label": "real",
+    "n": 10,
+    "flagged_pct": 0.0,
+    "mean_score": 20.3
+   },
+   {
+    "group": "vocoded_speech",
+    "label": "fake",
+    "n": 12,
+    "flagged_pct": 25.0,
+    "mean_score": 36.2
+   },
+   {
+    "group": "voice_clone",
+    "label": "fake",
+    "n": 30,
+    "flagged_pct": 76.7,
+    "mean_score": 63.9
+   }
+  ],
+  "generalisation": [
+   {
+    "unseen_family": "ASVspoof 2019 (VCTK speakers vs 13 TTS/VC systems)",
+    "n": 27,
+    "accuracy": 0.741,
+    "auc": 0.853
+   },
+   {
+    "unseen_family": "FLEURS everyday speech (real only)",
+    "n": 16,
+    "accuracy": 0.25,
+    "false_alarm_rate": 0.75
+   },
+   {
+    "unseen_family": "LibriSpeech vs our own TTS (MMS, SpeechT5, macOS say)",
+    "n": 48,
+    "accuracy": 0.542,
+    "auc": 0.599
+   },
+   {
+    "unseen_family": "UniData (real voices vs their AI clones)",
+    "n": 45,
+    "accuracy": 0.511,
+    "auc": 0.496
+   }
+  ],
+  "external": {
+   "clips": [
+    {
+     "file": "ljspeech_real_LJ001-0001.wav",
+     "label": "real",
+     "score": 22,
+     "verdict": "authentic",
+     "ai_voice": 26,
+     "method": "real recording (LibriVox volunteer reading, studio-quality single speaker)"
+    },
+    {
+     "file": "wavefake_hifigan_LJ001-0001.wav",
+     "label": "fake",
+     "score": 34,
+     "verdict": "authentic",
+     "ai_voice": 41,
+     "method": "neural vocoder resynthesis - HiFi-GAN (mel-spectrogram of the real clip re-rendered by a G"
+    },
+    {
+     "file": "wavefake_waveglow_LJ001-0001.wav",
+     "label": "fake",
+     "score": 52,
+     "verdict": "suspicious",
+     "ai_voice": 63,
+     "method": "neural vocoder resynthesis - WaveGlow (NVIDIA flow-based vocoder) on the real clip's mel-s"
+    },
+    {
+     "file": "f5tts_clone_ljspeech_LJ001-0001.wav",
+     "label": "fake",
+     "score": 21,
+     "verdict": "authentic",
+     "ai_voice": 26,
+     "method": "zero-shot voice clone - F5-TTS (flow-matching diffusion-transformer TTS, 2024) via f5-tts-"
+    },
+    {
+     "file": "librispeech_real_260-123288-0003.wav",
+     "label": "real",
+     "score": 17,
+     "verdict": "authentic",
+     "ai_voice": 13,
+     "method": "real recording (LibriVox volunteer audiobook reading)"
+    },
+    {
+     "file": "librispeech_real_260-123288-0011_clone_reference.wav",
+     "label": "real",
+     "score": 23,
+     "verdict": "authentic",
+     "ai_voice": 16,
+     "method": "real recording (LibriVox volunteer audiobook reading) - used as the voice-cloning referenc"
+    },
+    {
+     "file": "chatterbox_clone_librispeech_260-123288-0003.wav",
+     "label": "fake",
+     "score": 44,
+     "verdict": "suspicious",
+     "ai_voice": 49,
+     "method": "zero-shot voice clone - Resemble AI Chatterbox (0.5B LLM-based TTS, 2025) chatterbox-tts 0"
+    },
+    {
+     "file": "f5tts_clone_librispeech_260-123288-0003.wav",
+     "label": "fake",
+     "score": 47,
+     "verdict": "suspicious",
+     "ai_voice": 54,
+     "method": "zero-shot voice clone - F5-TTS via f5-tts-mlx 0.2.6 on Apple M4; reference = librispeech_r"
+    },
+    {
+     "file": "asvspoof2019_LA_bonafide_LA_0022_LA_E_8088555.wav",
+     "label": "real",
+     "score": 3,
+     "verdict": "authentic",
+     "ai_voice": 3,
+     "method": "real recording (bona fide speech from the ASVspoof 2019 LA benchmark, VCTK-derived read ne"
+    },
+    {
+     "file": "asvspoof2019_LA_A10_LA_0022_LA_E_5288873.wav",
+     "label": "fake",
+     "score": 63,
+     "verdict": "suspicious",
+     "ai_voice": 76,
+     "method": "text-to-speech attack A10 - end-to-end neural TTS (Tacotron 2-style acoustic model + WaveR"
+    }
+   ],
+   "n": 10,
+   "correct": 6,
+   "auc": 0.917,
+   "note": "Generators never used for tuning: F5-TTS, Chatterbox, WaveGlow and ASVspoof attack A10. Not fully unseen: LibriSpeech speaker 260 (4 of these clips) and the HiFi-GAN vocoder type were in our tuning set. Only 10 clips: a spot check, not a statistic."
+  },
+  "dataset": {
+   "real": 100,
+   "fake": 106,
+   "held_out_real": 65,
+   "held_out_fake": 71
+  }
+ },
+ "video": {
+  "clips": [
+   {
+    "file": "ffpp_original_069.mp4",
+    "label": "real",
+    "group": "real recording",
+    "score": 47,
+    "verdict": "suspicious",
+    "ms": 2010,
+    "tests": {
+     "ai_face": 71,
+     "ai_generated": 62,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 22,
+     "metadata": 40
+    },
+    "method": "real recording (FaceForensics++ original YouTube video 069)"
+   },
+   {
+    "file": "ffpp_deepfakes_069.mp4",
+    "label": "fake",
+    "group": "face-swap",
+    "score": 76,
+    "verdict": "synthetic",
+    "ms": 1989,
+    "tests": {
+     "ai_face": 89,
+     "ai_generated": 92,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 88,
+     "metadata": 40
+    },
+    "method": "face-swap (autoencoder 'Deepfakes' / faceswap method, FF++ Deepfakes 069_961)"
+   },
+   {
+    "file": "ffpp_face2face_069.mp4",
+    "label": "fake",
+    "group": "reenactment",
+    "score": 48,
+    "verdict": "suspicious",
+    "ms": 2023,
+    "tests": {
+     "ai_face": 67,
+     "ai_generated": 67,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 44,
+     "metadata": 40
+    },
+    "method": "reenactment (Face2Face expression transfer, FF++ Face2Face 069_961)"
+   },
+   {
+    "file": "ffpp_neuraltextures_069.mp4",
+    "label": "fake",
+    "group": "reenactment",
+    "score": 58,
+    "verdict": "suspicious",
+    "ms": 1997,
+    "tests": {
+     "ai_face": 81,
+     "ai_generated": 85,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 23,
+     "metadata": 40
+    },
+    "method": "reenactment (NeuralTextures neural rendering of the mouth region, FF++ NeuralTextures 069_"
+   },
+   {
+    "file": "dfd_original_09.mp4",
+    "label": "real",
+    "group": "real recording",
+    "score": 4,
+    "verdict": "authentic",
+    "ms": 2446,
+    "tests": {
+     "ai_face": 0,
+     "ai_generated": 1,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 12,
+     "metadata": 40
+    },
+    "method": "real recording (Google DFD actor 09, scene talking_against_wall; cropped 1280x720 window, "
+   },
+   {
+    "file": "dfd_faceswap_09_13.mp4",
+    "label": "fake",
+    "group": "face-swap",
+    "score": 5,
+    "verdict": "authentic",
+    "ms": 2474,
+    "tests": {
+     "ai_face": 0,
+     "ai_generated": 5,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 12,
+     "metadata": 40
+    },
+    "method": "face-swap (Google DFD manipulated sequence 09_13__LPT427RY, made by Google with publicly a"
+   },
+   {
+    "file": "celebdf_real_id2_0000.mp4",
+    "label": "real",
+    "group": "real recording",
+    "score": 34,
+    "verdict": "authentic",
+    "ms": 2212,
+    "tests": {
+     "ai_face": 44,
+     "ai_generated": 64,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 12,
+     "metadata": 40
+    },
+    "method": "real recording (Celeb-DF v2 Celeb-real id2_0000, YouTube interview; 2.0-14.83 s, first 2 s"
+   },
+   {
+    "file": "celebdf_synthesis_id2_id16_0000.mp4",
+    "label": "fake",
+    "group": "face-swap",
+    "score": 46,
+    "verdict": "suspicious",
+    "ms": 2209,
+    "tests": {
+     "ai_face": 72,
+     "ai_generated": 64,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 12,
+     "metadata": 40
+    },
+    "method": "face-swap (Celeb-DF v2 improved DeepFake synthesis, target id2 / source id16; 2.0-14.83 s,"
+   },
+   {
+    "file": "dfd_original_07.mp4",
+    "label": "real",
+    "group": "real recording",
+    "score": 8,
+    "verdict": "authentic",
+    "ms": 2097,
+    "tests": {
+     "ai_face": 4,
+     "ai_generated": 6,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 16,
+     "metadata": 40
+    },
+    "method": "real recording (Google DFD actor 07, scene talking_against_wall; cropped 1280x720 window, "
+   },
+   {
+    "file": "wav2lip_lipsync_dfd07.mp4",
+    "label": "fake",
+    "group": "lip-sync",
+    "score": 14,
+    "verdict": "authentic",
+    "ms": 2111,
+    "tests": {
+     "ai_face": 9,
+     "ai_generated": 14,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 35,
+     "metadata": 40
+    },
+    "method": "lip-sync (Wav2Lip GAN) + text-to-speech voice (macOS say, Samantha)"
+   }
+  ],
+  "correct": 6,
+  "n": 10,
+  "mean_latency_ms": 2156,
+  "tuning_clips": [
+   {
+    "file": "nasa_expert_blackhole_clip.mp4",
+    "label": "real",
+    "group": "talking_video",
+    "score": 4,
+    "verdict": "authentic",
+    "ms": 1214,
+    "tests": {
+     "ai_face": 1,
+     "ai_generated": 1,
+     "blink": null,
+     "landmark_jitter": 12,
+     "temporal_flicker": 44,
+     "metadata": 40
+    }
+   },
+   {
+    "file": "nasa_expert_sun_clip.mp4",
+    "label": "real",
+    "group": "talking_video",
+    "score": 3,
+    "verdict": "authentic",
+    "ms": 832,
+    "tests": {
+     "ai_face": 1,
+     "ai_generated": 0,
+     "blink": null,
+     "landmark_jitter": 12,
+     "temporal_flicker": 12,
+     "metadata": 40
+    }
+   },
+   {
+    "file": "nasa_iss_message_crop.mp4",
+    "label": "real",
+    "group": "talking_video",
+    "score": 10,
+    "verdict": "authentic",
+    "ms": 2747,
+    "tests": {
+     "ai_face": 14,
+     "ai_generated": 1,
+     "blink": 15,
+     "landmark_jitter": 12,
+     "temporal_flicker": 12,
+     "metadata": 40
+    }
+   },
+   {
+    "file": "animated_gan_face_1.mp4",
+    "label": "fake",
+    "group": "animated_gan_face",
+    "score": 91,
+    "verdict": "synthetic",
+    "ms": 2115,
+    "tests": {
+     "ai_face": 100,
+     "ai_generated": 100,
+     "blink": 44,
+     "landmark_jitter": 74,
+     "temporal_flicker": 12,
+     "metadata": 40
+    }
+   },
+   {
+    "file": "animated_gan_face_2.mp4",
+    "label": "fake",
+    "group": "animated_gan_face",
+    "score": 91,
+    "verdict": "synthetic",
+    "ms": 2325,
+    "tests": {
+     "ai_face": 100,
+     "ai_generated": 100,
+     "blink": 53,
+     "landmark_jitter": 74,
+     "temporal_flicker": 12,
+     "metadata": 40
+    }
+   },
+   {
+    "file": "animated_gan_face_3.mp4",
+    "label": "fake",
+    "group": "animated_gan_face",
+    "score": 92,
+    "verdict": "synthetic",
+    "ms": 2533,
+    "tests": {
+     "ai_face": 100,
+     "ai_generated": 100,
+     "blink": 62,
+     "landmark_jitter": 74,
+     "temporal_flicker": 12,
+     "metadata": 40
+    }
+   }
+  ],
+  "tuning_correct": 6,
+  "summary": {
+   "deepfakes": 6,
+   "deepfakes_synthetic_verdict": 1,
+   "deepfakes_flagged": 2,
+   "reals": 4,
+   "reals_authentic_verdict": 3,
+   "reals_flagged": 0
+  },
+  "note": "Headline clips are real research deepfakes made by other people (FaceForensics++, Google DFD, Celeb-DF, Wav2Lip). No number was fitted on them, though an earlier run on stills from these clips led us to change the calibration. The video thresholds were set by hand on our own 6 'tuning clips' (3 NASA, 3 animated GAN faces), which are therefore not a test. Our image network was not trained on face-swaps, reenactment or lip-sync, so it misses most of them."
+ }
+}

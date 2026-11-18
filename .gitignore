@@ -1,0 +1,14 @@
+.venv/
+models/*
+!models/.gitkeep
+eval_data/
+winkit/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+*.part
+*.tmp
+*.bak
+.pytest_cache/
+.ruff_cache/

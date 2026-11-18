@@ -1,0 +1,8 @@
+@mediapipe/tasks-vision 1.2.3 (npm, Apache-2.0) — vision_bundle.mjs saved as vision_bundle.js (ESM; .js avoids .mjs MIME issues on Windows)
+wasm/vision_wasm_internal.{js,wasm} from the same package
+face_landmarker.task — https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff  face_landmarker.task
+
+LOCAL PATCH (VERITAS integration, 2026-11-19): vision_bundle.js usage-logger flush() now drops its queue
+instead of POSTing to odml.pa.googleapis.com (the booth is fully offline; no telemetry leaves the laptop).
+Search for 'flush(t,e){this.i=[];t?.();return;' - re-apply if this file is ever re-downloaded.

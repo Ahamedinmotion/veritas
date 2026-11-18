@@ -1,0 +1,13 @@
+{
+ "width": 1600,
+ "height": 1067,
+ "splice": {
+  "x": 0.8187,
+  "y": 0.1837,
+  "w": 0.0775,
+  "h": 0.1593
+ },
+ "ela_ratio_vs_real_palm": 2.49,
+ "noise_ratio_sky": 2.43,
+ "history": "camera photo + synthetic sensor noise, JPEG q80; palm pasted from high-res copy at 30% scale; saved JPEG q92; ELA resave q80"
+}

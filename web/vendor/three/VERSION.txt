@@ -1,0 +1,1 @@
+three@0.187.0 build/three.module.js + three.core.js, minified by jsDelivr (Terser). Import path in three.module.min.js rewritten to ./three.core.min.js.

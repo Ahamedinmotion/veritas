@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>VERITAS · Forensics Lab</title>
+  <meta name="description" content="VERITAS deepfake forensics lab: analyze evidence, live face telemetry and the Humans vs AI challenge.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/instrument-serif-normal-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/ibm-plex-mono-normal-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/ibm-plex-sans-condensed-normal-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/lab.css">
+  <script type="module" src="js/lab/main.js"></script>
+</head>
+<body class="lab is-booting">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- ============================== HEADER ============================== -->
+  <header class="hdr" id="hdr">
+    <a class="brand" href="index.html" aria-label="VERITAS: back to the story">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 8l11 18L27 8"/><circle cx="16" cy="12.5" r="2.6"/></svg>
+      <span class="brand-word">VERITAS<small>Deepfake forensics lab</small></span>
+    </a>
+
+    <nav class="tabs" role="tablist" aria-label="Lab modes">
+      <a class="tab" role="tab" id="tab-analyze" href="#analyze" data-tab="analyze" aria-controls="view-analyze">
+        <span class="tab-n">01</span><span class="tab-t">Analyze</span>
+      </a>
+      <a class="tab" role="tab" id="tab-live" href="#live" data-tab="live" aria-controls="view-live">
+        <span class="tab-n">02</span><span class="tab-t">Live cam</span>
+      </a>
+      <a class="tab" role="tab" id="tab-game" href="#game" data-tab="game" aria-controls="view-game">
+        <span class="tab-n">03</span><span class="tab-t">Spot the fake</span>
+      </a>
+      <span class="tab-ink" aria-hidden="true"></span>
+    </nav>
+
+    <div class="hdr-right">
+      <div class="engine" id="engine" role="status" aria-live="polite" data-state="checking" title="Forensic engine status">
+        <span class="engine-dot" aria-hidden="true"></span>
+        <span class="engine-text">
+          <span class="engine-k">Engine</span>
+          <span class="engine-v" id="engine-v">Checking…</span>
+        </span>
+      </div>
+      <span class="hdr-clock" id="clock" aria-hidden="true">--:--:--</span>
+      <button class="icon-btn" id="fs-btn" type="button" aria-label="Toggle fullscreen (F)" title="Fullscreen (F)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+      </button>
+      <a class="back-link" href="index.html"><span aria-hidden="true">←</span> The story</a>
+    </div>
+  </header>
+
+  <div class="banner" id="offline-banner" role="alert" hidden>
+    <span class="banner-dot" aria-hidden="true"></span>
+    <strong>Engine offline</strong>
+    <span>Analysis is offline. Run <code>start_windows.bat</code> on this laptop, then wait for the light to turn green. Live cam keeps working.</span>
+    <button class="banner-retry" type="button" id="banner-retry">Check again</button>
+  </div>
+
+  <main id="main" tabindex="-1">
+    <!-- ============================== 01 ANALYZE ============================== -->
+    <section class="view view-analyze" id="view-analyze" role="tabpanel" aria-labelledby="tab-analyze" data-state="intake" hidden>
+
+      <!-- Intake -->
+      <div class="panel-intake" id="intake">
+        <div class="intake-head">
+          <p class="eyebrow"><span class="eyebrow-n">§ 01</span> Exhibit intake <span class="eyebrow-sep">/</span> <span id="intake-no">Case pending</span></p>
+          <h1 class="display">Submit <em>evidence.</em></h1>
+          <p class="lede">Drop a photo, video or voice clip. VERITAS runs a battery of independent forensic tests and writes a case report.</p>
+        </div>
+
+        <div class="intake-grid">
+          <div class="drop" id="drop" role="button" tabindex="0" aria-describedby="drop-hint" aria-label="Choose an image, video or audio file to analyze">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="drop-reticle" aria-hidden="true">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="44" class="r1"/>
+                <circle cx="60" cy="60" r="28" class="r2"/>
+                <path d="M60 4v24M60 92v24M4 60h24M92 60h24" class="r3"/>
+                <path d="M60 46v28M46 60h28" class="r4"/>
+              </svg>
+            </div>
+            <p class="drop-title">Drop evidence here</p>
+            <p class="drop-hint" id="drop-hint">or <span class="u">click to choose a file</span> &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>V</kbd> to paste</p>
+            <ul class="drop-kinds" aria-label="Supported files">
+              <li><span class="k-ic k-image" aria-hidden="true"></span>Image <span>JPG · PNG · WEBP</span></li>
+              <li><span class="k-ic k-video" aria-hidden="true"></span>Video <span>MP4 · MOV · WEBM</span></li>
+              <li><span class="k-ic k-audio" aria-hidden="true"></span>Audio <span>WAV · MP3 · M4A · OGG</span></li>
+            </ul>
+            <input type="file" id="file-input" accept="image/*,video/*,audio/*,.heic,.heif,.wav,.mp3,.m4a,.ogg,.flac,.webm,.mov,.mp4" hidden>
+            <div class="drop-over" aria-hidden="true"><span>Release to open case</span></div>
+          </div>
+
+          <aside class="locker" aria-labelledby="locker-h">
+            <header class="locker-head">
+              <h2 class="label" id="locker-h">Evidence locker</h2>
+              <span class="tag" id="locker-count"></span>
+            </header>
+            <div class="locker-grid" id="locker" role="list"></div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- Scanning -->
+      <div class="panel-scan" id="scan" aria-live="polite"></div>
+
+      <!-- Report -->
+      <article class="panel-report" id="report" aria-label="Case report"></article>
+
+      <!-- Session history -->
+      <footer class="history" id="history" aria-label="Cases this session" hidden>
+        <span class="history-k">This session</span>
+        <div class="history-row" id="history-row" role="list"></div>
+      </footer>
+    </section>
+
+    <!-- ============================== 02 LIVE CAM ============================== -->
+    <section class="view view-live" id="view-live" role="tabpanel" aria-labelledby="tab-live" hidden>
+      <div class="live-grid">
+        <div class="live-stage" id="live-stage" data-state="idle">
+          <video id="live-video" class="live-video" playsinline muted aria-label="Your camera, mirrored"></video>
+          <canvas id="live-canvas" class="live-canvas" aria-hidden="true"></canvas>
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="live-hud" aria-hidden="true">
+            <span class="hud-rec"><i></i>Live · Cam 01</span>
+            <span class="hud-tc" id="live-tc">00:00:00</span>
+          </div>
+          <div class="live-msg" id="live-msg" role="status"></div>
+          <div class="live-flash" id="live-flash" aria-hidden="true"></div>
+          <div class="liveness" id="liveness" hidden></div>
+          <div class="live-bar">
+            <button class="btn btn-ghost" type="button" id="live-check"><span class="btn-ic">◎</span>Liveness check</button>
+            <button class="btn btn-primary" type="button" id="live-capture"><span class="btn-ic">◉</span>Capture &amp; analyze</button>
+            <button class="btn btn-quiet" type="button" id="live-mesh" aria-pressed="true">Mesh on</button>
+          </div>
+        </div>
+
+        <aside class="live-tele" aria-label="Live face telemetry">
+          <section class="tele tele-ear">
+            <header><h3 class="label">Eye aspect ratio</h3><span class="tele-v mono" id="ear-v">—</span></header>
+            <canvas class="ear-graph" id="ear-graph" aria-label="Scrolling graph of eye aspect ratio with blink events"></canvas>
+            <p class="tele-x">Early deepfakes blinked too rarely; modern ones blink normally, so this is a clue, not proof. We measure <span class="formula">EAR = (‖p2−p6‖ + ‖p3−p5‖) / (2‖p1−p4‖)</span>; it dips sharply when an eye closes.</p>
+          </section>
+
+          <section class="tele tele-blinks">
+            <div class="blink-count">
+              <h3 class="label">Blinks</h3>
+              <span class="big-num mono" id="blink-n">0</span>
+            </div>
+            <div class="blink-rate">
+              <h3 class="label">Per minute <span class="dim">· typical 10–25, varies a lot</span></h3>
+              <span class="mid-num mono" id="blink-rate">—</span>
+              <div class="rate-scale" aria-hidden="true">
+                <span class="rate-norm"></span><span class="rate-mark" id="rate-mark"></span>
+                <span class="rate-lbl l0">0</span><span class="rate-lbl l15">10</span><span class="rate-lbl l20">25</span><span class="rate-lbl l40">40</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="tele tele-pose">
+            <header><h3 class="label">Head pose</h3><span class="tag">degrees</span></header>
+            <div class="pose-rows">
+              <div class="pose-row" data-axis="yaw"><span class="pose-k">Yaw</span><span class="pose-track"><i></i></span><span class="pose-v mono" id="pose-yaw">—</span></div>
+              <div class="pose-row" data-axis="pitch"><span class="pose-k">Pitch</span><span class="pose-track"><i></i></span><span class="pose-v mono" id="pose-pitch">—</span></div>
+              <div class="pose-row" data-axis="roll"><span class="pose-k">Roll</span><span class="pose-track"><i></i></span><span class="pose-v mono" id="pose-roll">—</span></div>
+            </div>
+            <p class="tele-x">Recovered from the 4×4 facial transformation matrix: how a 3D model of a face must rotate to fit yours.</p>
+          </section>
+
+          <section class="tele tele-mini">
+            <div><span class="label">Faces</span><span class="mono" id="t-faces">0</span></div>
+            <div><span class="label">FPS</span><span class="mono" id="t-fps">—</span></div>
+            <div><span class="label">Points</span><span class="mono" id="t-points">—</span></div>
+            <div><span class="label">Runs on</span><span class="mono" id="t-delegate">—</span></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================== 03 SPOT THE FAKE ============================== -->
+    <section class="view view-game" id="view-game" role="tabpanel" aria-labelledby="tab-game" hidden>
+      <div class="game" id="game" data-state="loading"></div>
+    </section>
+  </main>
+
+  <!-- Test detail overlay -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="ov-title" hidden></div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <noscript><p class="noscript">The VERITAS lab needs JavaScript enabled.</p></noscript>
+</body>
+</html>

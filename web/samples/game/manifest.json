@@ -1,0 +1,212 @@
+[
+ {
+  "file": "exhibit-01.jpg",
+  "label": "real",
+  "ai_score": 2,
+  "source": "Real smartphone photo (Wikimedia Commons) - FakirNL, CC BY-SA 4.0",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-02.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (COCO, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-03.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (FFHQ, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-04.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (FFHQ, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-05.jpg",
+  "label": "fake",
+  "ai_score": 36,
+  "source": "AI: Midjourney (text-to-image)",
+  "hint": "Look for impossible details: signs, reflections, repeating textures."
+ },
+ {
+  "file": "exhibit-06.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (COCO, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-07.jpg",
+  "label": "fake",
+  "ai_score": 64,
+  "source": "AI: FLUX (text-to-image)",
+  "hint": "Check hands, text, and how faces in the background are drawn."
+ },
+ {
+  "file": "exhibit-08.jpg",
+  "label": "fake",
+  "ai_score": 1,
+  "source": "AI: face-swap made by our team (landmark warp + Poisson blend)",
+  "hint": "Look at the edge of the face - skin tone and lighting change at the seam."
+ },
+ {
+  "file": "exhibit-09.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (COCO, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-10.jpg",
+  "label": "fake",
+  "ai_score": 55,
+  "source": "AI: FLUX (text-to-image)",
+  "hint": "Check hands, text, and how faces in the background are drawn."
+ },
+ {
+  "file": "exhibit-11.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (FFHQ, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-12.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real smartphone photo (Wikimedia Commons) - GilPe, CC BY-SA 4.0",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-13.jpg",
+  "label": "fake",
+  "ai_score": 99,
+  "source": "AI: Stable Diffusion (text-to-image)",
+  "hint": "Look for impossible details: signs, reflections, repeating textures."
+ },
+ {
+  "file": "exhibit-14.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (FFHQ, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-15.jpg",
+  "label": "fake",
+  "ai_score": 99,
+  "source": "AI: StyleGAN2 face (thispersondoesnotexist.com)",
+  "hint": "Look at the background, earrings and hair edges - GANs smear them."
+ },
+ {
+  "file": "exhibit-16.jpg",
+  "label": "fake",
+  "ai_score": 99,
+  "source": "AI: DALL-E 3 (text-to-image)",
+  "hint": "Check hands, text, and how faces in the background are drawn."
+ },
+ {
+  "file": "exhibit-17.jpg",
+  "label": "fake",
+  "ai_score": 83,
+  "source": "AI: Stable Diffusion (text-to-image)",
+  "hint": "Check hands, text, and how faces in the background are drawn."
+ },
+ {
+  "file": "exhibit-18.jpg",
+  "label": "fake",
+  "ai_score": 99,
+  "source": "AI: StyleGAN2 face (thispersondoesnotexist.com)",
+  "hint": "Look at the background, earrings and hair edges - GANs smear them."
+ },
+ {
+  "file": "exhibit-19.jpg",
+  "label": "fake",
+  "ai_score": 99,
+  "source": "AI: StyleGAN2 face (thispersondoesnotexist.com)",
+  "hint": "Look at the background, earrings and hair edges - GANs smear them."
+ },
+ {
+  "file": "exhibit-20.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (COCO, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-21.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (FFHQ, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-22.jpg",
+  "label": "fake",
+  "ai_score": 67,
+  "source": "AI: FLUX (text-to-image)",
+  "hint": "Check hands, text, and how faces in the background are drawn."
+ },
+ {
+  "file": "exhibit-23.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (COCO, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-24.jpg",
+  "label": "fake",
+  "ai_score": 92,
+  "source": "AI: Midjourney (text-to-image)",
+  "hint": "Look for impossible details: signs, reflections, repeating textures."
+ },
+ {
+  "file": "exhibit-25.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (FFHQ, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-26.jpg",
+  "label": "fake",
+  "ai_score": 81,
+  "source": "AI: Stable Diffusion (text-to-image)",
+  "hint": "Look for impossible details: signs, reflections, repeating textures."
+ },
+ {
+  "file": "exhibit-27.jpg",
+  "label": "real",
+  "ai_score": 29,
+  "source": "Real smartphone photo (Wikimedia Commons) - Andy Dufresne & Red, CC BY-SA 4.0",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ },
+ {
+  "file": "exhibit-28.jpg",
+  "label": "fake",
+  "ai_score": 20,
+  "source": "AI: face-swap made by our team (landmark warp + Poisson blend)",
+  "hint": "Look at the edge of the face - skin tone and lighting change at the seam."
+ },
+ {
+  "file": "exhibit-29.jpg",
+  "label": "fake",
+  "ai_score": 99,
+  "source": "AI: StyleGAN2 face (thispersondoesnotexist.com)",
+  "hint": "Look at the background, earrings and hair edges - GANs smear them."
+ },
+ {
+  "file": "exhibit-30.jpg",
+  "label": "real",
+  "ai_score": 1,
+  "source": "Real photo (COCO, Flickr)",
+  "hint": "Real camera photos have natural noise, consistent lighting and sensible small details."
+ }
+]
