@@ -162,7 +162,7 @@ These describe the shipped behaviour; nothing in the API contract above changed.
   Its `metrics` include `GenD_mean_P(fake)`, `B7_mean_P(fake)`, their FF++ thresholds, frames with a face,
   `networks_voting`, `one_sided: true`; its `visual` is the grid of the 8 aligned faces with per-frame scores.
 - **`/api/health`** `models` gains `face_swap` (true when loaded, or when switched off with `VERITAS_FACESWAP=off`);
-  `detail.model_names.face_swap` names the active mode. The lab shows "Online · 3/4 models" if it is missing.
+  `detail.model_names.face_swap` names the active mode. The lab shows "This laptop · 3/4 models" if it is missing.
 - **`timeline`** points may carry `swap` (the face-swap detector's per-frame score, on its 8 frames). **`keyframes`**
   carry `by`: `ai_face` | `face_swap` | `ai_generated` (which test rated that frame most suspicious).
 - **`web/data/results.json`**: `video.benchmark` = the 75-clip benchmark (`parts.{ffpp,celebdf,dfd,cross,all}.

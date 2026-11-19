@@ -122,7 +122,7 @@ demo scores move (the chapter-05 Wav2Lip clip would read 64, not 70). Videos tak
 1. [ ] Setup ended with `ALL DONE`; `setup-log.txt` shows `ALL PASS`. The black window prints the face-swap mode.
 2. [ ] Cold start of VERITAS (first after setup) and warm start: write both times down.
 3. [ ] `http://127.0.0.1:8000/api/health` shows `"ok": true` and all four models `true` (the lab header says
-       "Online · CPU", not "3/4 models"). Run the story on the TV. Analyse every locker exhibit.
+       "This laptop", not "This laptop · 3/4 models"). Run the story on the TV. Analyse every locker exhibit.
 4. [ ] **RAM and time.** With the story (TV) and the lab open, open Task Manager. Analyse the **Real talking video**
        exhibit three times; write down the time, the `python.exe` memory and **Performance -> Memory -> Available**.
        Under about 1 GB available: force `int8`. A video over 40 s: `int8` (about 5 s faster) or `b7` (about 14 s

@@ -39,7 +39,7 @@ shows `07 / 51`).
 
 - [ ] Charger plugged in. Wi-Fi **off**. `scripts\start_windows.bat` is running, with the black window minimised.
 - [ ] Tab 1: the story at `http://127.0.0.1:8000/`. Tab 2: the lab at `http://127.0.0.1:8000/lab.html#analyze`,
-      with the engine light green ("Online · CPU").
+      with the engine light green ("Engine · This laptop").
 - [ ] Morning warm-up: in the story, press → through all 51 steps once so every image and demo is loaded, then
       press **Home**. Press **F** for fullscreen. The counter should read `01 / 51`.
 - [ ] Lab warm-up: analyse one exhibit from the locker so the models are in memory (the first analysis is the
