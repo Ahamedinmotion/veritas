@@ -144,14 +144,17 @@ def build_lab():
     if vr.exists():
         add(vr, "real-video.mp4", "video", "authentic", "Real talking video",
             "NASA astronaut message from the International Space Station (public domain, cropped). One of the clips "
-            "we used to set the video thresholds: a demonstration, not a test.")
+            "we used to set the video thresholds: a demonstration, not a test. The face-swap detector stays quiet on "
+            "it (about 15/100).")
     vf = LAB / "synthetic-video.mp4"
     faces = sorted((EVAL / "images/fake").glob("tpdne_*"))
     subprocess.run([sys.executable, str(ROOT / "scripts/make_synthetic_video.py"), str(faces[-5]), str(vf),
                     "--seconds", "12", "--seed", "11"], check=True)
     items.append({"file": "synthetic-video.mp4", "kind": "video", "label": "synthetic", "title": "AI 'talking photo'",
                   "note": "A StyleGAN face animated with a slow camera move, the way cheap scam videos are made. It never "
-                          "blinks. Same recipe as the clips we used to set the video thresholds: a demonstration, not a test."})
+                          "blinks. Same recipe as the clips we used to set the video thresholds: a demonstration, not a test. "
+                          "Watch the face-swap detector score it near 0: it only knows swaps, so the AI-face model has to "
+                          "catch this one."})
     # audio
     # a HELD-OUT speaker (never used to fit the voice probe), not the single narrator of the original set
     from evalcommon import load_items

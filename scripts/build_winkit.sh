@@ -5,6 +5,10 @@
 #   OUT_DIR/site-packages/   every library for Windows x64 + Python 3.12 (CPU PyTorch), plus the VC++ runtime DLLs
 #                            copied into torch\lib so no admin install is needed
 #   OUT_DIR/cpython-3.12.12+20260127-x86_64-pc-windows-msvc-install_only_stripped.tar.gz
+#   OUT_DIR/models/          a copy of models/ (2.4 GB incl. the face-swap detector; APFS clones, no extra Mac disk).
+#                            start_windows_kit.bat uses it when C:\veritas\models is missing or has no face_swap\.
+# The face-swap detector's libraries (onnxruntime, torchvision + protobuf) come from uv.lock like everything else; its
+# MTCNN code is vendored in server/vendor/.
 # On the laptop: copy OUT_DIR to C:\veritas\winkit, then in a Command Prompt:
 #   cd C:\veritas  &&  tar -xf winkit\cpython-*.tar.gz -C winkit      (creates winkit\python\python.exe)
 #   scripts\start_windows_kit.bat
@@ -18,16 +22,16 @@ MSVC_VER=14.51.36231
 mkdir -p "$OUT"
 OUT="$(cd "$OUT" && pwd)"
 
-echo "1/4  exporting the locked requirements"
+echo "1/5  exporting the locked requirements"
 uv export --locked --format requirements-txt --no-hashes --no-emit-project -o "$OUT/requirements-win.txt" >/dev/null
 
-echo "2/4  installing Windows x64 wheels into $OUT/site-packages"
+echo "2/5  installing Windows x64 wheels into $OUT/site-packages"
 rm -rf "$OUT/site-packages"
 uv pip install --python-platform x86_64-pc-windows-msvc --python-version 3.12 --target "$OUT/site-packages" \
   --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cpu \
   -r "$OUT/requirements-win.txt"
 
-echo "3/4  adding the Visual C++ runtime DLLs next to torch (msvc-runtime $MSVC_VER from PyPI)"
+echo "3/5  adding the Visual C++ runtime DLLs next to torch (msvc-runtime $MSVC_VER from PyPI)"
 DL="$(mktemp -d)"
 URL="$(python3 -I -c "
 import json, sys, urllib.request
@@ -41,10 +45,19 @@ for dll in msvcp140.dll msvcp140_1.dll msvcp140_2.dll vcruntime140_threads.dll c
 done
 rm -rf "$DL"
 
-echo "4/4  downloading the portable Windows Python ($PBS_FILE)"
+echo "4/5  downloading the portable Windows Python ($PBS_FILE)"
 if [ ! -f "$OUT/$PBS_FILE" ]; then
   curl -fL "https://github.com/astral-sh/python-build-standalone/releases/download/${PBS_TAG}/${PBS_FILE//+/%2B}" \
     -o "$OUT/$PBS_FILE.part" && mv "$OUT/$PBS_FILE.part" "$OUT/$PBS_FILE"
 fi
+echo "5/5  copying the models (incl. models/face_swap) into $OUT/models"
+python3 -I scripts/download_models.py --check >/dev/null || { echo "ERROR: models/ is incomplete - run scripts/download_models.py first"; exit 1; }
+rm -rf "$OUT/models" && mkdir -p "$OUT/models"
+for d in models/*/; do d="${d%/}"; cp -c -R "$d" "$OUT/models/" 2>/dev/null || cp -R "$d" "$OUT/models/"; done
+rm -rf "$OUT/models/.download_cache"
+for pkg in onnxruntime torchvision torch transformers mediapipe; do
+  [ -d "$OUT/site-packages/$pkg" ] || { echo "ERROR: $pkg missing from the kit"; exit 1; }
+done
+ls "$OUT/site-packages/onnxruntime/capi/" | grep -q "onnxruntime.*\.dll\|onnxruntime_pybind11_state.*\.pyd" || { echo "ERROR: onnxruntime is not the Windows build"; exit 1; }
 du -sh "$OUT"
 echo "Done. Copy $OUT to the USB stick as winkit\\ (see docs/SETUP_WINDOWS.md, Route C)."

@@ -619,6 +619,148 @@
      "as_live_capture": 5
     }
    ]
+  },
+  "faceswap_on_stills": {
+   "decision": "video-only",
+   "why": "On single stills the detector raised false alarms on real faces (more real photos flagged after webcam / H.264 / denoise degradations, and it fired on about 1 in 5 frames of real people from research videos), so photos and Live Cam captures do not use it.",
+   "weight_what_if": 1.25,
+   "real_heldout_photos": {
+    "laundered": {
+     "with_face": 37,
+     "fires": 2,
+     "engine_flagged": 0,
+     "with_fs_flagged": 0,
+     "engine_synthetic": 0,
+     "with_fs_synthetic": 0,
+     "verdict_changed": 2
+    },
+    "webcam": {
+     "with_face": 34,
+     "fires": 5,
+     "engine_flagged": 1,
+     "with_fs_flagged": 4,
+     "engine_synthetic": 1,
+     "with_fs_synthetic": 3,
+     "verdict_changed": 4
+    },
+    "denoise": {
+     "with_face": 34,
+     "fires": 1,
+     "engine_flagged": 4,
+     "with_fs_flagged": 5,
+     "engine_synthetic": 4,
+     "with_fs_synthetic": 4,
+     "verdict_changed": 2
+    },
+    "h264": {
+     "with_face": 33,
+     "fires": 4,
+     "engine_flagged": 2,
+     "with_fs_flagged": 3,
+     "engine_synthetic": 0,
+     "with_fs_synthetic": 0,
+     "verdict_changed": 3
+    },
+    "whatsapp": {
+     "with_face": 36,
+     "fires": 0,
+     "engine_flagged": 0,
+     "with_fs_flagged": 0,
+     "engine_synthetic": 0,
+     "with_fs_synthetic": 0,
+     "verdict_changed": 1
+    }
+   },
+   "face_swap_stills": {
+    "laundered": {
+     "n": 9,
+     "fires": 6,
+     "engine_flagged": 2,
+     "with_fs_flagged": 5
+    },
+    "webcam": {
+     "n": 9,
+     "fires": 7,
+     "engine_flagged": 1,
+     "with_fs_flagged": 6
+    },
+    "denoise": {
+     "n": 9,
+     "fires": 7,
+     "engine_flagged": 2,
+     "with_fs_flagged": 6
+    },
+    "h264": {
+     "n": 9,
+     "fires": 6,
+     "engine_flagged": 0,
+     "with_fs_flagged": 5
+    },
+    "whatsapp": {
+     "n": 9,
+     "fires": 6,
+     "engine_flagged": 0,
+     "with_fs_flagged": 5
+    }
+   },
+   "real_video_frames": {
+    "real_live_jpeg": {
+     "n": 105,
+     "with_face": 105,
+     "fires": 20,
+     "fires_pct": 19.0,
+     "max": 96.3,
+     "median": 14.2
+    },
+    "real_webcam": {
+     "n": 105,
+     "with_face": 105,
+     "fires": 27,
+     "fires_pct": 25.7,
+     "max": 97.6,
+     "median": 25.7
+    }
+   },
+   "fake_video_frames": {
+    "fake_live_jpeg": {
+     "n": 120,
+     "with_face": 120,
+     "fires": 101,
+     "fires_pct": 84.2,
+     "max": 99.8,
+     "median": 98.30000000000001
+    },
+    "fake_webcam": {
+     "n": 120,
+     "with_face": 120,
+     "fires": 103,
+     "fires_pct": 85.8,
+     "max": 99.8,
+     "median": 96.0
+    }
+   },
+   "demo_stills": {
+    "real": {
+     "n": 12,
+     "with_face": 12,
+     "fires": 0,
+     "fires_pct": 0.0,
+     "max": 9.6,
+     "median": 6.05,
+     "engine_flagged": 5,
+     "with_fs_flagged": 5
+    },
+    "fake": {
+     "n": 18,
+     "with_face": 18,
+     "fires": 16,
+     "fires_pct": 88.9,
+     "max": 99.6,
+     "median": 74.05000000000001,
+     "engine_flagged": 11,
+     "with_fs_flagged": 17
+    }
+   }
   }
  },
  "generated": "2026-11-18T21:04:30+00:00",
@@ -630,6 +772,7 @@
   "Robustness, held-out H.264 video-still copies: 2 of 49 real images flagged (0 with a 'synthetic' verdict); 39 of 55 fakes still caught; AUC 0.92.",
   "Robustness, held-out WhatsApp-style copies: 0 of 49 real images flagged (0 with a 'synthetic' verdict); 43 of 55 fakes still caught; AUC 0.97.",
   "External false-alarm check: stills of REAL people from research videos (never used to fit any number): 5 of 12 flagged as an uploaded photo, 5 of 12 in Live Cam mode. Compressed video frames remain the engine's weakest spot for false alarms.",
+  "The face-swap detector is video-only. Scored on single stills it fired on 20 of 105 frames of real people from research videos saved like a Live Cam capture, and adding it to photos would have raised real webcam-style photos flagged from 1 to 4 of 49, so photos and Live Cam captures do not use it (their numbers above are unchanged).",
   "False-alarm check: 0 of 7 held-out real smartphone photos were flagged after WhatsApp-style recompression (1600 px, JPEG q75); highest fused score 6.",
   "The AI-image network (CommunityForensics ViT, Park & Owens, CVPR 2025; pretrained, not trained by us) was trained on millions of images from thousands of generators. FFHQ and COCO are listed among its training datasets (Community Forensics dataset card), so the real-photo numbers are optimistic; our 7 phone photos (0 flagged) are the fairest real-photo test. Real-world accuracy on brand-new generators will be lower than these numbers. It is a general AI-image detector: it was not trained on face-swaps, reenactment or lip-sync.",
   "95% confidence ranges (exact binomial): accuracy 84-96%, fakes caught 71-92%, false-alarm rate 0-7.3%.",
@@ -638,7 +781,12 @@
   "Voice, outside clips (generators never used for tuning: F5-TTS, Chatterbox, WaveGlow, ASVspoof A10; not fully unseen: LibriSpeech speaker 260, in 4 clips, and the HiFi-GAN vocoder type were in our tuning set): fakes caught 2 of 6, real voices cleared 4 of 4, AUC 0.92 from only 4 real and 6 fake clips. In the lab none of the fakes gets a 'synthetic' verdict (0 of 6 above 65). Only 10 clips - a spot check.",
   "Voice stress test - a whole source family left out of training: ASVspoof 2019: AUC 0.85; FLEURS everyday speech: 75% of real voices flagged; LibriSpeech vs our own TTS: AUC 0.60; UniData: AUC 0.50. An AUC near 0.5 on a left-out dataset means what the probe learned does not transfer: it partly learned dataset quirks (microphones, rooms) rather than signs of synthesis.",
   "Voice, in-distribution (held-out speakers, but the SAME datasets and generators as tuning): accuracy 75.7%, AUC 0.813. This is the optimistic number. The voice test is a pretrained wav2vec2 network's layer-4 features plus a logistic-regression probe trained on our calibration clips; speakers never appear on both sides of the split.",
-  "Video, external research deepfakes (never used to fit any number): 1 of 6 get a 'synthetic' verdict (2 score above 50); 3 of 4 real clips are called authentic. The engine catches generated faces but misses most face-swaps, reenactments and lip-syncs.",
+  "Video benchmark, datasets neither face-swap network was trained on (Celeb-DF + Google DFD, 15 real + 15 fake clips; no threshold or weight was chosen on them, but the detectors were ranked by their AUC on these clips and the pair was chosen after seeing them, so this AUC is optimistic): AUC of the engine's verdict score 0.60 [95% CI 0.41-0.77] before the face-swap detector, 0.998 [0.87-1.00] after (paired bootstrap gain +0.39, CI +0.19 to +0.59). AUC intervals are Newcombe's Wilson-type intervals: with only 15 + 15 clips a bootstrap at the ceiling (0.99-1.00) is far too narrow. Fakes called synthetic 0 -> 12 of 15; reals called synthetic 0 -> 0, reals called suspicious 2 -> 5 of 15. Caveat: GenD's authors chose their checkpoint using Celeb-DF++ validation videos, so Celeb-DF is unseen in training but not in model selection; Google DFD (5 real + 5 fake) is the only fully unseen part.",
+  "Video benchmark, FaceForensics++ test split (20 real + 25 fake): AUC 0.609 -> 0.945; fakes called synthetic 0 -> 16 of 25 (per method, 5 fakes each vs 20 reals: Deepfakes 0.80 -> 1.00; FaceSwap 0.45 -> 0.99; Face2Face 0.43 -> 0.92; NeuralTextures 0.68 -> 0.99; FaceShifter 0.69 -> 0.82). In-sample for the face-swap detector: its thresholds were chosen on these 45 clips, and GenD was trained on other FF++ videos of the same methods (FaceShifter excepted).",
+  "Video false-alarm check: 39 real clips re-encoded like a cheap webcam (360p, blur, noise, denoise, H.264 CRF 30): verdicts authentic/suspicious/synthetic 38/1/0 before the face-swap detector, 27/11/1 after (it fired on 21 of 39). Grainy, heavily compressed real video is its weak spot.",
+  "The face-swap test on its own (its 50 = the pair threshold chosen on FF++): AUC 0.99 on Celeb-DF + DFD, but it fired on 7 of 15 real clips there and on 21 of 39 webcam-quality real clips. Its threshold was set on FaceForensics++, the dataset GenD was trained on, where it is overconfident about real faces; the fusion turns most of these alarms into 'suspicious', not 'synthetic'.",
+  "The face-swap detector (GenD + the DFDC-winning EfficientNet-B7) is pretrained, not trained by us. We benchmarked 6 published detectors; our pre-registered rule (best cross-dataset AUC) picked the DFDC winner alone, and we added GenD after seeing the cross-dataset and demo results because it also catches reenactment. On those clips the pair is statistically tied with the DFDC winner alone (+0.03 AUC, 95% CI 0.00-0.09). The 8-frame setting was chosen for speed after all results were known; with 4 or 16 frames the benchmark simulation called one real Celeb-DF/DFD clip synthetic. Only 2019-2020 manipulation methods were tested.",
+  "Video, the 10 booth demo clips (FF++ 069 is in GenD's training split, the Celeb-DF id2 pair is from Celeb-DF's training portion, and these clips were looked at when the pair was chosen, so they are a demonstration; only the Wav2Lip lip-sync we made from a Google DFD clip is a fully unseen catch): 5 of 6 fakes get a 'synthetic' verdict (1 before the face-swap detector); 3 of 4 real clips are called authentic.",
   "Video tuning clips (our 6, thresholds set by hand while looking at them - not a test): 6 of 6 correct.",
   "Threshold for accuracy/precision/recall: fused score above 50 counts as 'synthetic'. In the lab, scores 35-65 are shown as 'suspicious' rather than forcing a yes/no answer."
  ],
@@ -1072,67 +1220,87 @@
     "group": "real recording",
     "score": 47,
     "verdict": "suspicious",
-    "ms": 2010,
+    "before": 47,
+    "before_verdict": "suspicious",
+    "ms": 5602,
     "tests": {
      "ai_face": 71,
+     "face_swap": 16,
      "ai_generated": 62,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 22,
      "metadata": 40
     },
-    "method": "real recording (FaceForensics++ original YouTube video 069)"
+    "method": "real recording (FaceForensics++ original YouTube video 069)",
+    "in_gend_training": true,
+    "celebdf_train_portion": false
    },
    {
     "file": "ffpp_deepfakes_069.mp4",
     "label": "fake",
     "group": "face-swap",
-    "score": 76,
+    "score": 94,
     "verdict": "synthetic",
-    "ms": 1989,
+    "before": 76,
+    "before_verdict": "synthetic",
+    "ms": 5297,
     "tests": {
      "ai_face": 89,
+     "face_swap": 99,
      "ai_generated": 92,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 88,
      "metadata": 40
     },
-    "method": "face-swap (autoencoder 'Deepfakes' / faceswap method, FF++ Deepfakes 069_961)"
+    "method": "face-swap (autoencoder 'Deepfakes' / faceswap method, FF++ Deepfakes 069_961)",
+    "in_gend_training": true,
+    "celebdf_train_portion": false
    },
    {
     "file": "ffpp_face2face_069.mp4",
     "label": "fake",
     "group": "reenactment",
-    "score": 48,
-    "verdict": "suspicious",
-    "ms": 2023,
+    "score": 68,
+    "verdict": "synthetic",
+    "before": 48,
+    "before_verdict": "suspicious",
+    "ms": 5587,
     "tests": {
      "ai_face": 67,
+     "face_swap": 81,
      "ai_generated": 67,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 44,
      "metadata": 40
     },
-    "method": "reenactment (Face2Face expression transfer, FF++ Face2Face 069_961)"
+    "method": "reenactment (Face2Face expression transfer, FF++ Face2Face 069_961)",
+    "in_gend_training": true,
+    "celebdf_train_portion": false
    },
    {
     "file": "ffpp_neuraltextures_069.mp4",
     "label": "fake",
     "group": "reenactment",
-    "score": 58,
-    "verdict": "suspicious",
-    "ms": 1997,
+    "score": 69,
+    "verdict": "synthetic",
+    "before": 58,
+    "before_verdict": "suspicious",
+    "ms": 6115,
     "tests": {
      "ai_face": 81,
+     "face_swap": 77,
      "ai_generated": 85,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 23,
      "metadata": 40
     },
-    "method": "reenactment (NeuralTextures neural rendering of the mouth region, FF++ NeuralTextures 069_"
+    "method": "reenactment (NeuralTextures neural rendering of the mouth region, FF++ NeuralTextures 069_",
+    "in_gend_training": true,
+    "celebdf_train_portion": false
    },
    {
     "file": "dfd_original_09.mp4",
@@ -1140,33 +1308,43 @@
     "group": "real recording",
     "score": 4,
     "verdict": "authentic",
-    "ms": 2446,
+    "before": 4,
+    "before_verdict": "authentic",
+    "ms": 5926,
     "tests": {
      "ai_face": 0,
+     "face_swap": 8,
      "ai_generated": 1,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 12,
      "metadata": 40
     },
-    "method": "real recording (Google DFD actor 09, scene talking_against_wall; cropped 1280x720 window, "
+    "method": "real recording (Google DFD actor 09, scene talking_against_wall; cropped 1280x720 window, ",
+    "in_gend_training": false,
+    "celebdf_train_portion": false
    },
    {
     "file": "dfd_faceswap_09_13.mp4",
     "label": "fake",
     "group": "face-swap",
-    "score": 5,
-    "verdict": "authentic",
-    "ms": 2474,
+    "score": 41,
+    "verdict": "suspicious",
+    "before": 5,
+    "before_verdict": "authentic",
+    "ms": 6295,
     "tests": {
      "ai_face": 0,
+     "face_swap": 84,
      "ai_generated": 5,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 12,
      "metadata": 40
     },
-    "method": "face-swap (Google DFD manipulated sequence 09_13__LPT427RY, made by Google with publicly a"
+    "method": "face-swap (Google DFD manipulated sequence 09_13__LPT427RY, made by Google with publicly a",
+    "in_gend_training": false,
+    "celebdf_train_portion": false
    },
    {
     "file": "celebdf_real_id2_0000.mp4",
@@ -1174,33 +1352,43 @@
     "group": "real recording",
     "score": 34,
     "verdict": "authentic",
-    "ms": 2212,
+    "before": 34,
+    "before_verdict": "authentic",
+    "ms": 5844,
     "tests": {
      "ai_face": 44,
+     "face_swap": 10,
      "ai_generated": 64,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 12,
      "metadata": 40
     },
-    "method": "real recording (Celeb-DF v2 Celeb-real id2_0000, YouTube interview; 2.0-14.83 s, first 2 s"
+    "method": "real recording (Celeb-DF v2 Celeb-real id2_0000, YouTube interview; 2.0-14.83 s, first 2 s",
+    "in_gend_training": false,
+    "celebdf_train_portion": true
    },
    {
     "file": "celebdf_synthesis_id2_id16_0000.mp4",
     "label": "fake",
     "group": "face-swap",
-    "score": 46,
-    "verdict": "suspicious",
-    "ms": 2209,
+    "score": 83,
+    "verdict": "synthetic",
+    "before": 46,
+    "before_verdict": "suspicious",
+    "ms": 5282,
     "tests": {
      "ai_face": 72,
+     "face_swap": 95,
      "ai_generated": 64,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 12,
      "metadata": 40
     },
-    "method": "face-swap (Celeb-DF v2 improved DeepFake synthesis, target id2 / source id16; 2.0-14.83 s,"
+    "method": "face-swap (Celeb-DF v2 improved DeepFake synthesis, target id2 / source id16; 2.0-14.83 s,",
+    "in_gend_training": false,
+    "celebdf_train_portion": true
    },
    {
     "file": "dfd_original_07.mp4",
@@ -1208,38 +1396,48 @@
     "group": "real recording",
     "score": 8,
     "verdict": "authentic",
-    "ms": 2097,
+    "before": 8,
+    "before_verdict": "authentic",
+    "ms": 6110,
     "tests": {
      "ai_face": 4,
+     "face_swap": 5,
      "ai_generated": 6,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 16,
      "metadata": 40
     },
-    "method": "real recording (Google DFD actor 07, scene talking_against_wall; cropped 1280x720 window, "
+    "method": "real recording (Google DFD actor 07, scene talking_against_wall; cropped 1280x720 window, ",
+    "in_gend_training": false,
+    "celebdf_train_portion": false
    },
    {
     "file": "wav2lip_lipsync_dfd07.mp4",
     "label": "fake",
     "group": "lip-sync",
-    "score": 14,
-    "verdict": "authentic",
-    "ms": 2111,
+    "score": 70,
+    "verdict": "synthetic",
+    "before": 14,
+    "before_verdict": "authentic",
+    "ms": 6114,
     "tests": {
      "ai_face": 9,
+     "face_swap": 95,
      "ai_generated": 14,
      "blink": 15,
      "landmark_jitter": 12,
      "temporal_flicker": 35,
      "metadata": 40
     },
-    "method": "lip-sync (Wav2Lip GAN) + text-to-speech voice (macOS say, Samantha)"
+    "method": "lip-sync (Wav2Lip GAN) + text-to-speech voice (macOS say, Samantha)",
+    "in_gend_training": false,
+    "celebdf_train_portion": false
    }
   ],
-  "correct": 6,
+  "correct": 9,
   "n": 10,
-  "mean_latency_ms": 2156,
+  "mean_latency_ms": 5817,
   "tuning_clips": [
    {
     "file": "nasa_expert_blackhole_clip.mp4",
@@ -1247,9 +1445,12 @@
     "group": "talking_video",
     "score": 4,
     "verdict": "authentic",
-    "ms": 1214,
+    "before": 4,
+    "before_verdict": "authentic",
+    "ms": 3847,
     "tests": {
      "ai_face": 1,
+     "face_swap": 25,
      "ai_generated": 1,
      "blink": null,
      "landmark_jitter": 12,
@@ -1263,9 +1464,12 @@
     "group": "talking_video",
     "score": 3,
     "verdict": "authentic",
-    "ms": 832,
+    "before": 3,
+    "before_verdict": "authentic",
+    "ms": 4163,
     "tests": {
      "ai_face": 1,
+     "face_swap": 48,
      "ai_generated": 0,
      "blink": null,
      "landmark_jitter": 12,
@@ -1279,9 +1483,12 @@
     "group": "talking_video",
     "score": 10,
     "verdict": "authentic",
-    "ms": 2747,
+    "before": 10,
+    "before_verdict": "authentic",
+    "ms": 6089,
     "tests": {
      "ai_face": 14,
+     "face_swap": 16,
      "ai_generated": 1,
      "blink": 15,
      "landmark_jitter": 12,
@@ -1295,9 +1502,12 @@
     "group": "animated_gan_face",
     "score": 91,
     "verdict": "synthetic",
-    "ms": 2115,
+    "before": 91,
+    "before_verdict": "synthetic",
+    "ms": 4722,
     "tests": {
      "ai_face": 100,
+     "face_swap": 0,
      "ai_generated": 100,
      "blink": 44,
      "landmark_jitter": 74,
@@ -1311,9 +1521,12 @@
     "group": "animated_gan_face",
     "score": 91,
     "verdict": "synthetic",
-    "ms": 2325,
+    "before": 91,
+    "before_verdict": "synthetic",
+    "ms": 4488,
     "tests": {
      "ai_face": 100,
+     "face_swap": 0,
      "ai_generated": 100,
      "blink": 53,
      "landmark_jitter": 74,
@@ -1327,9 +1540,12 @@
     "group": "animated_gan_face",
     "score": 92,
     "verdict": "synthetic",
-    "ms": 2533,
+    "before": 92,
+    "before_verdict": "synthetic",
+    "ms": 6172,
     "tests": {
      "ai_face": 100,
+     "face_swap": 1,
      "ai_generated": 100,
      "blink": 62,
      "landmark_jitter": 74,
@@ -1341,12 +1557,1519 @@
   "tuning_correct": 6,
   "summary": {
    "deepfakes": 6,
-   "deepfakes_synthetic_verdict": 1,
-   "deepfakes_flagged": 2,
+   "deepfakes_synthetic_verdict": 5,
+   "deepfakes_flagged": 5,
    "reals": 4,
    "reals_authentic_verdict": 3,
    "reals_flagged": 0
   },
-  "note": "Headline clips are real research deepfakes made by other people (FaceForensics++, Google DFD, Celeb-DF, Wav2Lip). No number was fitted on them, though an earlier run on stills from these clips led us to change the calibration. The video thresholds were set by hand on our own 6 'tuning clips' (3 NASA, 3 animated GAN faces), which are therefore not a test. Our image network was not trained on face-swaps, reenactment or lip-sync, so it misses most of them."
- }
+  "summary_before": {
+   "deepfakes_synthetic_verdict": 1,
+   "deepfakes_flagged": 2,
+   "reals_authentic_verdict": 3,
+   "reals_flagged": 0,
+   "correct": 6
+  },
+  "note": "Demo clips: research deepfakes made by other people (FaceForensics++, Google DFD, Celeb-DF) plus a Wav2Lip lip-sync we made from a Google DFD clip, never used to fit any number, but looked at when the face-swap pair was chosen. FF++ 069 (3 of the 6 fakes and 1 real) is in the face-swap detector's TRAINING split, and the Celeb-DF id2 pair comes from Celeb-DF's training portion, so these are a demonstration; the 75-clip benchmark is the test. Scores measured at 48 sampled frames on the development Mac; at 32 frames (the booth default) the same 10 clips keep their verdicts (DFD face-swap 41 -> 44). The video thresholds of the older tests were set by hand on our own 6 tuning clips, which are therefore not a test.",
+  "benchmark": {
+   "n": 75,
+   "parts": {
+    "ffpp": {
+     "before": {
+      "n_real": 20,
+      "n_fake": 25,
+      "auc": 0.609,
+      "auc_ci95": [
+       0.44,
+       0.762
+      ],
+      "auc_ci95_newcombe": [
+       0.443,
+       0.75
+      ],
+      "accuracy_at_50": 0.444,
+      "fakes_flagged": 0,
+      "reals_flagged": 0,
+      "reals": {
+       "authentic": 19,
+       "suspicious": 1,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 19,
+       "suspicious": 6,
+       "synthetic": 0
+      }
+     },
+     "after": {
+      "n_real": 20,
+      "n_fake": 25,
+      "auc": 0.945,
+      "auc_ci95": [
+       0.874,
+       0.991
+      ],
+      "auc_ci95_newcombe": [
+       0.823,
+       0.983
+      ],
+      "accuracy_at_50": 0.8,
+      "fakes_flagged": 17,
+      "reals_flagged": 1,
+      "reals": {
+       "authentic": 17,
+       "suspicious": 3,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 3,
+       "suspicious": 6,
+       "synthetic": 16
+      }
+     }
+    },
+    "celebdf": {
+     "before": {
+      "n_real": 10,
+      "n_fake": 10,
+      "auc": 0.645,
+      "auc_ci95": [
+       0.38,
+       0.885
+      ],
+      "auc_ci95_newcombe": [
+       0.404,
+       0.825
+      ],
+      "accuracy_at_50": 0.5,
+      "fakes_flagged": 0,
+      "reals_flagged": 0,
+      "reals": {
+       "authentic": 10,
+       "suspicious": 0,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 9,
+       "suspicious": 1,
+       "synthetic": 0
+      }
+     },
+     "after": {
+      "n_real": 10,
+      "n_fake": 10,
+      "auc": 0.995,
+      "auc_ci95": [
+       0.97,
+       1.0
+      ],
+      "auc_ci95_newcombe": [
+       0.808,
+       1.0
+      ],
+      "accuracy_at_50": 0.95,
+      "fakes_flagged": 10,
+      "reals_flagged": 1,
+      "reals": {
+       "authentic": 7,
+       "suspicious": 3,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 0,
+       "suspicious": 2,
+       "synthetic": 8
+      }
+     }
+    },
+    "dfd": {
+     "before": {
+      "n_real": 5,
+      "n_fake": 5,
+      "auc": 0.58,
+      "auc_ci95": [
+       0.2,
+       0.92
+      ],
+      "auc_ci95_newcombe": [
+       0.28,
+       0.828
+      ],
+      "accuracy_at_50": 0.6,
+      "fakes_flagged": 2,
+      "reals_flagged": 1,
+      "reals": {
+       "authentic": 3,
+       "suspicious": 2,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 3,
+       "suspicious": 2,
+       "synthetic": 0
+      }
+     },
+     "after": {
+      "n_real": 5,
+      "n_fake": 5,
+      "auc": 1.0,
+      "auc_ci95": [
+       1.0,
+       1.0
+      ],
+      "auc_ci95_newcombe": [
+       0.689,
+       1.0
+      ],
+      "accuracy_at_50": 0.9,
+      "fakes_flagged": 5,
+      "reals_flagged": 1,
+      "reals": {
+       "authentic": 3,
+       "suspicious": 2,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 0,
+       "suspicious": 1,
+       "synthetic": 4
+      }
+     }
+    },
+    "cross": {
+     "before": {
+      "n_real": 15,
+      "n_fake": 15,
+      "auc": 0.604,
+      "auc_ci95": [
+       0.404,
+       0.811
+      ],
+      "auc_ci95_newcombe": [
+       0.406,
+       0.77
+      ],
+      "accuracy_at_50": 0.533,
+      "fakes_flagged": 2,
+      "reals_flagged": 1,
+      "reals": {
+       "authentic": 13,
+       "suspicious": 2,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 12,
+       "suspicious": 3,
+       "synthetic": 0
+      }
+     },
+     "after": {
+      "n_real": 15,
+      "n_fake": 15,
+      "auc": 0.998,
+      "auc_ci95": [
+       0.987,
+       1.0
+      ],
+      "auc_ci95_newcombe": [
+       0.869,
+       1.0
+      ],
+      "accuracy_at_50": 0.933,
+      "fakes_flagged": 15,
+      "reals_flagged": 2,
+      "reals": {
+       "authentic": 10,
+       "suspicious": 5,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 0,
+       "suspicious": 3,
+       "synthetic": 12
+      }
+     }
+    },
+    "all": {
+     "before": {
+      "n_real": 35,
+      "n_fake": 40,
+      "auc": 0.588,
+      "auc_ci95": [
+       0.456,
+       0.713
+      ],
+      "auc_ci95_newcombe": [
+       0.458,
+       0.704
+      ],
+      "accuracy_at_50": 0.48,
+      "fakes_flagged": 2,
+      "reals_flagged": 1,
+      "reals": {
+       "authentic": 32,
+       "suspicious": 3,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 31,
+       "suspicious": 9,
+       "synthetic": 0
+      }
+     },
+     "after": {
+      "n_real": 35,
+      "n_fake": 40,
+      "auc": 0.945,
+      "auc_ci95": [
+       0.89,
+       0.985
+      ],
+      "auc_ci95_newcombe": [
+       0.86,
+       0.978
+      ],
+      "accuracy_at_50": 0.853,
+      "fakes_flagged": 32,
+      "reals_flagged": 3,
+      "reals": {
+       "authentic": 27,
+       "suspicious": 8,
+       "synthetic": 0
+      },
+      "fakes": {
+       "authentic": 3,
+       "suspicious": 9,
+       "synthetic": 28
+      }
+     }
+    }
+   },
+   "per_method": [
+    {
+     "method": "Deepfakes",
+     "n_fake": 5,
+     "before": {
+      "auc": 0.795,
+      "flagged": 0,
+      "synthetic": 0
+     },
+     "after": {
+      "auc": 1.0,
+      "flagged": 5,
+      "synthetic": 5
+     },
+     "face_swap_auc": 1.0,
+     "seen_in_training": "GenD: this method's TRAIN videos (not these test clips)"
+    },
+    {
+     "method": "FaceSwap",
+     "n_fake": 5,
+     "before": {
+      "auc": 0.445,
+      "flagged": 0,
+      "synthetic": 0
+     },
+     "after": {
+      "auc": 0.99,
+      "flagged": 4,
+      "synthetic": 4
+     },
+     "face_swap_auc": 0.97,
+     "seen_in_training": "GenD: this method's TRAIN videos (not these test clips)"
+    },
+    {
+     "method": "Face2Face",
+     "n_fake": 5,
+     "before": {
+      "auc": 0.435,
+      "flagged": 0,
+      "synthetic": 0
+     },
+     "after": {
+      "auc": 0.92,
+      "flagged": 3,
+      "synthetic": 2
+     },
+     "face_swap_auc": 0.92,
+     "seen_in_training": "GenD: this method's TRAIN videos (not these test clips)"
+    },
+    {
+     "method": "NeuralTextures",
+     "n_fake": 5,
+     "before": {
+      "auc": 0.68,
+      "flagged": 0,
+      "synthetic": 0
+     },
+     "after": {
+      "auc": 0.99,
+      "flagged": 4,
+      "synthetic": 4
+     },
+     "face_swap_auc": 0.97,
+     "seen_in_training": "GenD: this method's TRAIN videos (not these test clips)"
+    },
+    {
+     "method": "FaceShifter",
+     "n_fake": 5,
+     "before": {
+      "auc": 0.69,
+      "flagged": 0,
+      "synthetic": 0
+     },
+     "after": {
+      "auc": 0.825,
+      "flagged": 1,
+      "synthetic": 1
+     },
+     "face_swap_auc": 0.81,
+     "seen_in_training": "no (FaceShifter is in neither model's training data)"
+    }
+   ],
+   "face_swap_test": {
+    "ffpp": {
+     "n": 45,
+     "auc": 0.934,
+     "auc_ci95": [
+      0.854,
+      0.986
+     ],
+     "auc_ci95_newcombe": [
+      0.807,
+      0.978
+     ],
+     "accuracy_at_ffpp_threshold": 0.822,
+     "recall": 0.88,
+     "specificity": 0.75,
+     "fired_on_reals": 5,
+     "fired_on_fakes": 22
+    },
+    "celebdf": {
+     "n": 20,
+     "auc": 0.99,
+     "auc_ci95": [
+      0.94,
+      1.0
+     ],
+     "auc_ci95_newcombe": [
+      0.8,
+      1.0
+     ],
+     "accuracy_at_ffpp_threshold": 0.65,
+     "recall": 1.0,
+     "specificity": 0.3,
+     "fired_on_reals": 7,
+     "fired_on_fakes": 10
+    },
+    "dfd": {
+     "n": 10,
+     "auc": 1.0,
+     "auc_ci95": [
+      1.0,
+      1.0
+     ],
+     "auc_ci95_newcombe": [
+      0.689,
+      1.0
+     ],
+     "accuracy_at_ffpp_threshold": 1.0,
+     "recall": 1.0,
+     "specificity": 1.0,
+     "fired_on_reals": 0,
+     "fired_on_fakes": 5
+    },
+    "cross": {
+     "n": 30,
+     "auc": 0.991,
+     "auc_ci95": [
+      0.96,
+      1.0
+     ],
+     "auc_ci95_newcombe": [
+      0.857,
+      0.999
+     ],
+     "accuracy_at_ffpp_threshold": 0.767,
+     "recall": 1.0,
+     "specificity": 0.533,
+     "fired_on_reals": 7,
+     "fired_on_fakes": 15
+    },
+    "all": {
+     "n": 75,
+     "auc": 0.951,
+     "auc_ci95": [
+      0.905,
+      0.985
+     ],
+     "auc_ci95_newcombe": [
+      0.868,
+      0.982
+     ],
+     "accuracy_at_ffpp_threshold": 0.8,
+     "recall": 0.925,
+     "specificity": 0.657,
+     "fired_on_reals": 12,
+     "fired_on_fakes": 37
+    }
+   },
+   "cross_gain": {
+    "gain": 0.393,
+    "ci95": [
+     0.187,
+     0.593
+    ],
+    "p_gain_le_0": 0.0
+   },
+   "mean_latency_ms": 4704,
+   "clips": [
+    {
+     "file": "ffpp_deepfakes_249_280.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Deepfakes",
+     "before": 49,
+     "score": 90,
+     "verdict": "synthetic",
+     "face_swap": 100
+    },
+    {
+     "file": "ffpp_original_249.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 23,
+     "score": 23,
+     "verdict": "authentic",
+     "face_swap": 23
+    },
+    {
+     "file": "ffpp_faceswap_186_170.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceSwap",
+     "before": 13,
+     "score": 72,
+     "verdict": "synthetic",
+     "face_swap": 96
+    },
+    {
+     "file": "ffpp_original_186.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 5,
+     "score": 21,
+     "verdict": "authentic",
+     "face_swap": 50
+    },
+    {
+     "file": "ffpp_face2face_955_078.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Face2Face",
+     "before": 5,
+     "score": 73,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_original_955.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 4,
+     "score": 21,
+     "verdict": "authentic",
+     "face_swap": 55
+    },
+    {
+     "file": "ffpp_neuraltextures_579_701.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "NeuralTextures",
+     "before": 27,
+     "score": 73,
+     "verdict": "synthetic",
+     "face_swap": 93
+    },
+    {
+     "file": "ffpp_original_579.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 16,
+     "score": 39,
+     "verdict": "suspicious",
+     "face_swap": 63
+    },
+    {
+     "file": "ffpp_faceshifter_634_660.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceShifter",
+     "before": 39,
+     "score": 39,
+     "verdict": "suspicious",
+     "face_swap": 48
+    },
+    {
+     "file": "ffpp_original_634.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 33,
+     "score": 33,
+     "verdict": "authentic",
+     "face_swap": 12
+    },
+    {
+     "file": "ffpp_deepfakes_161_141.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Deepfakes",
+     "before": 22,
+     "score": 85,
+     "verdict": "synthetic",
+     "face_swap": 100
+    },
+    {
+     "file": "ffpp_original_161.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 16,
+     "score": 16,
+     "verdict": "authentic",
+     "face_swap": 19
+    },
+    {
+     "file": "ffpp_faceswap_682_669.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceSwap",
+     "before": 5,
+     "score": 74,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_original_682.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 5,
+     "score": 5,
+     "verdict": "authentic",
+     "face_swap": 22
+    },
+    {
+     "file": "ffpp_face2face_917_924.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Face2Face",
+     "before": 29,
+     "score": 29,
+     "verdict": "authentic",
+     "face_swap": 38
+    },
+    {
+     "file": "ffpp_original_917.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 32,
+     "score": 32,
+     "verdict": "authentic",
+     "face_swap": 9
+    },
+    {
+     "file": "ffpp_neuraltextures_488_399.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "NeuralTextures",
+     "before": 37,
+     "score": 68,
+     "verdict": "synthetic",
+     "face_swap": 85
+    },
+    {
+     "file": "ffpp_original_488.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 22,
+     "score": 22,
+     "verdict": "authentic",
+     "face_swap": 36
+    },
+    {
+     "file": "ffpp_faceshifter_625_650.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceShifter",
+     "before": 5,
+     "score": 25,
+     "verdict": "authentic",
+     "face_swap": 61
+    },
+    {
+     "file": "ffpp_original_625.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 5,
+     "score": 5,
+     "verdict": "authentic",
+     "face_swap": 6
+    },
+    {
+     "file": "ffpp_deepfakes_418_507.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Deepfakes",
+     "before": 43,
+     "score": 89,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_original_418.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 20,
+     "score": 20,
+     "verdict": "authentic",
+     "face_swap": 17
+    },
+    {
+     "file": "ffpp_faceswap_257_420.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceSwap",
+     "before": 17,
+     "score": 84,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_original_257.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 29,
+     "score": 51,
+     "verdict": "suspicious",
+     "face_swap": 69
+    },
+    {
+     "file": "ffpp_face2face_623_630.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Face2Face",
+     "before": 23,
+     "score": 44,
+     "verdict": "suspicious",
+     "face_swap": 63
+    },
+    {
+     "file": "ffpp_original_623.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 26,
+     "score": 26,
+     "verdict": "authentic",
+     "face_swap": 16
+    },
+    {
+     "file": "ffpp_neuraltextures_454_527.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "NeuralTextures",
+     "before": 11,
+     "score": 67,
+     "verdict": "synthetic",
+     "face_swap": 95
+    },
+    {
+     "file": "ffpp_original_454.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 5,
+     "score": 30,
+     "verdict": "authentic",
+     "face_swap": 70
+    },
+    {
+     "file": "ffpp_faceshifter_714_842.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceShifter",
+     "before": 9,
+     "score": 28,
+     "verdict": "authentic",
+     "face_swap": 54
+    },
+    {
+     "file": "ffpp_original_714.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 23,
+     "score": 23,
+     "verdict": "authentic",
+     "face_swap": 12
+    },
+    {
+     "file": "ffpp_deepfakes_862_047.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Deepfakes",
+     "before": 10,
+     "score": 88,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_original_862.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 3,
+     "score": 3,
+     "verdict": "authentic",
+     "face_swap": 37
+    },
+    {
+     "file": "ffpp_faceswap_695_422.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceSwap",
+     "before": 24,
+     "score": 44,
+     "verdict": "suspicious",
+     "face_swap": 63
+    },
+    {
+     "file": "ffpp_original_695.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 33,
+     "score": 33,
+     "verdict": "authentic",
+     "face_swap": 14
+    },
+    {
+     "file": "ffpp_face2face_932_384.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Face2Face",
+     "before": 4,
+     "score": 63,
+     "verdict": "suspicious",
+     "face_swap": 97
+    },
+    {
+     "file": "ffpp_original_932.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 4,
+     "score": 4,
+     "verdict": "authentic",
+     "face_swap": 25
+    },
+    {
+     "file": "ffpp_neuraltextures_479_706.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "NeuralTextures",
+     "before": 22,
+     "score": 41,
+     "verdict": "suspicious",
+     "face_swap": 59
+    },
+    {
+     "file": "ffpp_original_479.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 6,
+     "score": 6,
+     "verdict": "authentic",
+     "face_swap": 7
+    },
+    {
+     "file": "ffpp_faceshifter_670_661.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceShifter",
+     "before": 40,
+     "score": 40,
+     "verdict": "suspicious",
+     "face_swap": 35
+    },
+    {
+     "file": "ffpp_original_670.mp4",
+     "label": "real",
+     "part": "ffpp",
+     "method": "original",
+     "before": 37,
+     "score": 37,
+     "verdict": "suspicious",
+     "face_swap": 6
+    },
+    {
+     "file": "ffpp_deepfakes_278_306.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Deepfakes",
+     "before": 38,
+     "score": 88,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_faceswap_029_048.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceSwap",
+     "before": 6,
+     "score": 76,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_face2face_755_759.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "Face2Face",
+     "before": 12,
+     "score": 81,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "ffpp_neuraltextures_404_429.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "NeuralTextures",
+     "before": 25,
+     "score": 81,
+     "verdict": "synthetic",
+     "face_swap": 97
+    },
+    {
+     "file": "ffpp_faceshifter_973_970.mp4",
+     "label": "fake",
+     "part": "ffpp",
+     "method": "FaceShifter",
+     "before": 30,
+     "score": 78,
+     "verdict": "synthetic",
+     "face_swap": 95
+    },
+    {
+     "file": "celebdf_synthesis_id9_id6_0000.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 6,
+     "score": 60,
+     "verdict": "suspicious",
+     "face_swap": 95
+    },
+    {
+     "file": "celebdf_real_id9_0000.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "Celeb-real",
+     "before": 9,
+     "score": 9,
+     "verdict": "authentic",
+     "face_swap": 7
+    },
+    {
+     "file": "celebdf_synthesis_id1_id0_0007.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 48,
+     "score": 91,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "celebdf_real_id1_0007.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "Celeb-real",
+     "before": 29,
+     "score": 45,
+     "verdict": "suspicious",
+     "face_swap": 58
+    },
+    {
+     "file": "celebdf_synthesis_id17_id6_0000.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 14,
+     "score": 79,
+     "verdict": "synthetic",
+     "face_swap": 98
+    },
+    {
+     "file": "celebdf_real_id17_0000.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "Celeb-real",
+     "before": 13,
+     "score": 34,
+     "verdict": "authentic",
+     "face_swap": 58
+    },
+    {
+     "file": "celebdf_synthesis_id21_id19_0009.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 19,
+     "score": 84,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "celebdf_real_id21_0009.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "Celeb-real",
+     "before": 14,
+     "score": 59,
+     "verdict": "suspicious",
+     "face_swap": 89
+    },
+    {
+     "file": "celebdf_synthesis_id6_id1_0005.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 8,
+     "score": 74,
+     "verdict": "synthetic",
+     "face_swap": 98
+    },
+    {
+     "file": "celebdf_real_id6_0005.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "Celeb-real",
+     "before": 7,
+     "score": 7,
+     "verdict": "authentic",
+     "face_swap": 19
+    },
+    {
+     "file": "celebdf_synthesis_id4_id21_0004.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 12,
+     "score": 68,
+     "verdict": "synthetic",
+     "face_swap": 95
+    },
+    {
+     "file": "celebdf_real_id4_0004.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "Celeb-real",
+     "before": 13,
+     "score": 13,
+     "verdict": "authentic",
+     "face_swap": 33
+    },
+    {
+     "file": "celebdf_synthesis_id56_id55_0009.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 30,
+     "score": 87,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "celebdf_synthesis_id3_id28_0001.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 22,
+     "score": 59,
+     "verdict": "suspicious",
+     "face_swap": 84
+    },
+    {
+     "file": "celebdf_synthesis_id27_id23_0008.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 21,
+     "score": 79,
+     "verdict": "synthetic",
+     "face_swap": 97
+    },
+    {
+     "file": "celebdf_synthesis_id53_id52_0003.mp4",
+     "label": "fake",
+     "part": "celebdf",
+     "method": "Celeb-DF synthesis",
+     "before": 16,
+     "score": 81,
+     "verdict": "synthetic",
+     "face_swap": 98
+    },
+    {
+     "file": "celebdf_youtube_real_00048.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "YouTube-real",
+     "before": 20,
+     "score": 37,
+     "verdict": "suspicious",
+     "face_swap": 54
+    },
+    {
+     "file": "celebdf_youtube_real_00261.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "YouTube-real",
+     "before": 17,
+     "score": 33,
+     "verdict": "authentic",
+     "face_swap": 51
+    },
+    {
+     "file": "celebdf_youtube_real_00047.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "YouTube-real",
+     "before": 14,
+     "score": 32,
+     "verdict": "authentic",
+     "face_swap": 53
+    },
+    {
+     "file": "celebdf_youtube_real_00265.mp4",
+     "label": "real",
+     "part": "celebdf",
+     "method": "YouTube-real",
+     "before": 6,
+     "score": 30,
+     "verdict": "authentic",
+     "face_swap": 66
+    },
+    {
+     "file": "dfd_original_12__talking_against_wall.mp4",
+     "label": "real",
+     "part": "dfd",
+     "method": "DFD original",
+     "before": 4,
+     "score": 4,
+     "verdict": "authentic",
+     "face_swap": 22
+    },
+    {
+     "file": "dfd_faceswap_12_06__talking_against_wall__0VR4Y891.mp4",
+     "label": "fake",
+     "part": "dfd",
+     "method": "DFD face-swap",
+     "before": 4,
+     "score": 72,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "dfd_original_15__kitchen_still.mp4",
+     "label": "real",
+     "part": "dfd",
+     "method": "DFD original",
+     "before": 12,
+     "score": 12,
+     "verdict": "authentic",
+     "face_swap": 7
+    },
+    {
+     "file": "dfd_faceswap_15_02__kitchen_still__I8G2LWD1.mp4",
+     "label": "fake",
+     "part": "dfd",
+     "method": "DFD face-swap",
+     "before": 17,
+     "score": 62,
+     "verdict": "suspicious",
+     "face_swap": 90
+    },
+    {
+     "file": "dfd_original_21__outside_talking_still_laughing.mp4",
+     "label": "real",
+     "part": "dfd",
+     "method": "DFD original",
+     "before": 45,
+     "score": 45,
+     "verdict": "suspicious",
+     "face_swap": 8
+    },
+    {
+     "file": "dfd_faceswap_21_14__outside_talking_still_laughing__IRKML4J0.mp4",
+     "label": "fake",
+     "part": "dfd",
+     "method": "DFD face-swap",
+     "before": 56,
+     "score": 91,
+     "verdict": "synthetic",
+     "face_swap": 99
+    },
+    {
+     "file": "dfd_original_27__podium_speech_happy.mp4",
+     "label": "real",
+     "part": "dfd",
+     "method": "DFD original",
+     "before": 54,
+     "score": 54,
+     "verdict": "suspicious",
+     "face_swap": 17
+    },
+    {
+     "file": "dfd_faceswap_27_01__podium_speech_happy__S2YCUY48.mp4",
+     "label": "fake",
+     "part": "dfd",
+     "method": "DFD face-swap",
+     "before": 63,
+     "score": 82,
+     "verdict": "synthetic",
+     "face_swap": 88
+    },
+    {
+     "file": "dfd_original_10__talking_angry_couch.mp4",
+     "label": "real",
+     "part": "dfd",
+     "method": "DFD original",
+     "before": 29,
+     "score": 29,
+     "verdict": "authentic",
+     "face_swap": 30
+    },
+    {
+     "file": "dfd_faceswap_10_19__talking_angry_couch__BVVPN5D5.mp4",
+     "label": "fake",
+     "part": "dfd",
+     "method": "DFD face-swap",
+     "before": 26,
+     "score": 73,
+     "verdict": "synthetic",
+     "face_swap": 93
+    }
+   ],
+   "webcam_reals": {
+    "n": 39,
+    "before": {
+     "authentic": 38,
+     "suspicious": 1,
+     "synthetic": 0
+    },
+    "after": {
+     "authentic": 27,
+     "suspicious": 11,
+     "synthetic": 1
+    },
+    "flagged_before": 0,
+    "flagged_after": 3,
+    "face_swap_fired": 21,
+    "clips": [
+     {
+      "file": "ffpp_original_249.mp4",
+      "before": 14,
+      "score": 14,
+      "verdict": "authentic",
+      "face_swap": 48
+     },
+     {
+      "file": "ffpp_original_186.mp4",
+      "before": 13,
+      "score": 13,
+      "verdict": "authentic",
+      "face_swap": 18
+     },
+     {
+      "file": "ffpp_original_955.mp4",
+      "before": 4,
+      "score": 47,
+      "verdict": "suspicious",
+      "face_swap": 91
+     },
+     {
+      "file": "ffpp_original_579.mp4",
+      "before": 7,
+      "score": 44,
+      "verdict": "suspicious",
+      "face_swap": 83
+     },
+     {
+      "file": "ffpp_original_634.mp4",
+      "before": 12,
+      "score": 12,
+      "verdict": "authentic",
+      "face_swap": 35
+     },
+     {
+      "file": "ffpp_original_161.mp4",
+      "before": 9,
+      "score": 30,
+      "verdict": "authentic",
+      "face_swap": 59
+     },
+     {
+      "file": "ffpp_original_682.mp4",
+      "before": 5,
+      "score": 33,
+      "verdict": "authentic",
+      "face_swap": 76
+     },
+     {
+      "file": "ffpp_original_917.mp4",
+      "before": 18,
+      "score": 18,
+      "verdict": "authentic",
+      "face_swap": 28
+     },
+     {
+      "file": "ffpp_original_488.mp4",
+      "before": 14,
+      "score": 39,
+      "verdict": "suspicious",
+      "face_swap": 66
+     },
+     {
+      "file": "ffpp_original_625.mp4",
+      "before": 4,
+      "score": 4,
+      "verdict": "authentic",
+      "face_swap": 31
+     },
+     {
+      "file": "ffpp_original_418.mp4",
+      "before": 38,
+      "score": 38,
+      "verdict": "suspicious",
+      "face_swap": 31
+     },
+     {
+      "file": "ffpp_original_257.mp4",
+      "before": 24,
+      "score": 52,
+      "verdict": "suspicious",
+      "face_swap": 75
+     },
+     {
+      "file": "ffpp_original_623.mp4",
+      "before": 7,
+      "score": 7,
+      "verdict": "authentic",
+      "face_swap": 25
+     },
+     {
+      "file": "ffpp_original_454.mp4",
+      "before": 4,
+      "score": 36,
+      "verdict": "suspicious",
+      "face_swap": 81
+     },
+     {
+      "file": "ffpp_original_714.mp4",
+      "before": 14,
+      "score": 14,
+      "verdict": "authentic",
+      "face_swap": 24
+     },
+     {
+      "file": "ffpp_original_862.mp4",
+      "before": 5,
+      "score": 72,
+      "verdict": "synthetic",
+      "face_swap": 95
+     },
+     {
+      "file": "ffpp_original_695.mp4",
+      "before": 6,
+      "score": 6,
+      "verdict": "authentic",
+      "face_swap": 24
+     },
+     {
+      "file": "ffpp_original_932.mp4",
+      "before": 5,
+      "score": 33,
+      "verdict": "authentic",
+      "face_swap": 76
+     },
+     {
+      "file": "ffpp_original_479.mp4",
+      "before": 22,
+      "score": 22,
+      "verdict": "authentic",
+      "face_swap": 17
+     },
+     {
+      "file": "ffpp_original_670.mp4",
+      "before": 19,
+      "score": 19,
+      "verdict": "authentic",
+      "face_swap": 27
+     },
+     {
+      "file": "celebdf_real_id9_0000.mp4",
+      "before": 5,
+      "score": 5,
+      "verdict": "authentic",
+      "face_swap": 26
+     },
+     {
+      "file": "celebdf_real_id1_0007.mp4",
+      "before": 5,
+      "score": 21,
+      "verdict": "authentic",
+      "face_swap": 50
+     },
+     {
+      "file": "celebdf_real_id17_0000.mp4",
+      "before": 5,
+      "score": 5,
+      "verdict": "authentic",
+      "face_swap": 40
+     },
+     {
+      "file": "celebdf_real_id21_0009.mp4",
+      "before": 11,
+      "score": 34,
+      "verdict": "authentic",
+      "face_swap": 61
+     },
+     {
+      "file": "celebdf_real_id6_0005.mp4",
+      "before": 5,
+      "score": 5,
+      "verdict": "authentic",
+      "face_swap": 34
+     },
+     {
+      "file": "celebdf_real_id4_0004.mp4",
+      "before": 10,
+      "score": 10,
+      "verdict": "authentic",
+      "face_swap": 33
+     },
+     {
+      "file": "celebdf_youtube_real_00048.mp4",
+      "before": 6,
+      "score": 25,
+      "verdict": "authentic",
+      "face_swap": 58
+     },
+     {
+      "file": "celebdf_youtube_real_00261.mp4",
+      "before": 6,
+      "score": 33,
+      "verdict": "authentic",
+      "face_swap": 71
+     },
+     {
+      "file": "celebdf_youtube_real_00047.mp4",
+      "before": 5,
+      "score": 24,
+      "verdict": "authentic",
+      "face_swap": 58
+     },
+     {
+      "file": "celebdf_youtube_real_00265.mp4",
+      "before": 5,
+      "score": 34,
+      "verdict": "authentic",
+      "face_swap": 76
+     },
+     {
+      "file": "dfd_original_12__talking_against_wall.mp4",
+      "before": 4,
+      "score": 22,
+      "verdict": "authentic",
+      "face_swap": 54
+     },
+     {
+      "file": "dfd_original_15__kitchen_still.mp4",
+      "before": 7,
+      "score": 38,
+      "verdict": "suspicious",
+      "face_swap": 78
+     },
+     {
+      "file": "dfd_original_21__outside_talking_still_laughing.mp4",
+      "before": 7,
+      "score": 41,
+      "verdict": "suspicious",
+      "face_swap": 80
+     },
+     {
+      "file": "dfd_original_27__podium_speech_happy.mp4",
+      "before": 25,
+      "score": 49,
+      "verdict": "suspicious",
+      "face_swap": 62
+     },
+     {
+      "file": "dfd_original_10__talking_angry_couch.mp4",
+      "before": 2,
+      "score": 39,
+      "verdict": "suspicious",
+      "face_swap": 79
+     },
+     {
+      "file": "ffpp_original_069.mp4",
+      "before": 26,
+      "score": 26,
+      "verdict": "authentic",
+      "face_swap": 43
+     },
+     {
+      "file": "dfd_original_09.mp4",
+      "before": 4,
+      "score": 4,
+      "verdict": "authentic",
+      "face_swap": 12
+     },
+     {
+      "file": "celebdf_real_id2_0000.mp4",
+      "before": 7,
+      "score": 7,
+      "verdict": "authentic",
+      "face_swap": 26
+     },
+     {
+      "file": "dfd_original_07.mp4",
+      "before": 31,
+      "score": 54,
+      "verdict": "suspicious",
+      "face_swap": 72
+     }
+    ],
+    "note": "35 real benchmark clips + 4 real demo clips, re-encoded like a cheap webcam (360p, blur, noise, denoise, H.264 CRF 30), full engine before vs after the face-swap detector."
+   },
+   "note": "Video = the FULL engine (every video test + fusion). 'Before' is the engine as shipped on 19 Nov (the same report fused without the face-swap test); 'after' adds the face-swap detector: two PRETRAINED published networks (GenD CLIP ViT-L/14, WACV 2026, trained on FaceForensics++; the DFDC-winning EfficientNet-B7, trained on DFDC) that we benchmarked, chose and integrated - we did not train them. Its three thresholds were chosen on the 45 FaceForensics++ test clips only, so FF++ accuracy is in-sample. Celeb-DF + Google DFD (15 real + 15 fake) are the out-of-sample test: no threshold or weight was chosen on them and neither network was trained on them, but the 6 candidates were ranked by their AUC on them (pre-registered rule) and the pair was preferred over the rule's winner (B7 alone) after looking at them, so their AUC is optimistic; GenD's authors chose their checkpoint using Celeb-DF++ validation videos, so only Google DFD (5 + 5) is fully unseen. On these clips the pair and B7 alone are statistically tied. AUC intervals: auc_ci95 = stratified percentile bootstrap (too narrow near 1.0 with so few clips), auc_ci95_newcombe = Newcombe's Wilson-type interval (use this one). The demo clips FF++ 069 are in GenD's training split, and the Celeb-DF id2 pair is from Celeb-DF's training portion.",
+   "dataset": "75 leak-free clips: FaceForensics++ c23 official test split (20 real + 25 fake: Deepfakes, FaceSwap, Face2Face, NeuralTextures, FaceShifter x 5), Celeb-DF v2 official test list (10 + 10), Google DFD (5 + 5; actors not in any training set). No overlap with the demo clips (whole identities excluded)."
+  }
+ },
+ "generated_video": "2026-11-19T03:06:27+00:00"
 }

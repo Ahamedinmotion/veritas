@@ -422,6 +422,15 @@ main { outline: none; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes fadeIn { from { opacity: 0; } }
 .tl-pt { stroke: var(--ink-0); stroke-width: 1; }
+/* face-swap detector: 8 per-frame scores drawn as diamonds on a dashed bone line (the AI-face trace stays blue) */
+.tl-swline { fill: none; stroke: var(--bone-dim); stroke-width: 1.2; stroke-dasharray: 4 4; opacity: 0.75; }
+.tl-sw { stroke: var(--bone); stroke-width: 2; }
+.rp.is-fresh .tl-svg:not(.no-anim) .tl-sw, .rp.is-fresh .tl-svg:not(.no-anim) .tl-swline { animation: fadeIn 0.8s ease 1.9s both; }
+.tl-leg { margin: 0; display: flex; flex-wrap: wrap; gap: 0.35rem 1.2rem; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.04em; color: var(--bone-dim); text-transform: uppercase; }
+.tl-leg span { display: inline-flex; align-items: center; gap: 0.45rem; }
+.tl-leg-line i { width: 18px; height: 2.5px; border-radius: 2px; background: var(--scan); }
+.tl-leg-sw i { width: 8px; height: 8px; transform: rotate(45deg); background: var(--bone-dim); border: 2px solid var(--bone); }
+.ov-onesided { border-left: 2px solid var(--scan); padding-left: 0.7rem; }
 .tl-kf line { stroke: var(--evidence); stroke-dasharray: 2 3; opacity: 0.7; }
 .tl-kf text { font-family: var(--font-mono); font-size: 13px; fill: var(--evidence); text-anchor: middle; }
 .tl-kf.is-flash line { animation: kfflash 0.9s ease; }

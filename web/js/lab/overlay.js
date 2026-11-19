@@ -53,10 +53,11 @@ function render() {
   const t = tests[idx]; if (!t) return close();
   const skipped = t.status === 'skipped' || t.status === 'error';
   const visualOnly = !skipped && t.score == null;
-  const b = skipped || visualOnly ? 'none' : band(t.score);
+  const silent = !!(m0(t).one_sided && t.score != null && t.score < 50);   // one-sided test that did not fire
+  const b = skipped || visualOnly || silent ? 'none' : band(t.score);
   const col = BAND_VAR[b];
   // Internal/debug fields go to the mono footer; the panel shows the measurements a judge can reason about.
-  const HIDE = new Set(['ms', 'raw', 'model', 'detector', 'error']);
+  const HIDE = new Set(['ms', 'raw', 'model', 'detector', 'error', 'one_sided', 'z']);
   const m = t.metrics || {};
   const metrics = Object.entries(m).filter(([k, v]) => !HIDE.has(k) && v != null && v !== '');
   const hasProb = metrics.some(([k]) => isProb(k));
@@ -90,20 +91,21 @@ function render() {
         <h2 class="ov-name" id="ov-title">${esc(t.name || t.id)}</h2>
         <div class="ov-score">
           <span class="ov-score-v">${skipped ? '—' : visualOnly ? 'Visual' : Math.round(t.score)}</span>
-          <span class="ov-score-k">${skipped ? (t.status === 'error' ? 'test failed' : 'skipped · not applicable') : visualOnly ? 'evidence picture · not scored' : '/100 synthetic likelihood'}</span>
+          <span class="ov-score-k">${skipped ? (t.status === 'error' ? 'test failed' : 'skipped · not applicable') : visualOnly ? 'evidence picture · not scored' : silent ? '/100 · below 50, so not counted (one-sided)' : '/100 synthetic likelihood'}</span>
           <span class="ov-bar"><i style="transform:scaleX(${skipped || visualOnly ? 0 : t.score / 100})"></i><b style="left:35%"></b><b style="left:65%"></b></span>
         </div>
         ${t.finding ? `<p class="ov-finding">${esc(t.finding)}</p>` : ''}
         ${t.explain ? `<h3 class="label ov-h">The science</h3><p class="ov-explain">${esc(t.explain)}</p>` : ''}
         ${metrics.length ? `<h3 class="label ov-h">Measurements</h3><dl class="ov-metrics">${metrics.map(([k, v]) => `<div><dt>${esc(metricName(k))}</dt><dd>${esc(isProb(k) && typeof v === 'number' ? fmtProb(v) : fmtVal(v))}</dd></div>`).join('')}</dl>
           ${hasProb ? '<p class="ov-mnote">“Raw P(fake)” is the network’s direct output. The score above is that output after calibration on our labelled test set, so the two numbers differ.</p>' : ''}` : ''}
+        ${m.one_sided ? `<p class="ov-mnote ov-onesided"><b>One-sided test.</b> It counts toward the verdict only when it raises an alarm (score 50 or more); below 50 its weight is 0, because these networks were trained on face-swaps and call fully AI-generated faces “real”. 50 = the thresholds chosen on FaceForensics++ only: each network’s mean P(fake) over 8 frames is compared with its own threshold, the two are averaged, and the result is compared with the pair’s own FaceForensics++ threshold, which is lower. So the pair can fire even when each network on its own is slightly below its threshold.</p>` : ''}
         <p class="ov-foot mono">weight in verdict ${weightPct} · status ${esc(t.status || 'ok')} · id ${esc(t.id)}${tech.length ? ` · ${esc(tech.join(' · '))}` : ''}</p>
       </div>
 
       <button class="ov-close" type="button" aria-label="Close details (Esc)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="1.8"/></svg></button>
       <nav class="ov-nav" aria-label="Other tests">
         <button class="ov-prev btn btn-quiet" type="button"><span aria-hidden="true">←</span> Previous</button>
-        <span class="ov-dots">${tests.map((x, i) => `<i class="${i === idx ? 'is-on' : ''}" style="--c:${BAND_VAR[x.status === 'skipped' || x.score == null ? 'none' : band(x.score)]}"></i>`).join('')}</span>
+        <span class="ov-dots">${tests.map((x, i) => `<i class="${i === idx ? 'is-on' : ''}" style="--c:${BAND_VAR[x.status === 'skipped' || x.score == null || (m0(x).one_sided && x.score < 50) ? 'none' : band(x.score)]}"></i>`).join('')}</span>
         <button class="ov-next btn btn-quiet" type="button">Next <span aria-hidden="true">→</span></button>
       </nav>
     </div>
@@ -123,6 +125,8 @@ function render() {
       <span class="label">${skipped ? 'Not run for this file' : 'This test reports numbers, not a picture'}</span></div>`));
   }
 }
+
+function m0(t) { return (t && t.metrics) || {}; }
 
 function visualWord(t) {
   return { compression: 'Error map', noise: 'Noise residual', ai_model: 'Patch scores', frequency: 'Spectrum' }[t.category] || 'Heatmap';

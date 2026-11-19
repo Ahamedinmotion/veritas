@@ -182,6 +182,7 @@ const jpg = (c, q = 0.86) => c.toDataURL('image/jpeg', q);
 
 /* ------------------------------------------------------------------ text */
 const EXPLAIN = {
+  face_swap: 'Two pretrained deepfake detectors (GenD and the DFDC challenge winner) each find the face in 8 frames and give the probability that it was swapped or re-animated; such detectors are trained to pick up blending seams and texture mismatches. One-sided: it can only raise an alarm.',
   ai_face: 'A vision network trained on thousands of real and face-swapped videos looks only at the cropped face. It learns blending seams, over-smoothed skin and lighting mismatches that people miss, and outputs the probability that the face is synthetic.',
   ai_generated: 'A classifier trained on photographs and on images from diffusion models and GANs. Generators leave statistical fingerprints across the whole picture — texture regularity, colour distribution — even when nothing looks wrong to the eye.',
   ela: 'Every JPEG save throws away a little detail. ELA re-saves the image at a known quality and maps the difference: regions with a different compression history, such as pasted or generated areas, glow brighter or darker than the rest.',
@@ -201,7 +202,7 @@ const EXPLAIN = {
 
 /* ------------------------------------------------------------------ public API */
 export function health() {
-  return Promise.resolve({ ok: true, version: '1.0.0-mock', models: { face_deepfake: true, ai_generated: true, audio_deepfake: true }, device: 'mock' });
+  return Promise.resolve({ ok: true, version: '1.0.0-mock', models: { face_deepfake: true, ai_generated: true, audio_deepfake: true, face_swap: true }, device: 'mock' });
 }
 
 let caseNo = 41;
@@ -286,11 +287,15 @@ function fuse(tests) {
 async function buildVideo(file, variant) {
   const R = rng(17); const dur = 18.4;
   const sc = (v) => scale(v, variant);
+  // the face-swap detector only fires on swap-like clips; on the AI "talking photo" (a GAN face, no swap) and on real
+  // video it stays silent, as the real engine does (it scores the locker's talking photo 0)
+  const swapFires = variant !== 'authentic' && /swap|deepfake|reenact|lip/i.test(file.name || '');
   const timeline = Array.from({ length: 48 }, (_, i) => {
     const t = +(0.2 + (i * (dur - 0.4)) / 47).toFixed(2);
     let v = 46 + (R() - 0.5) * 18 + 10 * Math.sin(i / 5);
     if (i > 14 && i < 21) v += 34; if (i > 33 && i < 37) v += 40;
-    return { t, score: clamp(Math.round(scale(v, variant)), 0, 100) };
+    const swap = swapFires ? clamp(Math.round(scale(v + 18, variant)), 0, 100) : 2 + ((i * 37) % 7);   // no R() here: keeps the AI-face trace identical
+    return { t, score: clamp(Math.round(scale(v, variant)), 0, 100), ...(i % 6 === 3 ? { swap } : {}) };
   });
   const keyIdx = [17, 19, 35, 8];
   const keyframes = keyIdx.map((i, k) => {
@@ -303,6 +308,13 @@ async function buildVideo(file, variant) {
     { id: 'ai_face', name: 'AI Face Analysis', category: 'ai_model', score: sc(74), weight: 0.3, status: 'ok',
       finding: 'Average over 48 frames; spikes at 5.9 s and 13.6 s.', explain: EXPLAIN.ai_face + ' For video, it runs on every sampled frame and we average.',
       visual: null, metrics: { frames: 48, mean_p_fake: +(sc(74) / 100).toFixed(2), max_p_fake: +(sc(93) / 100).toFixed(2) } },
+    swapFires
+      ? { id: 'face_swap', name: 'Face-Swap Detector', category: 'ai_model', score: sc(82), weight: 0.3, status: 'ok',
+        finding: 'Face-swap traces: 6 of 8 face frames above threshold.', explain: EXPLAIN.face_swap, visual: null,
+        metrics: { frames_scored: 8, networks_voting: 2, one_sided: true } }
+      : { id: 'face_swap', name: 'Face-Swap Detector', category: 'ai_model', score: variant === 'authentic' ? 15 : 0, weight: 0, status: 'ok',
+        finding: 'No face-swap traces found (this test only raises alarms).', explain: EXPLAIN.face_swap, visual: null,
+        metrics: { frames_scored: 8, networks_voting: 2, one_sided: true } },
     { id: 'blink', name: 'Blink Rate (Eye Aspect Ratio)', category: 'biometric', score: sc(68), weight: 0.2, status: 'ok',
       finding: variant === 'authentic' ? '6 blinks in 18 s — a normal rate.' : 'Only 2 blinks in 18 s (expected 5–6).', explain: EXPLAIN.blink,
       visual: png(lineChart(900, 320, ear, { ymax: 0.4, thresh: 0.21, label: 'EAR · 18.4 s', events: [42 / 159, 121 / 159] })),

@@ -7,7 +7,7 @@ each giving a 0-100 "synthetic likelihood", and fuses them into one verdict:
 | Evidence | Tests (id) | Typical time (M4 Mac / 4-core Windows laptop) |
 |---|---|---|
 | Image | ai_generated, ai_face, ela, noise, fft, jpeg_quant, metadata | 0.5-1.5 s / 3-5 s |
-| Video (first 20 s) | ai_face (24-48 frames), ai_generated (12 frames), blink, landmark_jitter, temporal_flicker, metadata | 2-5 s / 10-25 s |
+| Video (first 20 s) | ai_face (32-48 frames), face_swap (8 frames), ai_generated (12 frames), blink, landmark_jitter, temporal_flicker, metadata | 5-6 s / 33-43 s on the slow-laptop proxy (4 M4 efficiency cores; face-swap step 19-26 s) |
 | Audio (first 30 s) | ai_voice, breath_silence (scored); spectral_cutoff, prosody, spectrogram (pictures only) | 0.3-1.6 s / 2-4 s |
 
 ## Image tests
@@ -48,9 +48,37 @@ each giving a 0-100 "synthetic likelihood", and fuses them into one verdict:
   of a meaningless verdict. 16-bit PNG/TIFF are scaled to 8 bits (no more white-out); HEIC (iPhone) is supported.
 
 ## Video tests
-- **AI Face (per-frame)** - up to 48 frames spread over the clip (32 on an 8-thread laptop, 24 on <= 4 threads);
-  timeline + 4 most suspicious keyframes. Same general AI-image network: catches generated faces, misses most
-  face-swaps / reenactments / lip-syncs (see the external video results).
+- **AI Face (per-frame)** - up to 48 frames spread over the clip (48 on a 10+ thread CPU, otherwise 32; 24 only if
+  `VERITAS_VIDEO_FRAMES=24` is set, which moves some demo scores);
+  timeline + keyframes. Same general AI-image network: catches generated faces, misses most face-swaps /
+  reenactments / lip-syncs on its own (that is why the face-swap detector below was added).
+- **Face-Swap Detector (`face_swap`, added 19 Nov 2026)** - two PRETRAINED published detectors that we benchmarked
+  and chose (we did not train them; `server/forensics/face_swap.py`, files in `models/face_swap/`, 1.5 GB):
+  - **GenD** (Yermakov, Cech, Matas, Fritz, *Deepfake Detection that Generalizes Across Benchmarks*, WACV 2026; MIT):
+    OpenAI's CLIP ViT-L/14 vision transformer with only its LayerNorm layers (0.03 % of the weights) and a linear
+    head tuned on FaceForensics++ (train split). Exact published fp32 weights, run as ONNX (logits = PyTorch within
+    2.4e-6). Its own face detector, **SCRFD-10G** (InsightFace `det_10g.onnx`, 640 px letterbox, threshold 0.5), the
+    largest face, 5-point alignment to GenD's template at scale 1.3, CLIP preprocessing (224 px, CLIP mean/std).
+    99.97 % of its weights are OpenAI's CLIP ViT-L/14 (MIT), which comes inside GenD's checkpoint.
+  - **DFDC-B7**: the Deepfake Detection Challenge (2020) first-place EfficientNet-B7 by Selim Seferbekov (MIT), one
+    of its 7 checkpoints, trained on the DFDC training set only, starting from the Noisy-Student ImageNet
+    EfficientNet-B7 (`tf_efficientnet_b7_ns`, Xie et al., CVPR 2020). ONNX (= PyTorch within 5e-7). Its own face detector,
+    **MTCNN** (facenet-pytorch, vendored in `server/vendor/`), on the half-size frame; box +1/3 margin, 380 px,
+    ImageNet normalisation; the frame score is the most suspicious face.
+  - **8 frames**, evenly spaced over the engine's sampled frames. Each model's P(fake) is averaged over the frames
+    where it found a face. Fixed rule (nothing fitted but three thresholds, all chosen on the 45 FaceForensics++
+    test clips only): `z = 0.5*(logit pG - logit 0.8121) + 0.5*(logit pB - logit 0.6968) - logit 0.1178`,
+    `score = 100*sigmoid(z)`, so 50 = the pair's FF++ threshold. The pair term (-logit 0.1178 = +2.01 log-odds)
+    dominates: the pair can fire while each network is slightly below its own threshold (e.g. a real FF++ clip with
+    GenD 0.30 and B7 0.38 scores 55). If only one model finds a face it is scored on its own threshold.
+    What the networks look at is not known (black boxes); such detectors are trained to pick up blending seams and
+    texture mismatches. Per-frame scores (same formula on one frame) feed the timeline (diamonds) and keyframes; the
+    visual is the 8 aligned faces the model judged.
+  - **One-sided** (see Fusion): both networks call fully generated (GAN) faces "real" - they only ever saw swaps -
+    so the test may raise an alarm but never vouches. On the animated-GAN exhibit it scores about 0 and stays out.
+  - Modes (`VERITAS_FACESWAP`): `fp32` (default), `int8` (RAM fallback, GenD int8: ~0.6 GB less, its borderline
+    decisions jitter), `b7` (B7 alone, smallest), `off`. Never fewer than 8 frames: the thresholds are for 8-frame
+    means.
 - **AI-Generated Frames** - whole-frame detector on 12 frames (catches fully generated text-to-video clips).
 - **Blink Rate (EAR)** - MediaPipe FaceLandmarker (478 points) at ~12 fps.
   EAR = (|p2-p6| + |p3-p5|) / (2|p1-p4|). A blink = EAR dip below 72% of the open-eye level for <= 0.6 s.
@@ -78,7 +106,9 @@ each giving a 0-100 "synthetic likelihood", and fuses them into one verdict:
   labelled at the true mel positions of 0.5/1/2/4/8 kHz. Plus `waveform` (600 peaks) for the UI.
 
 ## Fusion (server/fusion.py)
-1. Tests that could not run drop out; weights renormalise.
+1. Tests that could not run drop out; weights renormalise. The **one-sided** face-swap test (weight 1.25 next to the
+   other video weights, which sum to 1) only votes when its score is 50 or more, and the result is
+   max(fused without it, fused with it): it can raise a score, never lower it. Its weight was chosen on FF++ only.
 2. Each score -> log-odds; weighted mean (AI models ~70% of the weight). A classic test above 65 gets its weight
    amplified up to 3x only when its evidence is specific (localised splice, periodic grid, AI tag, frozen face,
    missing blinks) - never for "too smooth / too little grain", which webcams and phones also produce.
@@ -89,10 +119,37 @@ each giving a 0-100 "synthetic likelihood", and fuses them into one verdict:
 
 ## Honest limitations (say these before the judges ask)
 All numbers: `web/data/results.json` (see its `notes`).
-- **Real deepfake videos are mostly missed.** The image network is a *general AI-image* detector. It catches faces
-  generated whole (GAN, diffusion, animated "talking photos"), but it was never trained on face-swaps, reenactment
-  or lip-sync. On the external research clips (FaceForensics++, Google DFD, Celeb-DF, Wav2Lip) it caught
-  1 of 6 with a 'synthetic' verdict (2 of 6 above 50; the DFD face-swap scored 5 and the Wav2Lip lip-sync 14), while 3 of 4 real clips were called authentic and the FF++ original was 'suspicious' (47). Our own ethical face-swap made with `make_faceswap.py --video` also passes as real.
+- **Face-swap videos: much better, not solved.** Before 19 Nov the engine missed most face-swaps (its image network
+  was never trained on them). With the pretrained face-swap detector, on 30 clips from datasets neither network was
+  trained on (Celeb-DF 10 + 10, Google DFD 5 + 5; no threshold or weight was chosen on them) the AUC of the verdict
+  score went from 0.60 to 0.998 (95% CI about 0.87-1.00, Newcombe; the bootstrap's 0.99-1.00 is far too narrow with
+  so few clips), fakes called 'synthetic' from 0 to 12 of 15 (3 'suspicious', none 'authentic'), reals called
+  'synthetic' 0 -> 0, but reals called 'suspicious' 2 -> 5 of 15. These 30 clips are **not a clean held-out test**:
+  our pre-registered rule ranked the 6 candidates by their AUC on them, we chose the pair after seeing them, and
+  GenD's authors chose their checkpoint using Celeb-DF++ validation videos (Celeb-DF is unseen in training, not in
+  model selection). Only Google DFD (5 + 5, AUC 1.00) is fully unseen. On these clips the pair is statistically tied
+  with the DFDC winner alone (+0.03 AUC, 95% CI 0.00-0.09). FaceForensics++ test (45 clips; in-sample for the
+  thresholds, GenD's home ground): AUC 0.61 -> 0.945; FaceShifter, in neither network's training, only 1 of 5
+  'synthetic'. 10 booth demo clips: 5 of 6 fakes 'synthetic' (was 1), but the 3 FF++ 069 fakes are in GenD's training
+  split, the Celeb-DF id2 pair is from Celeb-DF's training portion, and the DFD 09_13 face-swap is only 'suspicious'
+  (41; 44 at 32 frames): only the Wav2Lip lip-sync we made is a fully unseen catch. Only 2019-2020 manipulation
+  methods were tested: modern swap apps (FaceFusion/inswapper, SimSwap), talking-head avatars and
+  WhatsApp-recompressed clips were not.
+- **Frame count matters a little.** The engine samples 48 frames on a 10+ thread CPU, otherwise 32 (never fewer since
+  19 Nov; `VERITAS_VIDEO_FRAMES` overrides), and the face-swap test uses 8 of them. At 32 frames all 10 demo clips
+  and all 30 cross clips keep their verdict (one score moves: DFD 09_13 41 -> 44). At 24 frames (the old 4-thread
+  setting) the Wav2Lip clip drops 70 -> 64 (suspicious) and the real Celeb-DF clip rises 34 -> 38.
+- **More real videos read "suspicious", most of all grainy ones.** The face-swap pair's threshold was set on
+  FaceForensics++, GenD's training domain, where it is overconfident about real faces; out of that domain it is too
+  low, so real interviews can fire it (7 of 15 cross real clips scored >= 50 on the test alone, Celeb-DF reals 7 of
+  10; in the fused verdict 5 of 15 became 'suspicious', none 'synthetic'). "None synthetic" is fragile: with 4 or 16
+  frames instead of 8 the benchmark simulation called one of them synthetic, and 0 of 15 still allows a true rate up
+  to 22 %. On 39 real clips re-encoded like a cheap webcam (360p, blur, noise,
+  denoise, H.264 CRF 30) it fired on 21: verdicts went from 38/1/0 (authentic/suspicious/synthetic) to **27/11/1** -
+  one real FF++ news clip was called 'synthetic' (72). Heavily compressed real video is its weak spot; we did not
+  re-tune anything on these clips. Test real webcam/phone videos of classmates on Friday.
+- **The face-swap detector is video-only.** On single still images it raised false alarms on real faces (see
+  results.json `image_details.faceswap_on_stills`), so photos and Live Cam captures do not use it.
 - **Compressed video frames of real people can be called synthetic.** Stills from real research videos (low
   resolution, heavy compression) were flagged in 5 of 12 cases (3 with a 'synthetic' verdict; before the review fixes it was 12 of 12). Simulated webcam frames do much better
   (1 of 49 held-out real images flagged after a simulated webcam pipeline, 2 of 49 as H.264 video stills), but test the Live Cam on the booth laptop with real people on Friday.
@@ -119,7 +176,8 @@ All numbers: `web/data/results.json` (see its `notes`).
   even though no number was fitted on the held-out files.
 - Fusion weights and the classic tests' thresholds were set by hand; only the neural calibration curves, the
   noise/FFT feature models and the image fusion gain/bias were fitted (on the calibration split).
-- 171 images / 206 voice clips / 16 videos is a school-scale experiment, not a benchmark.
+- 171 images / 206 voice clips / 91 videos (75 benchmark + 10 demo + 6 tuning) is a school-scale experiment, not a
+  benchmark: the cross-dataset video test has only 15 real and 15 fake clips.
 
 ## Re-running the experiment
 ```
@@ -128,5 +186,8 @@ uv run python scripts/make_faceswap.py --n 16                 # face-swap compos
 uv run python scripts/compare_models.py --kind image          # model selection (calibration split)
 uv run python scripts/evaluate.py                             # calibrate + held-out + robustness + external -> results.json (~45 min)
 uv run python scripts/evaluate.py --kind images --reuse-pass1 # re-fit image curves/fusion from cached pass-1 reports
+uv run python scripts/evaluate_video.py                       # video: 75 leak-free clips + demo + tuning, before vs after (~8 min)
+uv run python scripts/evaluate_video.py --restat              # recompute intervals + notes from the saved per-clip rows
+uv run python scripts/evaluate_faceswap_images.py             # should the face-swap detector score stills? (~45 min)
 uv run python scripts/build_samples.py --lab --game           # demo files
 ```

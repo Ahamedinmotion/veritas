@@ -1,31 +1,43 @@
 // Chapter 05 — the VERITAS pipeline, revealed in five states (pinned + scrubbed, or stepped).
 import { $, $$ } from './util.js';
 
-// REAL engine output for one research clip: FaceForensics++ "Deepfakes" face-swap 069 (web/data/results.json
-// video.clips). The six tests and base weights are the engine's real VIDEO pipeline (server/config.py
-// DEFAULT_WEIGHTS["video"]); score + confidence come from the line-for-line port of server/fusion.py below.
-// Checked against the Python engine: these inputs -> score 76, confidence 0.63 (the engine reported 76).
-// Honest teaching point: the AI-face model and the flicker test carried the verdict; blink and jitter sat at their floors.
+// REAL engine output for one clip: the Wav2Lip lip-sync we made from Google DFD actor 07 (web/data/results.json
+// video.clips; actor 07 is in neither face-swap network's training data). The seven tests and base weights are the
+// engine's real VIDEO pipeline (server/config.py DEFAULT_WEIGHTS["video"]); score + confidence come from the
+// line-for-line port of server/fusion.py below (one-sided face-swap test included).
+// Checked against the Python engine: these inputs -> score 70, confidence 0.49 (the engine reported 70; 14 before
+// the face-swap detector was added). Teaching point: the AI-face model said "real" (9); the face-swap detector (95)
+// carried the verdict. Blink and jitter sat at their floors.
 const VIDEO = [
-  { id: 'ai_face', name: 'AI-face model', ai: true, s: 89, w: 0.40 },
-  { id: 'ai_generated', name: 'AI-image model', ai: true, s: 92, w: 0.20 },
+  { id: 'ai_face', name: 'AI-face model', ai: true, s: 9, w: 0.40 },
+  { id: 'face_swap', name: 'Face-swap model', ai: true, s: 95, w: 1.25, oneSided: true },
+  { id: 'ai_generated', name: 'AI-image model', ai: true, s: 14, w: 0.20 },
   { id: 'blink', name: 'Blink rate', s: 15, w: 0.14 },
   { id: 'landmark_jitter', name: 'Landmark jitter', s: 12, w: 0.10 },
-  { id: 'temporal_flicker', name: 'Skin flicker', s: 88, w: 0.10 },
+  { id: 'temporal_flicker', name: 'Skin flicker', s: 35, w: 0.10 },
   { id: 'metadata', name: 'Container metadata', s: 40, w: 0.06 },
 ];
 const GAIN = 1, BIAS = 0; // video has no fitted calibration in server/calibration.json → gain 1, bias 0
 const T_SUS = 35, T_SYN = 65, AMPLIFY = 2;
 const color = (s) => (s < T_SUS ? 'var(--authentic)' : s <= T_SYN ? 'var(--evidence)' : 'var(--synthetic)');
 
-// Port of server/fusion.py fuse(): log-odds weighted mean, classic-test amplification, calibrated sigmoid.
+// Port of server/fusion.py fuse(): log-odds weighted mean, classic-test amplification, calibrated sigmoid; a
+// one-sided test only votes at 50 or more, and can only raise the score (max of with / without it).
 export function fuse(tests, gain = GAIN, bias = BIAS) {
   const logit = (s) => { const p = Math.min(0.985, Math.max(0.015, s / 100)); return Math.log(p / (1 - p)); };
-  const active = tests.filter((t) => t.s != null && t.w > 0).map((t) => ({ ...t, eff: !t.ai && t.s > T_SYN ? t.w * (1 + (AMPLIFY * (t.s - T_SYN)) / (100 - T_SYN)) : t.w }));
+  let active = tests.filter((t) => t.s != null && t.w > 0 && !(t.oneSided && t.s < 50)).map((t) => ({ ...t, eff: !t.ai && t.s > T_SYN ? t.w * (1 + (AMPLIFY * (t.s - T_SYN)) / (100 - T_SYN)) : t.w }));
   if (!active.length) return { score: 50, confidence: 0 };
-  const tot = active.reduce((a, t) => a + t.eff, 0);
-  const Z = active.reduce((a, t) => a + (t.eff / tot) * logit(t.s), 0);
-  const score = Math.min(100, Math.max(0, 100 / (1 + Math.exp(-(gain * Z + bias)))));
+  const combine = (items) => {
+    const tot = items.reduce((a, t) => a + t.eff, 0);
+    const Z = items.reduce((a, t) => a + (t.eff / tot) * logit(t.s), 0);
+    return { score: Math.min(100, Math.max(0, 100 / (1 + Math.exp(-(gain * Z + bias))))), tot };
+  };
+  let { score, tot } = combine(active);
+  const rest = active.filter((t) => !t.oneSided);
+  if (rest.length && rest.length < active.length) {
+    const r = combine(rest);
+    if (r.score > score) ({ score, tot } = r), (active = rest);
+  }
   const agree = 1 - active.reduce((a, t) => a + (Math.round((t.eff / tot) * 1000) / 1000) * Math.abs(t.s - score) / 100, 0);
   const decis = Math.abs(score - 50) / 50;
   let conf = (0.45 * agree + 0.55 * decis) * (active.length < 3 ? 0.75 : 1);

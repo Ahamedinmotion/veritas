@@ -22,6 +22,8 @@ dependencies = [
     "scikit-learn>=1.5",
     "PyWavelets>=1.6",
     "pillow-heif>=0.18",
+    "onnxruntime>=1.20",
+    "torchvision>=0.29",
 ]
 
 [tool.uv]
@@ -29,6 +31,9 @@ package = false
 
 [tool.uv.sources]
 torch = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'win32' or sys_platform == 'linux'" },
+]
+torchvision = [
     { index = "pytorch-cpu", marker = "sys_platform == 'win32' or sys_platform == 'linux'" },
 ]
 

@@ -53,6 +53,7 @@ function cmCounts(cf) {
 export async function initResults() {
   const body = $('#results-body'), ds = $('#res-dataset');
   const frame2 = $('#results-more'), body2 = $('#results-body2'), ds2 = $('#res-dataset2');
+  const frame3 = $('#results-video'), body3 = $('#results-body3'), ds3 = $('#res-dataset3');
   const example = new URLSearchParams(location.search).get('results') === 'example';
   const url = example ? 'data/results.example.json' : 'data/results.json';
   let R = null;
@@ -61,7 +62,7 @@ export async function initResults() {
     if (r.ok) R = await r.json();
   } catch (e) { /* missing */ }
   const m = R && R.metrics;
-  if (!R || !m || num(m.accuracy) == null) { pending(body, ds); hideFrame(frame2); return; }
+  if (!R || !m || num(m.accuracy) == null) { pending(body, ds); hideFrame(frame2); hideFrame(frame3); return; }
 
   if (example) $$('.frame--results').forEach((f) => f.classList.add('is-example'));
 
@@ -130,14 +131,17 @@ export async function initResults() {
   /* ───────── Frame 2 · voice, video, caveats ───────── */
   const A = R.audio && R.audio.metrics ? R.audio : null;
   const V = R.video && Array.isArray(R.video.clips) && R.video.clips.length ? R.video : null;
-  if (!A && !V) { hideFrame(frame2); return; }
+  const VB = V && V.benchmark && V.benchmark.parts && V.benchmark.parts.cross ? V.benchmark : null;
+  if (VB) renderVideoBenchmark(V, VB, body3, ds3); else hideFrame(frame3);
+  if (!A && !(V && !VB)) { hideFrame(frame2); return; }
   const acm = A ? cmCounts(A.confusion) : null;
   const gen = A && Array.isArray(A.generalisation) ? A.generalisation.filter((g) => num(g.auc) != null) : [];
   const nImg = total || (cm ? cm.n : 0);
   const ad = (A && A.dataset) || {};
   const nAud = (num(ad.real) || 0) + (num(ad.fake) || 0) || (acm ? acm.n : 0);
   const onePt = cm && cm.n ? 100 / cm.n : null;
-  ds2.innerHTML = `<span class="scope__k">SMALL, SCHOOL-SCALE TEST</span><span>${nImg ? `${nImg} images` : ''}${nAud ? ` · ${nAud} voice clips` : ''}${V ? ` · ${V.clips.length} videos` : ''}</span>${onePt ? `<span class="scope__cond">one image changing class moves accuracy ≈ ${onePt.toFixed(1)} points</span>` : ''}`;
+  const nVid = V ? (VB ? (num(VB.n) || 0) + V.clips.length : V.clips.length) : 0;
+  ds2.innerHTML = `<span class="scope__k">SMALL, SCHOOL-SCALE TEST</span><span>${nImg ? `${nImg} images` : ''}${nAud ? ` · ${nAud} voice clips` : ''}${nVid ? ` · ${nVid} videos` : ''}</span>${onePt ? `<span class="scope__cond">one image changing class moves accuracy ≈ ${onePt.toFixed(1)} points</span>` : ''}`;
 
   // Voice: lead with the 10 outside clips (fakes caught / reals cleared), then the leave-one-dataset-out
   // stress test; the same-datasets held-out number is shown last, as the optimistic reference it is.
@@ -172,7 +176,7 @@ export async function initResults() {
       <p class="panel__note is-warn">Voices, generators and microphones it has never heard are the hardest problem in deepfake detection.</p>
     </div>`);
   }
-  if (V) {
+  if (V && !VB) {
     const vc = V.clips.filter((c) => num(c.score) != null);
     const vf = vc.filter((c) => c.label === 'fake'), vr = vc.filter((c) => c.label !== 'fake');
     const vCaught = vf.filter((c) => c.score > 50).length, vCleared = vr.filter((c) => c.score <= 50).length;
@@ -192,6 +196,91 @@ export async function initResults() {
   body2.innerHTML = `<div class="res res--more" style="--cols:${panels.length}">${panels.join('')}</div>
     ${R.generated && !example ? `<p class="res__run mono">RUN ${esc(fmtDate(R.generated))} · FULL METHOD, SOURCES &amp; NOTES IN data/results.json AND docs/</p>` : ''}`;
   onceVisible(body2, () => animate(body2), 0.2);
+}
+
+/* ───────── Frame 3 · video: the full engine before vs after the face-swap detector (75 leak-free clips) ───────── */
+const PART_NAME = { celebdf: 'Celeb-DF', dfd: 'Google DFD', ffpp: 'All 45 clips' };
+const METHOD_NAME = { Deepfakes: 'Deepfakes', FaceSwap: 'FaceSwap', Face2Face: 'Face2Face', NeuralTextures: 'NeuralTextures', FaceShifter: 'FaceShifter*' };
+const f2 = (v) => (num(v) == null ? '—' : v.toFixed(2));
+
+function verdictBar(b, n) {
+  if (!b || !n) return '';
+  const seg = (k, cls) => (b[k] ? `<i class="${cls}" style="flex:${b[k]}" title="${b[k]} ${k}">${b[k]}</i>` : '');
+  return `<span class="vbar">${seg('authentic', 'v-a')}${seg('suspicious', 'v-s')}${seg('synthetic', 'v-f')}</span>`;
+}
+
+function pairBars(rows) {
+  return `<div class="pbars">${rows.map((r) => r.head ? `<p class="pbar__h mono">${esc(r.head)}</p>` : `<div class="pbar ${r.ref ? 'is-ref' : ''}">
+      <span>${esc(r.name)}</span>
+      <i class="pbar__t"><b class="pbar__b" style="width:${Math.max(0.01, Math.min(1, r.before)) * 100}%"></b><b class="pbar__a" style="width:${Math.max(0.01, Math.min(1, r.after)) * 100}%"></b></i>
+      <em><s>${f2(r.before)}</s> → ${f2(r.after)}</em></div>`).join('')}
+    <div class="pbar pbar--ax mono" aria-hidden="true"><span></span><i><s>0</s><s>0.5</s><s>1</s></i><em></em></div>
+  </div>`;
+}
+
+function renderVideoBenchmark(V, B, body3, ds3) {
+  const P = B.parts, X = P.cross, cb = X.before, ca = X.after;
+  const nX = (cb.n_real || 0) + (cb.n_fake || 0);
+  const ff = P.ffpp, cdf = P.celebdf, dfd = P.dfd;
+  ds3.innerHTML = `<span class="scope__k">FULL ENGINE · BEFORE vs AFTER</span><b class="scope__n">n = ${num(B.n) ?? '—'}</b>
+    <span>${ff ? `${ff.after.n_real + ff.after.n_fake} FaceForensics++ test` : ''}${cdf ? ` · ${cdf.after.n_real + cdf.after.n_fake} Celeb-DF` : ''}${dfd ? ` · ${dfd.after.n_real + dfd.after.n_fake} Google DFD` : ''} clips</span>
+    <span class="scope__cond">no clip shared with any model’s training data or our demo clips</span>`;
+  const g = B.cross_gain;
+  const wr = B.webcam_reals && B.webcam_reals.after && num(B.webcam_reals.n) ? B.webcam_reals : null;
+  const synF = (b) => b.fakes.synthetic, synR = (b) => b.reals.synthetic;
+  const rowsA = [
+    { head: 'NOT IN EITHER NETWORK’S TRAINING' },
+    cdf && { name: PART_NAME.celebdf, before: cdf.before.auc, after: cdf.after.auc },
+    dfd && { name: PART_NAME.dfd, before: dfd.before.auc, after: dfd.after.auc },
+    { head: 'FACEFORENSICS++ TEST · GenD’S HOME GROUND' },
+    ff && { name: PART_NAME.ffpp, before: ff.before.auc, after: ff.after.auc },
+    ...(B.per_method || []).map((pm) => ({ name: METHOD_NAME[pm.method] || pm.method, before: pm.before.auc, after: pm.after.auc })),
+  ].filter((r) => r && (r.head || (num(r.before) != null && num(r.after) != null)));
+  const demo = V.clips.filter((c) => num(c.score) != null);
+  const dF = demo.filter((c) => c.label === 'fake'), dR = demo.filter((c) => c.label !== 'fake');
+  const dSynA = dF.filter((c) => c.score > 65).length, dSynB = dF.filter((c) => num(c.before) != null && c.before > 65).length;
+  const dAuthA = dR.filter((c) => c.score < 35).length, dAuthB = dR.filter((c) => num(c.before) != null && c.before < 35).length;
+  const leaked = demo.filter((c) => c.in_gend_training);
+  const cdfTrain = demo.filter((c) => c.celebdf_train_portion);
+  // AUC interval: Newcombe's Wilson-type interval (honest at the ceiling with 15 + 15 clips); bootstrap as fallback
+  const ci = (b) => b.auc_ci95_newcombe || b.auc_ci95;
+  const nbA = (b) => b.reals.suspicious + b.reals.synthetic;   // reals NOT called authentic
+  body3.innerHTML = `<div class="res res--more res--video" style="--cols:3">
+    <div class="panel panel--xauc">
+      <div class="panel__k"><span>NOT IN TRAINING · ${nX} CLIPS</span><b>CELEB-DF + GOOGLE DFD</b></div>
+      <div class="xauc"><span>AUC OF THE VERDICT SCORE</span>
+        <b><s><span data-to="${cb.auc}" data-dec="2">0.00</span></s><i>→</i><span class="is-authentic"><span data-to="${ca.auc}" data-dec="3">0.000</span></span></b>
+        <em>95% CI ${f2(ci(cb)?.[0])}–${f2(ci(cb)?.[1])} → ${f2(ci(ca)?.[0])}–${f2(ci(ca)?.[1])}${g ? ` · gain +${f2(g.gain)}` : ''}</em></div>
+      <div class="vstat vstat--two">
+        <div><span>FAKES CALLED SYNTHETIC</span><b class="is-synthetic"><s>${synF(cb)}</s>→<span data-to="${synF(ca)}" data-dec="0">0</span><small>/${ca.n_fake}</small></b></div>
+        <div><span>REALS NOT AUTHENTIC</span><b class="is-evidence"><s>${nbA(cb)}</s>→<span data-to="${nbA(ca)}" data-dec="0">0</span><small>/${ca.n_real}</small></b></div>
+      </div>
+      <div class="vbars">
+        <p><span>FAKES · BEFORE</span>${verdictBar(cb.fakes, cb.n_fake)}</p>
+        <p><span>FAKES · AFTER</span>${verdictBar(ca.fakes, ca.n_fake)}</p>
+        <p><span>REALS · BEFORE</span>${verdictBar(cb.reals, cb.n_real)}</p>
+        <p><span>REALS · AFTER</span>${verdictBar(ca.reals, ca.n_real)}</p>
+        <p class="vbars__leg mono"><span><i class="v-a"></i>AUTHENTIC</span><span><i class="v-s"></i>SUSPICIOUS</span><span><i class="v-f"></i>SYNTHETIC</span></p>
+      </div>
+      <p class="panel__note is-warn">${ca.reals.suspicious ? `The cost: ${ca.reals.suspicious} of ${ca.n_real} reals now “suspicious” (${cb.reals.suspicious} before).` : ''}${wr ? ` Webcam-quality reals: ${wr.after.suspicious} of ${wr.n} suspicious, ${wr.after.synthetic} synthetic (was ${wr.before.suspicious}, ${wr.before.synthetic}).` : ' Nothing was tuned on these clips.'}</p>
+    </div>
+    <div class="panel panel--pauc">
+      <div class="panel__k"><span>AUC BY DATASET &amp; METHOD</span><b>BEFORE → AFTER</b></div>
+      ${pairBars(rowsA)}
+      <p class="panel__note">0.5 = coin toss. Celeb-DF 10 + 10 clips, DFD 5 + 5, each FF++ method 5 fakes vs 20 reals: one clip moves an AUC by 0.05–0.2. GenD’s checkpoint was picked on Celeb-DF++ videos, so only DFD is fully unseen. GenD trained on other FF++ videos; thresholds set on these 45. *FaceShifter: in neither network’s training.</p>
+    </div>
+    <div class="panel panel--video">
+      <div class="panel__k"><span>THE ${demo.length} BOOTH CLIPS</span><b>BEFORE → AFTER</b></div>
+      <div class="vstat vstat--two">
+        <div><span>FAKES SYNTHETIC</span><b class="is-synthetic"><s>${dSynB}</s>→<span data-to="${dSynA}" data-dec="0">0</span><small>/${dF.length}</small></b></div>
+        <div><span>REALS AUTHENTIC</span><b class="is-authentic"><s>${dAuthB}</s>→<span data-to="${dAuthA}" data-dec="0">0</span><small>/${dR.length}</small></b></div>
+      </div>
+      ${clipRows(demo, true)}
+      <p class="panel__note is-warn">${leaked.length ? '† In GenD’s training data. ' : ''}${cdfTrain.length ? '‡ Celeb-DF train split. ' : ''}Only the Wav2Lip clip is a fully unseen catch.</p>
+    </div>
+    <p class="res__method"><b>Pretrained, not ours:</b> GenD (WACV 2026) + the Deepfake Detection Challenge winner, 2 of the 6 detectors we benchmarked <sup class="cite"><a href="#ref-27">27</a></sup> <sup class="cite"><a href="#ref-28">28</a></sup>. Our pre-registered rule, scored on these 30 clips, chose the winner alone; we added GenD after seeing the results, so the left panel is optimistic (the two tie: +0.03 AUC, CI 0.00–0.09). Only 2019–2020 fake methods were tested.</p>
+  </div>`;
+  onceVisible(body3, () => animate(body3), 0.2);
 }
 
 function hideFrame(f) {
@@ -238,18 +327,20 @@ function clipLabel(c) {
 const MARK_OK = '<svg class="mk" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.5l3 3 6-7"/></svg>';
 const MARK_NO = '<svg class="mk" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>';
 
-function clipRows(clips) {
-  // one row per clip: bar = fused score 0–100, colour = what it really is, dashed line = the 50 cut-off
+function clipRows(clips, before = false) {
+  // one row per clip: bar = fused score 0–100, colour = what it really is, dashed line = the 50 cut-off;
+  // with before = true a white tick marks the score the engine gave before the face-swap detector
   const order = [...clips].sort((a, b) => (a.label === b.label ? (a.label === 'fake' ? b.score - a.score : a.score - b.score) : a.label === 'real' ? -1 : 1));
   return `<div class="clips" role="list">
     ${order.map((c) => {
       const fake = c.label === 'fake', ok = (c.score > 50) === fake, sc = Math.max(0, Math.min(100, c.score));
-      return `<div class="clip ${fake ? 'is-fake' : 'is-real'} ${ok ? 'is-ok' : 'is-wrong'}" role="listitem" aria-label="${esc(clipLabel(c))}: score ${Math.round(c.score)}, ${ok ? 'correct' : 'wrong'}">
-        <span>${esc(clipLabel(c))}</span><i><b style="width:${Math.max(1, sc)}%"></b></i><em>${Math.round(c.score)}</em><strong>${ok ? MARK_OK : MARK_NO}</strong></div>`;
+      const hasB = before && num(c.before) != null;
+      return `<div class="clip ${fake ? 'is-fake' : 'is-real'} ${ok ? 'is-ok' : 'is-wrong'}" role="listitem" aria-label="${esc(clipLabel(c))}: score ${Math.round(c.score)}${hasB ? `, before ${Math.round(c.before)}` : ''}, ${ok ? 'correct' : 'wrong'}">
+        <span>${esc(clipLabel(c))}${c.in_gend_training ? '<sup>†</sup>' : ''}${c.celebdf_train_portion ? '<sup>‡</sup>' : ''}</span><i><b style="width:${Math.max(1, sc)}%"></b>${hasB ? `<u style="left:${Math.max(0, Math.min(100, c.before))}%" title="before: ${Math.round(c.before)}"></u>` : ''}</i><em>${Math.round(c.score)}</em><strong>${ok ? MARK_OK : MARK_NO}</strong></div>`;
     }).join('')}
     <div class="clip clip--ax mono" aria-hidden="true"><span></span><i><s>0</s><s>50</s><s>100</s></i><em></em><strong></strong></div>
   </div>
-  <div class="vscale__leg clips__leg mono"><span><i class="sw sw--auth"></i>REAL</span><span><i class="sw sw--synth"></i>FAKE</span><span class="is-ok">${MARK_OK} CORRECT</span><span class="is-wrong">${MARK_NO} WRONG</span></div>`;
+  <div class="vscale__leg clips__leg mono"><span><i class="sw sw--auth"></i>REAL</span><span><i class="sw sw--synth"></i>FAKE</span>${before ? '<span><i class="sw sw--tick"></i>BEFORE</span>' : ''}<span class="is-ok">${MARK_OK} ${before ? 'RIGHT SIDE OF 50' : 'CORRECT'}</span><span class="is-wrong">${MARK_NO} WRONG</span>${!before && clips.some((c) => c.in_gend_training) ? '<span>† IN GenD TRAINING</span>' : ''}</div>`;
 }
 
 function confusion(c, small = false) {

@@ -54,6 +54,7 @@ MODEL_DIRS = {
     "audio_deepfake": MODELS_DIR / "audio_deepfake",
 }
 FACE_DETECTOR_ONNX = MODELS_DIR / "face_detector" / "face_detection_yunet_2023mar.onnx"
+FACE_SWAP_DIR = MODELS_DIR / "face_swap"   # GenD + DFDC-B7 face-swap detector (server/forensics/face_swap.py)
 FACE_LANDMARKER_TASK = MODELS_DIR / "face_landmarker" / "face_landmarker.task"
 # The web app vendors the same landmarker model; use it as a fallback location.
 FACE_LANDMARKER_FALLBACK = WEB_DIR / "vendor" / "mediapipe" / "face_landmarker.task"
@@ -71,6 +72,8 @@ DEFAULT_WEIGHTS = {
     "video": {
         "ai_face": 0.40, "ai_generated": 0.20, "blink": 0.14, "landmark_jitter": 0.10,
         "temporal_flicker": 0.10, "metadata": 0.06,
+        # one-sided face-swap test (counts only when its score >= 50); weight set per mode by faceswap_weight()
+        "face_swap": 1.25,
     },
     "audio": {
         # spectral_cutoff and prosody are shown as visual evidence only (held-out AUC 0.42 / 0.52 = chance)
@@ -94,17 +97,52 @@ CALIBRATION = load_calibration()
 def weights_for(kind: str) -> dict:
     w = dict(DEFAULT_WEIGHTS[kind])
     w.update(CALIBRATION.get("weights", {}).get(kind, {}))
+    if kind == "video":
+        w["face_swap"] = faceswap_weight()
     return w
 
 
+# ---- face-swap detector (video) -----------------------------------------------------------------
+# Mode -> (models, fusion weight). All weights and thresholds were chosen on FaceForensics++ only (BENCHMARK.md).
+#   fp32 : GenD fp32 + DFDC-B7 (default, the verified recommendation; ~1.5 GB files, +1.5-2.2 GB RAM)
+#   int8 : GenD int8 + DFDC-B7 (RAM fallback, ~0.5-1 GB less; borderline clips jitter)
+#   b7   : DFDC-B7 alone (smallest; catches far fewer reenactments)
+#   off  : no face-swap test (the engine as it was before 19 Nov 2026)
+FACESWAP_MODES = {"fp32": (("gend", "dfdc"), 1.25), "int8": (("gend_int8", "dfdc"), 1.5), "b7": (("dfdc",), 2.0)}
+
+
+_WARNED_MODE: set = set()
+
+
+def faceswap_mode() -> str:
+    # cmd keeps quotes in `set VERITAS_FACESWAP="int8"`, so strip them as well as spaces
+    raw = os.environ.get("VERITAS_FACESWAP", "fp32")
+    m = raw.strip().strip("\"'").strip().lower() or "fp32"
+    if m in FACESWAP_MODES or m == "off":
+        return m
+    if raw not in _WARNED_MODE:
+        _WARNED_MODE.add(raw)
+        import logging
+
+        logging.getLogger("veritas").warning("VERITAS_FACESWAP=%r is not one of fp32, int8, b7, off - using fp32", raw)
+    return "fp32"
+
+
+def faceswap_weight() -> float:
+    m = faceswap_mode()
+    return FACESWAP_MODES[m][1] if m in FACESWAP_MODES else 0.0
+
+
 def video_sampled_frames() -> int:
-    """Face frames per video: 48 on a fast machine (>= 10 CPU threads), 32 on a typical 8-thread laptop, 24 on
-    <= 4 threads - the face pass dominates video time. Override with the VERITAS_VIDEO_FRAMES environment variable."""
-    env = os.environ.get("VERITAS_VIDEO_FRAMES")
-    if env and env.isdigit():
+    """Face frames per video: 48 on a fast machine (>= 10 CPU threads), otherwise 32 - the face pass dominates video
+    time. Never fewer than 32 by default: at 24 frames (the old <= 4-thread setting) the face-swap test sees different
+    frames and published demo scores move (Wav2Lip 70 -> 64, a real Celeb-DF clip 34 -> 38), while at 32 all 40 checked
+    clips keep their verdict. Override with the VERITAS_VIDEO_FRAMES environment variable (e.g. 24 if too slow)."""
+    env = os.environ.get("VERITAS_VIDEO_FRAMES", "").strip().strip("\"'")
+    if env.isdigit():
         return max(8, min(VIDEO_MAX_SAMPLED_FRAMES, int(env)))
     n = os.cpu_count() or 4
-    return VIDEO_MAX_SAMPLED_FRAMES if n >= 10 else 32 if n > 4 else 24
+    return VIDEO_MAX_SAMPLED_FRAMES if n >= 10 else 32
 
 
 def torch_threads() -> int:

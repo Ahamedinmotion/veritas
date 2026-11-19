@@ -54,6 +54,19 @@ analyses 3 stills from each video as photos (`image_details.external_video_still
 Not fully unseen: LibriSpeech speaker 260 (4 of the 10 audio clips) and the HiFi-GAN vocoder type also appear in our
 voice calibration split, and an earlier run on stills from these videos led us to redesign the image calibration.
 
+## Video benchmark (75 clips: 35 real, 40 fake) - `eval_data/video_faceswap/` (gitignored), never shipped or shown
+Used to choose and test the face-swap detector (docs/MODEL_SELECTION.md). Per-clip provenance (mirror, revision,
+raw SHA-256, processing) is in `eval_data/video_faceswap/manifest.json`; why it is leak-free is in its `SPLITS.md`.
+Every clip has `booth_display: false`: measurement only, never in `web/`, never redistributed.
+
+| Set | n | What | Licence |
+|---|---|---|---|
+| FaceForensics++ c23, official **test** split | 20 real + 25 fake | YouTube originals; Deepfakes, FaceSwap, Face2Face, NeuralTextures, FaceShifter (5 each). Via the Hugging Face mirror gonnerthetooner/FaceForensics (re-upload of the Kaggle FF++ c23 bundle) | FaceForensics++ Terms of Use: non-commercial research and education only, no redistribution |
+| Celeb-DF v2, official **test** list | 10 real + 10 fake | Celeb-real + YouTube-real; Celeb-DF synthesis. Via gonnerthetooner/deepfake_video_data | Celeb-DF Terms of Use: research only, no redistribution |
+| Google DFD (DeepFakeDetection) | 5 real + 5 fake | Paid, consenting actors; fakes not in the Kaggle FF++ bundle | FaceForensics++ Terms of Use (DFD is distributed with FF++) |
+
+All 75 were trimmed to 10 s and re-encoded identically (H.264 CRF 18, no audio, metadata stripped).
+
 ## Video tuning clips (6 clips: 3 real, 3 synthetic) - NOT a test
 
 The hand-set video thresholds were chosen while looking at these, so they are listed in results.json as
@@ -122,3 +135,14 @@ our derivative `face-swap.jpg` is also CC BY-SA 2.0; COCO 000000012748 is licenc
 | Synthetic speech detector | abhishtagatya/wav2vec2-base-960h-itw-deepfake (wav2vec2-base fine-tuned on In-the-Wild deepfake audio) | Apache-2.0 |
 | Face detector | OpenCV Zoo YuNet `face_detection_yunet_2023mar.onnx` | MIT |
 | Face landmarks | Google MediaPipe FaceLandmarker `face_landmarker.task` | Apache-2.0 |
+| Face-swap detector, network 1 (video) | **GenD** CLIP ViT-L/14, huggingface.co/yermandy/GenD_CLIP_L_14 @891ce01 (Yermakov, Cech, Matas, Fritz, *Deepfake Detection that Generalizes Across Benchmarks*, WACV 2026), exported by us to ONNX (`models/face_swap/gend_clip.onnx`) | MIT (code and weights). Trained on FaceForensics++, so the FF++ Terms of Use (non-commercial research / education) apply to its use |
+| CLIP backbone + preprocessing config | GenD's checkpoint **is** OpenAI's CLIP ViT-L/14 (Radford et al., ICML 2021) with only its LayerNorms and a linear head re-tuned, so 99.97 % of its weights are OpenAI's; they come inside GenD's checkpoint. `preprocessor_config.json` of openai/clip-vit-large-patch14 | MIT |
+| Face-swap detector, network 2 (video) | **DFDC 1st-place EfficientNet-B7** (Selim Seferbekov, github.com/selimsef/dfdc_deepfake_challenge, release 0.0.1, checkpoint `final_999_DeepFakeClassifier_tf_efficientnet_b7_ns_0_23`), exported by us to ONNX (`dfdc_b7.onnx`). Its backbone started from the Noisy-Student ImageNet EfficientNet-B7 (`tf_efficientnet_b7_ns`; Q. Xie et al., *Self-training with Noisy Student improves ImageNet classification*, CVPR 2020) | MIT (code and weights). Trained on the DFDC dataset (Meta/Facebook DFDC terms: research) |
+| GenD's face detector | **SCRFD-10G** `det_10g.onnx` from InsightFace `buffalo_l` (release v0.7), byte-identical | **InsightFace pretrained models: non-commercial research purposes only.** Fine for our offline, non-commercial school exhibit; must not be used commercially or redistributed with a product |
+| B7's face detector | **MTCNN** from facenet-pytorch 2.6.0 (Tim Esler), code + `pnet/rnet/onet.pt` vendored in `server/vendor/facenet_pytorch/` | MIT |
+| Runtime | ONNX Runtime 1.32 (MIT), torchvision 0.29 (BSD-3-Clause, for MTCNN's NMS) | MIT / BSD-3 |
+
+None of the face-swap weights may be used commercially: GenD and B7 are MIT, but their training data (FaceForensics++,
+DFDC) and the SCRFD detector are research/non-commercial. All of them allow an offline, non-commercial school
+exhibit. If this repository is ever published, ship `scripts/download_models.py` (pinned upstream URLs + SHA-256),
+not the weights.

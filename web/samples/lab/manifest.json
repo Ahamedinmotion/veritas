@@ -36,7 +36,7 @@
   "kind": "video",
   "label": "authentic",
   "title": "Real talking video",
-  "note": "NASA astronaut message from the International Space Station (public domain, cropped). One of the clips we used to set the video thresholds: a demonstration, not a test.",
+  "note": "NASA astronaut message from the International Space Station (public domain, cropped). One of the clips we used to set the video thresholds: a demonstration, not a test. The face-swap detector stays quiet on it (about 15/100).",
   "engine_score": 10
  },
  {
@@ -44,7 +44,7 @@
   "kind": "video",
   "label": "synthetic",
   "title": "AI 'talking photo'",
-  "note": "A StyleGAN face animated with a slow camera move, the way cheap scam videos are made. It never blinks. Same recipe as the clips we used to set the video thresholds: a demonstration, not a test.",
+  "note": "A StyleGAN face animated with a slow camera move, the way cheap scam videos are made. It never blinks. Same recipe as the clips we used to set the video thresholds: a demonstration, not a test. Watch the face-swap detector score it near 0: it only knows swaps, so the AI-face model has to catch this one.",
   "engine_score": 91
  },
  {

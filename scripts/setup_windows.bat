@@ -63,7 +63,8 @@ if not %errorlevel%==0 (
 
 REM ---- 4. Can the AI libraries actually load? PyTorch needs the Microsoft Visual C++ runtime.
 echo  [4/4] Checking that the engine libraries load ...
-".venv\Scripts\python.exe" -c "import torch, transformers, mediapipe, cv2, av, soundfile, librosa; print('  engine libraries OK')"
+REM (onnxruntime only loads its DLLs when a session is created, so open the small face detector once.)
+".venv\Scripts\python.exe" -c "import os, torch, transformers, mediapipe, cv2, av, soundfile, librosa, torchvision, onnxruntime as ort; p='models/face_swap/det_10g.onnx'; os.path.exists(p) and ort.InferenceSession(p, providers=['CPUExecutionProvider']); print('  engine libraries OK')"
 if errorlevel 1 (
   echo.
   echo  ERROR: the AI libraries cannot load. Install the Microsoft Visual C++ 2015-2022 Redistributable x64

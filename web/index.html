@@ -426,6 +426,7 @@
       <li class="reveal"><a href="#ex-blink"><b class="mono">G</b><span>Blink Rate · EAR</span><small class="mono">BIOMETRIC</small></a></li>
       <li class="reveal"><a href="#ex-jitter"><b class="mono">H</b><span>Landmark Jitter</span><small class="mono">TEMPORAL</small></a></li>
       <li class="reveal"><a href="#ex-audio"><b class="mono">I</b><span>Voice Spectrum</span><small class="mono">ACOUSTIC</small></a></li>
+      <li class="reveal"><a href="#ex-swap"><b class="mono">J</b><span>Face-Swap Detector</span><small class="mono">NEURAL NET · PRETRAINED</small></a></li>
     </ol>
   </div>
 
@@ -655,6 +656,70 @@
       <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>SYNTHESISED HARMONICS, NOT A RECORDING</figcaption>
     </figure>
   </div>
+
+  <!-- J · Face-swap detector (pretrained, benchmarked by us) -->
+  <div class="frame frame--demo" id="ex-swap" data-stop>
+    <div class="col col--text">
+      <p class="eyebrow mono"><b>EXHIBIT J</b> Face-swap detector · pretrained <span class="ref">Yermakov et al. 2026 · Seferbekov 2020 <sup class="cite"><a href="#ref-27">27</a></sup> <sup class="cite"><a href="#ref-28">28</a></sup></span></p>
+      <h3 class="h-demo">Two networks that have seen <em>thousands of swaps.</em></h3>
+      <p>A face-swap keeps a real person’s skin, so a general AI-image detector misses it. VERITAS adds two <b>published</b> deepfake detectors that we benchmarked and chose; we did not train them. <b>GenD</b> starts from <b>CLIP</b>, a vision transformer that learned from 400 million captioned images; its authors re-tuned only 0.03% of its weights on FaceForensics++ fakes. The <b>Deepfake Detection Challenge winner</b>, an EfficientNet-B7, learned from more than 100,000 clips of 3,426 paid actors.</p>
+      <p><b>Why CLIP features may carry over:</b> they describe light, texture and shape in general terms, learned from 400 million web images, not one fake-maker’s fingerprints. Its authors argue that freezing almost all of them stops it memorising one dataset’s quirks; it scored best on average over their 14 benchmark datasets.</p>
+      <div class="eq eq--sm" role="math" aria-label="S equals 100 times sigma of one half z GenD plus one half z B7 minus z pair">
+        <i>S</i> <span class="rel">=</span> 100 · <i>σ</i>(½ <i>z</i><sub>GenD</sub> + ½ <i>z</i><sub>B7</sub> − <i>z</i><sub>pair</sub>)
+      </div>
+      <p class="eq-note mono"><i>z</i> = LOG-ODDS OF A NETWORK’S MEAN P(FAKE) OVER 8 FRAMES MINUS LOG-ODDS OF ITS THRESHOLD · THRESHOLDS CHOSEN ON FACEFORENSICS++ ONLY</p>
+      <p class="limit-note"><b>One-sided.</b> Both networks call a fully AI-generated face “real” (they only saw swaps), so this test may raise an alarm but never vouches for a video. Tested on 2019–2020 methods only.</p>
+    </div>
+    <figure class="col col--viz swapviz" aria-label="Schematic: a video frame goes to two face detectors; GenD aligns the face and splits it into 256 patches for a CLIP vision transformer, the DFDC winner crops the face for an EfficientNet-B7; both probabilities are averaged into one face-swap score">
+      <svg class="swapviz__svg" viewBox="0 0 640 420" aria-hidden="true">
+        <defs>
+          <marker id="sw-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="sw-arrhead"/></marker>
+          <clipPath id="sw-face-clip"><rect x="196" y="40" width="112" height="112" rx="2"/></clipPath>
+        </defs>
+        <!-- frame -->
+        <rect x="14" y="150" width="116" height="80" rx="3" class="sw-box"/>
+        <ellipse cx="72" cy="186" rx="15" ry="19" class="sw-face"/>
+        <path d="M50 230q22-24 44 0" class="sw-face"/>
+        <text x="72" y="250" class="sw-k">8 FRAMES</text>
+        <!-- lane 1: GenD -->
+        <path d="M130 170L190 104" class="sw-wire" marker-end="url(#sw-arr)"/>
+        <g clip-path="url(#sw-face-clip)">
+          <rect x="196" y="40" width="112" height="112" class="sw-crop"/>
+          <ellipse cx="252" cy="98" rx="36" ry="46" class="sw-face"/>
+          <circle cx="238" cy="88" r="3.5" class="sw-lm"/><circle cx="266" cy="88" r="3.5" class="sw-lm"/><circle cx="252" cy="104" r="3.5" class="sw-lm"/><circle cx="241" cy="120" r="3.5" class="sw-lm"/><circle cx="263" cy="120" r="3.5" class="sw-lm"/>
+          <path d="M196 54h112M196 68h112M196 82h112M196 96h112M196 110h112M196 124h112M196 138h112M210 40v112M224 40v112M238 40v112M252 40v112M266 40v112M280 40v112M294 40v112" class="sw-grid"/>
+        </g>
+        <rect x="196" y="40" width="112" height="112" class="sw-box sw-box--hi"/>
+        <text x="252" y="30" class="sw-k">ALIGNED · 16×16 PATCHES</text>
+        <path d="M308 96H350" class="sw-wire" marker-end="url(#sw-arr)"/>
+        <rect x="354" y="52" width="150" height="90" rx="3" class="sw-box sw-box--net"/>
+        <text x="429" y="82" class="sw-t">GenD</text>
+        <text x="429" y="103" class="sw-s">CLIP ViT-L/14</text>
+        <text x="429" y="121" class="sw-s">0.03% re-tuned</text>
+        <!-- lane 2: B7 -->
+        <path d="M130 212L190 276" class="sw-wire" marker-end="url(#sw-arr)"/>
+        <rect x="196" y="236" width="112" height="112" class="sw-box"/>
+        <ellipse cx="252" cy="292" rx="30" ry="38" class="sw-face"/>
+        <rect x="222" y="252" width="60" height="78" class="sw-mtcnn"/>
+        <text x="252" y="368" class="sw-k">FACE BOX + MARGIN</text>
+        <path d="M308 292H350" class="sw-wire" marker-end="url(#sw-arr)"/>
+        <rect x="354" y="248" width="150" height="90" rx="3" class="sw-box sw-box--net"/>
+        <text x="429" y="278" class="sw-t">DFDC winner</text>
+        <text x="429" y="299" class="sw-s">EfficientNet-B7</text>
+        <text x="429" y="317" class="sw-s">3,426 actors</text>
+        <!-- merge -->
+        <path d="M504 97C540 97 530 190 556 192" class="sw-wire" marker-end="url(#sw-arr)"/>
+        <path d="M504 293C540 293 530 196 556 194" class="sw-wire" marker-end="url(#sw-arr)"/>
+        <circle cx="592" cy="193" r="32" class="sw-box sw-box--out"/>
+        <text x="592" y="190" class="sw-t sw-t--sm">average</text>
+        <text x="592" y="206" class="sw-s">log-odds</text>
+        <text x="592" y="246" class="sw-k">SCORE</text>
+        <text x="592" y="262" class="sw-k">COUNTS ≥ 50</text>
+        <text x="14" y="402" class="sw-k sw-k--l">FACE FINDERS · GenD: SCRFD + 5-POINT ALIGNMENT · B7: MTCNN</text>
+      </svg>
+      <figcaption class="figcap mono"><span class="pill pill--illus">ILLUSTRATION</span>SCHEMATIC OF THE TWO PRETRAINED NETWORKS · EACH KEEPS THE FACE DETECTOR AND CROP IT WAS TRAINED WITH</figcaption>
+    </figure>
+  </div>
 </section>
 
 <!-- ════════════════════════════════════════════════════════════
@@ -664,7 +729,7 @@
   <div class="system__stage" id="system-stage" data-stops="0,0.2,0.4,0.6,0.8,1" data-state="0">
     <div class="system__head">
       <p class="eyebrow mono"><b>05</b> The system</p>
-      <h2 class="display" id="system-h">Fourteen tests. Three pipelines. <em>One verdict.</em></h2>
+      <h2 class="display" id="system-h">Fifteen tests. Three pipelines. <em>One verdict.</em></h2>
     </div>
     <div class="pipe" id="pipe">
       <svg class="pipe__wires" id="pipe-wires" aria-hidden="true"></svg>
@@ -672,7 +737,7 @@
         <span class="pipe__k mono">01 · EVIDENCE IN</span>
         <ul class="pipe__files mono">
           <li><i>IMG</i>photo.jpg</li>
-          <li class="is-sel"><i>VID</i>face-swap.mp4</li>
+          <li class="is-sel"><i>VID</i>lip-sync.mp4</li>
           <li><i>AUD</i>voicenote.m4a</li>
         </ul>
         <p class="pipe__note mono">SHA-256 HASHED ON ARRIVAL · EACH KIND OF FILE HAS ITS OWN PIPELINE</p>
@@ -680,7 +745,7 @@
       <div class="pipe__col pipe__col--pre" data-s="2">
         <span class="pipe__k mono">02 · PREPROCESS</span>
         <ul class="pipe__steps">
-          <li><b>Face detection</b><span class="mono">YuNet · OpenCV</span></li>
+          <li><b>Face detection</b><span class="mono">YuNet · SCRFD · MTCNN</span></li>
           <li><b>Face landmarks</b><span class="mono">MediaPipe · 478 points</span></li>
           <li><b>Frame sampling</b><span class="mono">≤ 48 frames · ≤ 20 s</span></li>
           <li><b>Audio</b><span class="mono">resampled · ≤ 30 s</span></li>
@@ -702,7 +767,7 @@
           <span class="eq-l"><i>S</i> <span class="rel">=</span> 100 · <i>σ</i>(<i>z</i>)</span>
           <span class="eq-l"><i>z</i> <span class="rel">=</span> <i>a</i> <span class="bigop bigop--in"><span class="bigop__s">∑</span><span class="bigop__b"><i>i</i></span></span> <i>w</i><sub><i>i</i></sub> ln <span class="frac frac--sm"><span><i>s</i><sub><i>i</i></sub></span><span>100 − <i>s</i><sub><i>i</i></sub></span></span> <span class="rel">+</span> <i>b</i></span>
         </div>
-        <p class="pipe__note">Each score becomes <b>log-odds</b>, so a confident 95 counts more than a lukewarm 60. Weights <i>w<sub>i</sub></i> sum to 1 over the tests that ran; AI models carry the biggest.<span class="fuse-more"> Only specific anomalies (a grain mismatch, a periodic grid, an AI tag, blink, jitter, flicker) get up to 3× weight. Photos: <i>a</i> = 1.67, <i>b</i> = 0.5 (fitted on our calibration files, <i>b</i> capped at ±0.5); video and voice: <i>a</i> = 1, <i>b</i> = 0.</span></p>
+        <p class="pipe__note">Each score becomes <b>log-odds</b>, so a confident 95 counts more than a lukewarm 60. Weights <i>w<sub>i</sub></i> sum to 1 over the tests that ran; AI models carry the biggest.<span class="fuse-more"> The face-swap model is one-sided: it counts only at 50+. Only specific anomalies (a grain mismatch, a periodic grid, an AI tag, blink, jitter, flicker) get up to 3× weight. Photos: <i>a</i> = 1.67, <i>b</i> = 0.5 (fitted on our calibration files, <i>b</i> capped at ±0.5); video and voice: <i>a</i> = 1, <i>b</i> = 0.</span></p>
       </div>
       <div class="pipe__col pipe__col--out" data-s="5">
         <span class="pipe__k mono">05 · VERDICT + REPORT</span>
@@ -717,14 +782,14 @@
           <div class="gauge__read"><b id="gauge-val">0</b><span class="mono" id="gauge-verdict">AWAITING EVIDENCE</span></div>
           <div class="gauge__scale mono"><span>0 · REAL</span><span>35</span><span>65</span><span>FAKE · 100</span></div>
         </div>
-        <p class="pipe__note mono"><span class="pill pill--real">REAL ENGINE OUTPUT</span>FF++ FACE-SWAP, A RESEARCH DATASET CLIP · CONFIDENCE = AN AGREEMENT INDEX, NOT A PROBABILITY</p>
+        <p class="pipe__note mono"><span class="pill pill--real">REAL ENGINE OUTPUT</span>OUR WAV2LIP LIP-SYNC OF A GOOGLE DFD CLIP · 14 WITHOUT THE FACE-SWAP MODEL · CONFIDENCE = AGREEMENT, NOT A PROBABILITY</p>
       </div>
     </div>
     <div class="stack">
       <span class="mono stack__k">BUILT WITH</span>
-      <ul class="mono"><li>Python</li><li>FastAPI</li><li>PyTorch</li><li>Hugging Face Transformers</li><li>MediaPipe</li><li>OpenCV</li><li>NumPy</li></ul>
+      <ul class="mono"><li>Python</li><li>FastAPI</li><li>PyTorch</li><li>Hugging Face Transformers</li><li>ONNX Runtime</li><li>MediaPipe</li><li>OpenCV</li><li>NumPy</li></ul>
       <span class="mono stack__off"><i class="dot dot--auth"></i>100% OFFLINE · RUNS ON THIS LAPTOP’S CPU · NOTHING IS UPLOADED</span>
-      <p class="stack__credit"><b class="mono">PRETRAINED AI · NOT TRAINED BY US</b> The two AI networks are open models we chose by experiment (best of 12 image and 7 voice candidates on our calibration files): CommunityForensics ViT (Park &amp; Owens, CVPR 2025) <sup class="cite"><a href="#ref-23">23</a></sup> and a wav2vec2 network fine-tuned on In-the-Wild deepfake speech <sup class="cite"><a href="#ref-24">24</a></sup>; faces are found by YuNet <sup class="cite"><a href="#ref-25">25</a></sup> and MediaPipe <sup class="cite"><a href="#ref-13">13</a></sup>. <b>Our own work:</b> the classic tests, the voice probe on top of wav2vec2, calibration, fusion and the whole evaluation.</p>
+      <p class="stack__credit"><b class="mono">PRETRAINED AI · NOT TRAINED BY US</b> Every AI network is an open model we chose by experiment: CommunityForensics ViT (Park &amp; Owens, CVPR 2025; best of 12 image candidates) <sup class="cite"><a href="#ref-23">23</a></sup>, a wav2vec2 network fine-tuned on In-the-Wild deepfake speech (best of 7) <sup class="cite"><a href="#ref-24">24</a></sup>, and for face-swaps GenD (Yermakov et al., WACV 2026) plus the Deepfake Detection Challenge winner’s EfficientNet-B7 (Seferbekov, 2020), two of the 6 published detectors we benchmarked on 75 leak-free research clips <sup class="cite"><a href="#ref-27">27</a></sup> <sup class="cite"><a href="#ref-28">28</a></sup>. Faces are found by YuNet <sup class="cite"><a href="#ref-25">25</a></sup>, MediaPipe <sup class="cite"><a href="#ref-13">13</a></sup>, SCRFD and MTCNN <sup class="cite"><a href="#ref-29">29</a></sup>. <b>Our own work:</b> the classic tests, the voice probe on top of wav2vec2, calibration, fusion, the benchmark and the whole evaluation.</p>
     </div>
   </div>
 </section>
@@ -746,12 +811,23 @@
 
   <div class="frame frame--results frame--results2" id="results-more" data-stop>
     <div class="results__head">
-      <p class="eyebrow mono"><b>06·2</b> Voices, video &amp; the hard cases</p>
+      <p class="eyebrow mono"><b>06·2</b> Voices &amp; the hard cases</p>
       <h2 class="display" data-split>Beyond photos — <em>and where it fails.</em></h2>
       <div class="results__ds mono" id="res-dataset2"></div>
     </div>
     <div class="results__body" id="results-body2" aria-live="polite">
-      <!-- js/story/results.js renders the voice + video experiments and the honest caveats -->
+      <!-- js/story/results.js renders the voice experiments (and the video spot check if there is no video benchmark) -->
+    </div>
+  </div>
+
+  <div class="frame frame--results frame--results3" id="results-video" data-stop>
+    <div class="results__head">
+      <p class="eyebrow mono"><b>06·3</b> Video · the face-swap upgrade</p>
+      <h2 class="display" data-split>Face-swaps: <em>before and after.</em></h2>
+      <div class="results__ds mono" id="res-dataset3"></div>
+    </div>
+    <div class="results__body" id="results-body3" aria-live="polite">
+      <!-- js/story/results.js renders the 75-clip video benchmark: engine before vs after the face-swap detector -->
     </div>
   </div>
 </section>
@@ -888,6 +964,10 @@
         <li id="ref-24">A. Baevski et al., “wav2vec 2.0”, NeurIPS 2020; N. Müller et al., “Does Audio Deepfake Detection Generalize?”, Interspeech 2022 (In-the-Wild dataset); checkpoint abhishtagatya/wav2vec2-base-960h-itw-deepfake (Apache-2.0). We trained only a small probe on its layer-4 features.</li>
         <li id="ref-25">YuNet face detector (face_detection_yunet_2023mar), OpenCV Zoo, MIT licence.</li>
         <li id="ref-26">J. Lukáš &amp; J. Fridrich, “Estimation of Primary Quantization Matrix in Double Compressed JPEG Images”, DFRWS 2003; A. C. Popescu &amp; H. Farid, “Statistical Tools for Digital Forensics”, Information Hiding Workshop 2004 (double JPEG compression).</li>
+        <li id="ref-27">A. Yermakov, J. Čech, J. Matas, M. Fritz, “Deepfake Detection that Generalizes Across Benchmarks” (GenD), WACV 2026, arXiv 2508.06248 (weights yermandy/GenD_CLIP_L_14, MIT; trained on FaceForensics++). Built on A. Radford et al., “Learning Transferable Visual Models From Natural Language Supervision” (CLIP), ICML 2021. Pretrained; used as published.</li>
+        <li id="ref-28">S. Seferbekov, Deepfake Detection Challenge 1st-place solution, 2020 (github.com/selimsef/dfdc_deepfake_challenge, MIT; one of its 7 EfficientNet-B7 checkpoints); B. Dolhansky et al., “The DeepFake Detection Challenge (DFDC) Dataset”, arXiv 2006.07397, 2020; M. Tan &amp; Q. V. Le, “EfficientNet”, ICML 2019; Q. Xie et al., “Self-training with Noisy Student improves ImageNet classification”, CVPR 2020 (the B7’s ImageNet pretraining). Pretrained; used as published.</li>
+        <li id="ref-29">J. Guo et al., “Sample and Computation Redistribution for Efficient Face Detection” (SCRFD), ICLR 2022 (InsightFace buffalo_l det_10g, non-commercial research licence); K. Zhang et al., “Joint Face Detection and Alignment Using Multitask Cascaded Convolutional Networks” (MTCNN), IEEE SPL 2016 (facenet-pytorch by T. Esler, MIT).</li>
+        <li id="ref-30">Benchmark clips: Y. Li et al., “Celeb-DF: A Large-scale Challenging Dataset for DeepFake Forensics”, CVPR 2020; N. Dufour &amp; A. Gully, “Contributing Data to Deepfake Detection Research” (Google DFD), Google AI Blog, 2019; FaceForensics++ test split [21]. Research use only; never shown or redistributed.</li>
       </ol>
     </div>
     <p class="credits__end mono">VERITAS · BUILT TO RUN OFFLINE · NO DEEPFAKES OF PUBLIC FIGURES OR ANYONE WE KNOW · TEST FAKES USE RESEARCH DATASETS ONLY</p>

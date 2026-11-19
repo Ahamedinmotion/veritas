@@ -550,54 +550,23 @@ def external_video_stills() -> dict | None:
 
 
 def evaluate_video() -> dict | None:
-    """Videos: far too few for statistics, so no tuning on them. Two lists:
-      * clips        - the EXTERNAL research clips in ../_incoming/media/video (FaceForensics++, Google DFD, Celeb-DF,
-                       Wav2Lip): real deepfakes made by other people. This is the honest test and the headline.
+    """Videos (scripts/evaluate_video.py does the work):
+      * benchmark    - the FULL engine on 75 leak-free research clips (eval_data/video_faceswap: FF++ test split,
+                       Celeb-DF test list, Google DFD), before vs after the face-swap detector, with 95% CIs.
+      * clips        - the 10 booth demo clips in ../_incoming/media/video (FF++ 069 is in GenD's training split).
       * tuning_clips - our own 6 clips (3 NASA, 3 animated GAN faces). The hand-set video thresholds were chosen while
                        looking at these, so they are NOT a test."""
+    import evaluate_video as ev
     from server.models import REGISTRY
 
     if not REGISTRY.loaded:
         REGISTRY.load()
         REGISTRY.warmup()
-
-    def run_clip(path, name, label, group, method=""):
-        rep = run_pipeline("video", path.read_bytes(), name)
-        row = {"file": name, "label": label, "group": group, "score": rep["score"], "verdict": rep["verdict"],
-               "ms": round(rep["_ms"]), "tests": {t["id"]: t["score"] for t in rep["tests"]}}
-        if method:
-            row["method"] = method
-        print(f"  video {name:40s} {label:4s} -> {rep['score']:3d} {rep['verdict']:10s} {row['tests']}")
-        return row
-
-    tuning = [run_clip(it["path"], it["name"], "fake" if it["y"] else "real", it["group"]) for it in load_items("video")]
-    external = []
-    d = INCOMING / "video"
-    if (d / "manifest.json").exists():
-        for m in json.loads((d / "manifest.json").read_text()):
-            f = d / m["file"].split("/", 1)[-1]
-            if f.exists():
-                method = m.get("method", "")
-                group = ("lip-sync" if "lip" in method.lower() else "reenactment" if "reenact" in method.lower()
-                         else "face-swap" if "swap" in method.lower() else "real recording")
-                external.append(run_clip(f, f.name, "fake" if m["label"] == "synthetic" else "real", group, method[:90]))
-    ok = lambda c: (c["score"] > 50) == (c["label"] == "fake")  # noqa: E731
-    head = external or tuning
-    out = {"clips": head, "correct": sum(ok(c) for c in head), "n": len(head),
-           "mean_latency_ms": int(np.mean([c["ms"] for c in head])) if head else None,
-           "tuning_clips": tuning, "tuning_correct": sum(ok(c) for c in tuning)}
-    if external:
-        fk = [c for c in external if c["label"] == "fake"]
-        rl = [c for c in external if c["label"] == "real"]
-        out["summary"] = {"deepfakes": len(fk), "deepfakes_synthetic_verdict": sum(c["score"] > 65 for c in fk),
-                          "deepfakes_flagged": sum(c["score"] > 50 for c in fk), "reals": len(rl),
-                          "reals_authentic_verdict": sum(c["score"] < 35 for c in rl),
-                          "reals_flagged": sum(c["score"] > 50 for c in rl)}
-        out["note"] = VIDEO_EXTERNAL_NOTE
-    else:
-        out["note"] = ("Only our own 6 tuning clips (3 real NASA, 3 animated GAN faces): video thresholds were set by "
-                       "hand while looking at them, so this is a demonstration, not a test.")
-    return out
+    bench = ev.evaluate_benchmark()
+    dt = ev.evaluate_demo_and_tuning()
+    if bench is not None:
+        bench["webcam_reals"] = ev.evaluate_webcam_reals()
+    return ev.build_video_block(bench, dt)
 
 
 def sources_summary(_unused=None) -> list[str]:
@@ -696,6 +665,14 @@ def build_notes(res: dict) -> list[str]:
         n.append(f"External false-alarm check: stills of REAL people from research videos (never used to fit any number): "
                  f"{r1['flagged']} of {r1['n']} flagged as an uploaded photo, {r2.get('flagged', '?')} of {r2.get('n', '?')} "
                  f"in Live Cam mode. Compressed video frames remain the engine's weakest spot for false alarms.")
+    fsi = det.get("faceswap_on_stills")
+    if fsi:
+        rw = fsi["real_heldout_photos"]["webcam"]
+        vf = fsi["real_video_frames"]["real_live_jpeg"]
+        n.append(f"The face-swap detector is video-only. Scored on single stills it fired on {vf['fires']} of {vf['n']} "
+                 f"frames of real people from research videos saved like a Live Cam capture, and adding it to photos would "
+                 f"have raised real webcam-style photos flagged from {rw['engine_flagged']} to {rw['with_fs_flagged']} of 49, "
+                 f"so photos and Live Cam captures do not use it (their numbers above are unchanged).")
     if det.get("whatsapp_phone_photos"):
         w = det["whatsapp_phone_photos"]
         n.append(f"False-alarm check: {w['flagged']} of {w['n']} held-out real smartphone photos were flagged after "
@@ -753,12 +730,69 @@ def build_notes(res: dict) -> list[str]:
                  f"calibration clips; speakers never appear on both sides of the split.")
     if res.get("video"):
         v = res["video"]
+        b = v.get("benchmark") or {}
+        x = (b.get("parts") or {}).get("cross")
+        if x:
+            xb, xa = x["before"], x["after"]
+            g = b.get("cross_gain") or {}
+            cb = xb.get("auc_ci95_newcombe") or xb["auc_ci95"]
+            ca = xa.get("auc_ci95_newcombe") or xa["auc_ci95"]
+            n.append(f"Video benchmark, datasets neither face-swap network was trained on (Celeb-DF + Google DFD, "
+                     f"{xa['n_real']} real + {xa['n_fake']} fake clips; no threshold or weight was chosen on them, but the "
+                     f"detectors were ranked by their AUC on these clips and the pair was chosen after seeing them, so "
+                     f"this AUC is optimistic): AUC of the engine's verdict score {xb['auc']:.2f} "
+                     f"[95% CI {cb[0]:.2f}-{cb[1]:.2f}] before the face-swap detector, {xa['auc']:.3f} "
+                     f"[{ca[0]:.2f}-{ca[1]:.2f}] after"
+                     + (f" (paired bootstrap gain +{g['gain']:.2f}, CI {g['ci95'][0]:+.2f} to {g['ci95'][1]:+.2f})" if g else "")
+                     + f". AUC intervals are Newcombe's Wilson-type intervals: with only {xa['n_real']} + {xa['n_fake']} "
+                     f"clips a bootstrap at the ceiling ({xa['auc_ci95'][0]:.2f}-{xa['auc_ci95'][1]:.2f}) is far too narrow. "
+                     f"Fakes called synthetic {xb['fakes']['synthetic']} -> {xa['fakes']['synthetic']} of {xa['n_fake']}; "
+                     f"reals called synthetic {xb['reals']['synthetic']} -> {xa['reals']['synthetic']}, reals called "
+                     f"suspicious {xb['reals']['suspicious']} -> {xa['reals']['suspicious']} of {xa['n_real']}. Caveat: GenD's "
+                     f"authors chose their checkpoint using Celeb-DF++ validation videos, so Celeb-DF is unseen in training "
+                     f"but not in model selection; Google DFD (5 real + 5 fake) is the only fully unseen part.")
+            f = (b.get("parts") or {}).get("ffpp")
+            if f:
+                fx = (b.get("per_method") or [])
+                pm = "; ".join(f"{m['method']} {m['before']['auc']:.2f} -> {m['after']['auc']:.2f}" for m in fx)
+                n.append(f"Video benchmark, FaceForensics++ test split (20 real + 25 fake): AUC {f['before']['auc']:.3f} -> "
+                         f"{f['after']['auc']:.3f}; fakes called synthetic {f['before']['fakes']['synthetic']} -> "
+                         f"{f['after']['fakes']['synthetic']} of 25" + (f" (per method, 5 fakes each vs 20 reals: {pm})" if pm else "")
+                         + ". In-sample for the face-swap detector: its thresholds were chosen on these 45 clips, and GenD "
+                         "was trained on other FF++ videos of the same methods (FaceShifter excepted).")
+            w = b.get("webcam_reals")
+            if w and w.get("n"):
+                wb, wa = w["before"], w["after"]
+                n.append(f"Video false-alarm check: {w['n']} real clips re-encoded like a cheap webcam (360p, blur, noise, "
+                         f"denoise, H.264 CRF 30): verdicts authentic/suspicious/synthetic {wb['authentic']}/{wb['suspicious']}/"
+                         f"{wb['synthetic']} before the face-swap detector, {wa['authentic']}/{wa['suspicious']}/{wa['synthetic']} "
+                         f"after (it fired on {w['face_swap_fired']} of {w['n']}). Grainy, heavily compressed real video is "
+                         f"its weak spot.")
+            ft = (b.get("face_swap_test") or {}).get("cross") or {}
+            if ft.get("n"):
+                n.append(f"The face-swap test on its own (its 50 = the pair threshold chosen on FF++): AUC {ft['auc']:.2f} "
+                         f"on Celeb-DF + DFD, but it fired on {ft['fired_on_reals']} of {xa['n_real']} real clips there "
+                         + (f"and on {w['face_swap_fired']} of {w['n']} webcam-quality real clips" if w and w.get('n') else "")
+                         + ". Its threshold was set on FaceForensics++, the dataset GenD was trained on, where it is "
+                         "overconfident about real faces; the fusion turns most of these alarms into 'suspicious', not "
+                         "'synthetic'.")
+            n.append("The face-swap detector (GenD + the DFDC-winning EfficientNet-B7) is pretrained, not trained by us. We "
+                     "benchmarked 6 published detectors; our pre-registered rule (best cross-dataset AUC) picked the DFDC "
+                     "winner alone, and we added GenD after seeing the cross-dataset and demo results because it also catches "
+                     "reenactment. On those clips the pair is statistically tied with the DFDC winner alone (+0.03 AUC, 95% "
+                     "CI 0.00-0.09). The 8-frame setting was chosen for speed after all results were known; with 4 or 16 "
+                     "frames the benchmark simulation called one real Celeb-DF/DFD clip synthetic. Only 2019-2020 "
+                     "manipulation methods were tested.")
         if v.get("summary"):
             sm = v["summary"]
-            n.append(f"Video, external research deepfakes (never used to fit any number): {sm['deepfakes_synthetic_verdict']} of "
-                     f"{sm['deepfakes']} get a 'synthetic' verdict ({sm['deepfakes_flagged']} score above 50); "
-                     f"{sm['reals_authentic_verdict']} of {sm['reals']} real clips are called authentic. The engine catches "
-                     f"generated faces but misses most face-swaps, reenactments and lip-syncs.")
+            sb = v.get("summary_before") or {}
+            n.append(f"Video, the 10 booth demo clips (FF++ 069 is in GenD's training split, the Celeb-DF id2 pair is "
+                     f"from Celeb-DF's training portion, and these clips were looked at when the pair was chosen, so they "
+                     f"are a demonstration; only the Wav2Lip lip-sync we made from a Google DFD clip is a fully unseen "
+                     f"catch): "
+                     f"{sm['deepfakes_synthetic_verdict']} of {sm['deepfakes']} fakes get a 'synthetic' verdict"
+                     + (f" ({sb['deepfakes_synthetic_verdict']} before the face-swap detector)" if sb else "")
+                     + f"; {sm['reals_authentic_verdict']} of {sm['reals']} real clips are called authentic.")
         n.append(f"Video tuning clips (our 6, thresholds set by hand while looking at them - not a test): "
                  f"{v.get('tuning_correct', v.get('correct'))} of {len(v.get('tuning_clips', v.get('clips', [])))} correct.")
     n.append("Threshold for accuracy/precision/recall: fused score above 50 counts as 'synthetic'. In the lab, scores "

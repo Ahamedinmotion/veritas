@@ -128,12 +128,17 @@ def health():
     h = REGISTRY.health()
     return {"ok": REGISTRY.loaded, "version": config.VERSION,
             "models": {"face_deepfake": h["face_deepfake"], "ai_generated": h["ai_generated"],
-                       "audio_deepfake": h["audio_deepfake"]},
+                       "audio_deepfake": h["audio_deepfake"], "face_swap": h["face_swap"]},
             "device": "cpu",
             "detail": {"face_detector": h["face_detector"], "face_landmarker": h["face_landmarker"],
                        "errors": REGISTRY.errors,
-                       "model_names": {k: getattr(getattr(REGISTRY, k), "repo", None)
-                                       for k in ("face_deepfake", "ai_generated", "audio_deepfake")}}}
+                       "model_names": {**{k: getattr(getattr(REGISTRY, k), "repo", None)
+                                          for k in ("face_deepfake", "ai_generated", "audio_deepfake")},
+                                       "face_swap": FACESWAP_NAMES.get(getattr(REGISTRY.face_swap, "mode", None))}}}
+
+
+FACESWAP_NAMES = {"fp32": "GenD CLIP ViT-L/14 + DFDC-B7", "int8": "GenD CLIP ViT-L/14 (int8) + DFDC-B7",
+                  "b7": "DFDC-B7"}
 
 
 async def _read_upload(request: Request, file: UploadFile) -> tuple[bytes, str]:

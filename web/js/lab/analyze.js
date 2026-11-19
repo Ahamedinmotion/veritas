@@ -15,8 +15,8 @@ const PIPE = {
     ['metadata', 'Metadata & Provenance', 'metadata'],
   ],
   video: [
-    ['ai_face', 'AI Face Analysis (per-frame)', 'ai_model'], ['ai_generated', 'AI-Generated Image Detector', 'ai_model'],
-    ['blink', 'Blink Rate (Eye Aspect Ratio)', 'biometric'], ['landmark_jitter', 'Landmark Jitter', 'temporal'],
+    ['ai_face', 'AI Face Analysis (per-frame)', 'ai_model'], ['face_swap', 'Face-Swap Detector', 'ai_model'],
+    ['ai_generated', 'AI-Generated Image Detector', 'ai_model'], ['blink', 'Blink Rate (Eye Aspect Ratio)', 'biometric'], ['landmark_jitter', 'Landmark Jitter', 'temporal'],
     ['temporal_flicker', 'Temporal Flicker', 'temporal'], ['metadata', 'Metadata & Provenance', 'metadata'],
   ],
   audio: [
@@ -143,10 +143,10 @@ async function loadLocker() {
   box.innerHTML = '<p class="locker-empty">Opening the locker…</p>';
   const items = await api.lockerItems();
   // honesty: the exhibits were picked to show each test working (fakes it scored > 70, reals < 20); the manifest's
-  // last exhibit is a deliberate miss. The story's Results chapter (06·2) shows everything it gets wrong.
+  // last exhibit is a deliberate miss. The story's Results chapter (06·2, 06·3) shows everything it gets wrong.
   const lc = $('#locker-count');
   lc.textContent = items.length ? `${items.length} exhibits · picked to show each test` : '';
-  lc.title = 'Exhibits were chosen to show each test working; one is a fake VERITAS misses. For everything it gets wrong, see the story, Results 06·2.';
+  lc.title = 'Exhibits were chosen to show each test working; one is a fake VERITAS misses. For everything it gets wrong, see the story, Results 06·2 and 06·3 (video benchmark).';
   if (!items.length) {
     box.innerHTML = `<div class="locker-empty"><p><strong>No demo exhibits installed.</strong></p>
       <p>Put sample files and a <code>manifest.json</code> in <code>web/samples/lab/</code>, or drop your own file on the left.</p></div>`;
@@ -491,7 +491,8 @@ async function revealPipe(report, pipe) {
     const row = list.querySelector(`.pipe-row[data-id="${CSS.escape(t.id)}"]`);
     if (!row) continue;
     const st = row.querySelector('.pipe-state');
-    const b = band(t.score);
+    // a one-sided test (the face-swap detector) below 50 is silent: grey, it neither flags nor clears the file
+    const b = t.metrics && t.metrics.one_sided && t.score != null && t.score < 50 ? 'none' : band(t.score);
     row.dataset.band = b;
     row.querySelector('.pipe-name').textContent = t.name || row.querySelector('.pipe-name').textContent;
     if (t.status === 'skipped' || t.status === 'error') { row.classList.add('is-skipped'); st.textContent = t.status === 'error' ? 'Error' : 'Skipped'; }

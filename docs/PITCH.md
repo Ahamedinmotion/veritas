@@ -9,9 +9,9 @@ There are three scripts in this file:
 3. **The 5-minute live demo of the lab.** Go straight into it after either pitch.
 
 After the scripts you will find what to do when something breaks, the numbers to know by heart, and a map of
-all 49 story steps for a longer tour. Hard questions and model answers are in `docs/JUDGE_QA.md`.
+all 51 story steps for a longer tour. Hard questions and model answers are in `docs/JUDGE_QA.md`.
 
-Every number here comes from `web/data/results.json` (run of 18–19 Nov) and `web/samples/*/manifest.json`.
+Every number here comes from `web/data/results.json` (run of 18–19 Nov; video benchmark 19 Nov) and `web/samples/*/manifest.json`.
 If anyone re-runs `scripts/evaluate.py`, check chapter 06 again and update this file.
 
 ---
@@ -29,7 +29,7 @@ laptop, presses number keys and does any mouse clicks. Pass the clicker at every
 
 **How the cues are written.** `→` means the speaker presses the clicker (or the → key). `[4]` means the partner
 presses that number key. *(07 · …)* in italics tells you which step you land on (the counter at the bottom right
-shows `07 / 49`).
+shows `07 / 51`).
 
 **One rule for both of you.** While your partner is talking, look at the screen or at the judge, not at your notes.
 
@@ -40,8 +40,8 @@ shows `07 / 49`).
 - [ ] Charger plugged in. Wi-Fi **off**. `scripts\start_windows.bat` is running, with the black window minimised.
 - [ ] Tab 1: the story at `http://127.0.0.1:8000/`. Tab 2: the lab at `http://127.0.0.1:8000/lab.html#analyze`,
       with the engine light green ("Online · CPU").
-- [ ] Morning warm-up: in the story, press → through all 49 steps once so every image and demo is loaded, then
-      press **Home**. Press **F** for fullscreen. The counter should read `01 / 49`.
+- [ ] Morning warm-up: in the story, press → through all 51 steps once so every image and demo is loaded, then
+      press **Home**. Press **F** for fullscreen. The counter should read `01 / 51`.
 - [ ] Lab warm-up: analyse one exhibit from the locker so the models are in memory (the first analysis is the
       slowest), then press **N**.
 - [ ] Live Cam: open it once (key **2**), allow the camera, check the mesh appears, then press **1**. This way the
@@ -136,34 +136,41 @@ the photo, and measure how much each pixel changes."
 seven more tests like this, from sensor noise and frequency grids to blink rate and the voice spectrum."
 
 ### 05 · The system (K, 1:55–2:15)
-`[5]` *(38 · "Fourteen tests. Three pipelines. One verdict.")* **K:** "Fourteen tests, three pipelines: photo,
+`[5]` *(39 · "Fifteen tests. Three pipelines. One verdict.")* **K:** "Fifteen tests, three pipelines: photo,
 video and voice."
 
-→ → *(39–40 · evidence in, preprocess)* **K:** "Each file is fingerprinted with SHA-256, faces are found, frames
+→ → *(40–41 · evidence in, preprocess)* **K:** "Each file is fingerprinted with SHA-256, faces are found, frames
 are sampled."
 
-→ *(41 · detectors)* **K:** "Pretrained neural networks carry about seventy percent of the weight. We didn't train
-them: we picked them by experiment, and they're credited right here. The physics tests add evidence a person can
-actually see. These are the real scores for a research face-swap: the AI-face model and the flicker test caught it;
-blink and jitter found nothing."
+→ *(42 · detectors)* **K:** "Pretrained neural networks carry most of the weight. We didn't train them: we picked
+them by experiment, and they're credited right here. These are the real scores for a lip-sync we made with Wav2Lip
+from a consenting actor's research clip. Our AI-face model said real, 9. The face-swap detector, which we added
+after benchmarking six published detectors, said 95."
 
-→ → *(42–43 · fusion, then the gauge swings)* **K:** "We combine them in log-odds, so a confident 95 counts far
-more than a lukewarm 60. The result is one score from 0 to 100, with a confidence."
+→ → *(43–44 · fusion, then the gauge swings)* **K:** "We combine them in log-odds, so a confident 95 counts far
+more than a lukewarm 60. The face-swap detector is one-sided: it can raise an alarm but never vouch. Result: 70,
+synthetic. Without it, this video scored 14." *(If asked: we looked at this clip when we chose the detectors, so it
+is a demonstration, not a test. On a laptop that samples 24 frames instead of 32 it reads 64, suspicious.)*
 
 *K passes the clicker to P.*
 
 ### 06 · Results (P, 2:15–2:45)
-`[6]` *(44 · image results)* **P:** "We tested it on 104 images it never saw during tuning: 91.3 percent accuracy,
+`[6]` *(45 · image results)* **P:** "We tested it on 104 images it never saw during tuning: 91.3 percent accuracy,
 an AUC of 0.971, and not one real photo wrongly flagged. That last one is optimistic: the network was trained on
 the same photo collections most of our real photos come from."
 
-→ *(45 · "Beyond photos, and where it fails")* **P:** "Now the hard part. Ten outside voice clips: every real voice
-cleared, but only 2 of 6 fakes caught. Ten research deepfake videos: the same, 2 of 6. It catches faces that AI
-generated whole, but misses most face-swaps, lip-syncs and voice clones. We show our failures, because you shouldn't trust a detector you can't
-question."
+→ *(46 · "Beyond photos, and where it fails")* **P:** "Now the hard part. Ten outside voice clips: every real voice
+cleared, but only 2 of 6 fakes caught. Voice clones are still our weakest spot."
+
+→ *(47 · "Face-swaps: before and after")* **P:** "Video face-swaps were our other big gap, so we ran a benchmark: six
+published detectors, 75 research clips none of them trained on. We added two of them. On two datasets neither
+network was trained on, fakes called synthetic went from 0 of 15 to 12 of 15, and none of the 15 real clips was
+called synthetic, though 5 now read suspicious. With 15 clips that is thin evidence, and on grainy webcam-quality
+video 1 of 39 real clips was called synthetic. We show our failures, because you shouldn't trust a detector you
+can't question."
 
 ### 08 · Close and hand-over (P, 2:45–3:00)
-`[8]` *(48 · "Your turn, detective.")* **P:** "Every detector is temporary. So VERITAS is one layer, next to signed
+`[8]` *(50 · "Your turn, detective.")* **P:** "Every detector is temporary. So VERITAS is one layer, next to signed
 content, watermarks and a human who decides. That's intelligence beyond humans, kept honest by humans.
 Let's show you."
 
@@ -186,14 +193,15 @@ Start on step 01. About 150 words.
 call where every face was fake. And people can't spot AI faces: in one study they were right 48 percent of the
 time."
 
-`[4]` → → *(22–23 · ELA map)* **K:** "So we measure. VERITAS runs fourteen tests. This one finds a palm tree we
+`[4]` → → *(22–23 · ELA map)* **K:** "So we measure. VERITAS runs fifteen tests. This one finds a palm tree we
 pasted in. Two neural networks do the rest, and everything is fused into one score, completely offline on this
 laptop."
 
-`[6]` *(44)* **P:** "On 104 images it never saw during tuning, it scored 91.3 percent, and no real photo was wrongly
+`[6]` *(45)* **P:** "On 104 images it never saw during tuning, it scored 91.3 percent, and no real photo was wrongly
 flagged."
 
-→ *(45)* **P:** "But on voice clones and video face-swaps it had never seen, it misses four fakes out of six, and we
+→ → *(47)* **P:** "For video face-swaps we benchmarked six published detectors and added two of them: on datasets
+they weren't trained on, fakes called synthetic went from 0 to 12 of 15. Voice clones still get past it, and we
 show you exactly where."
 
 `[8]` **P:** "Want to try it? Give it a photo, or see if you can beat it at spotting fakes."
@@ -218,7 +226,8 @@ report reveals as **Ground truth** after the verdict.
 | 4:20–5:00 | Spot the Fake: Humans vs AI scoreboard | K, then P closes | judge plays |
 
 Analysis times on the booth laptop (CPU only): a photo takes about 3–5 s and a voice clip about 2–4 s. A video can
-take 15–25 s. Fill in the real times on Friday. **Never sit in silence during a scan.** Every exhibit below has a
+take 25–40 s on a slow laptop (the face-swap detector adds 13–19 s there; about 5 s in total on our Mac). Fill in
+the real times on Friday. **Never sit in silence during a scan.** Every exhibit below has a
 line to say while it runs.
 
 ### 0:00–0:15 · Intro (K)
@@ -267,7 +276,7 @@ Press **N**. *K hands over to P.*
 
 ### 2:00–2:45 · Exhibit 4: AI "talking photo" video (P)
 Click **AI 'talking photo'**. This is the slowest scan, so talk through it:
-**P:** "For video, the engine samples up to 48 frames and runs the face model on each one. It also tracks
+**P:** "For video, the engine samples 32 to 48 frames and runs the face model on each one. It also tracks
 478 face landmarks about twelve times a second, to count blinks and measure how steady the face is."
 
 On the report, point at the timeline, then at the **Blink** and **Landmark Jitter** cards:
@@ -277,10 +286,17 @@ a photograph being moved, which is how scam 'talking photos' are made."
 
 The honest line (always say it):
 **P:** "We made this clip the same way as the clips we used to set the video thresholds, so it's a
-demonstration, not proof. On real research deepfakes, blink and jitter found nothing: modern fakes blink. The
-proof is on our results slide: only 2 of 6 research video fakes caught."
+demonstration, not proof. On real research deepfakes, blink and jitter found nothing: modern fakes blink. Look at
+the face-swap detector here: 0. It only knows swaps, so the AI-face model has to catch this one. For real
+face-swaps, the evidence is on results slide 06·3: on two datasets it wasn't trained on, it calls 12 of 15 fakes
+synthetic."
 
 Press **N**.
+
+> **Only if a judge asks to see the face-swap detector fire.** No locker exhibit does (research clips are not
+> shipped). Drag in a **consenting-actor** clip from the desktop folder (see `docs/SETUP_WINDOWS.md`): Google DFD
+> actor 09's face-swap (about 44, suspicious: say "it misses this one, and we show it") or our Wav2Lip lip-sync of
+> actor 07 (about 70). Never drop the Celeb-DF clips live: one is a deepfake of a real celebrity.
 
 ### 2:45–3:15 · Exhibit 5: AI voice (P)
 Click **AI voice**. When the report opens, click ▶ to play it. It lasts 5 seconds.
@@ -332,7 +348,7 @@ Let the judge take the keyboard. **Enter** starts the game. After each answer th
 and **Enter** moves to the next picture. At the end, read out their score against VERITAS's and offer: "Put your
 name on the board."
 
-**P (closing):** "That's VERITAS: fourteen tests, one verdict that shows its reasons, and nothing ever leaves this
+**P (closing):** "That's VERITAS: fifteen tests, one verdict that shows its reasons, and nothing ever leaves this
 laptop. Thank you. We'd love your questions."
 
 > **If you only have 3 minutes for the demo:** GAN face, then the video (or the voice clip if the laptop is slow),
@@ -345,8 +361,9 @@ laptop. Thank you. We'd love your questions."
 | Problem | Say | Do |
 |---|---|---|
 | Red **Engine offline** banner | "The engine is restarting. The camera part still works." | Double-click `scripts\start_windows.bat`, wait about 30 s, click **Check again**. Do the Live Cam in the meantime. |
-| A video scan is slow | Use the "while it scans" line, then explain the timeline you're about to see. | Don't cancel before 40 s. After that, press **Esc** and do the voice clip instead. |
+| A video scan is slow | Use the "while it scans" line, then explain the timeline you're about to see. | Don't cancel before 60 s. After that, press **Esc** and do the voice clip instead. If every video is that slow, see the face-swap fallback ladder in `docs/SETUP_WINDOWS.md`. |
 | A real person (you or a judge) comes out Suspicious or Synthetic in Live Cam | "That's our known weak spot. Webcam frames are smoothed and compressed, and to the AI detector they can look too clean. On stills of real people from research videos, 5 of 12 were flagged. That's why our score is evidence, not a verdict." | Don't argue with the result. Show story `[6]` → (06·2) if they want the numbers. |
+| A real person's video (phone/webcam) comes out Suspicious | "That's the price of the face-swap detector. Grainy, heavily compressed real video looks a bit like blending to it: in our test 11 of 39 webcam-quality real clips came out suspicious, and one synthetic. Suspicious means check the source, not fake." | Show the face-swap card: the per-frame faces and that it is one-sided. Then story `[6]` → → (06·3). |
 | A judge's own file is judged wrong | "Thank you. That's exactly the kind of case we want to learn from." | Write it down in the booth notebook (file type, source, score). |
 | Camera does not start | "The browser needs permission. One moment." | Close other camera apps, then click the lock icon → Camera → Allow, and reload. Check Windows Settings → Privacy & security → Camera (both switches on) and the laptop's camera shutter. If it still fails, skip Live Cam and show the blink demo in the story (`[4]`, then click exhibit G). |
 | Live Cam says "Camera paused" | "It rests when nobody is in front of it." | Click **Wake**. |
@@ -381,22 +398,48 @@ laptop. Thank you. We'd love your questions."
 - Same datasets, new speakers: **75.7%**, AUC **0.81**. This is the optimistic number.
 - When a whole dataset was left out of tuning, **75%** of real everyday-microphone voices (FLEURS) were flagged.
 
-**Video**
-- 10 research clips: fakes caught **2/6**, real cleared **4/4** (all under 50). Only the FF++ face-swap gets a
-  "synthetic" verdict in the lab. Blink and jitter sat at their floors on every clip. The
-  Google DFD face-swap scored **5** and the Wav2Lip lip-sync **14**. About **2.2 s** per clip on the development
-  laptop.
+**Video (face-swap benchmark, full engine, before → after the face-swap detector)**
+- We did not train it: we benchmarked **6** published detectors on **75** leak-free research clips and integrated
+  a pair of them, GenD (WACV 2026) + the Deepfake Detection Challenge winner (EfficientNet-B7). Our pre-registered
+  rule picked the challenge winner alone; we added GenD after seeing the results because it also catches
+  reenactment (Face2Face, NeuralTextures). One-sided, 8 frames.
+- Datasets neither network was trained on (Celeb-DF + Google DFD, 15 real + 15 fake): AUC **0.60 → 0.998**; with so
+  few clips the plausible range is about **0.87 to 1.00**. Fakes called synthetic **0 → 12 of 15** (3 suspicious).
+  Reals called synthetic **0 → 0**, but reals called suspicious **2 → 5 of 15**.
+- Caveat: GenD's authors chose their checkpoint using Celeb-DF++ validation videos, so Celeb-DF is unseen in
+  training but not in model selection; only Google DFD (5 real + 5 fake, AUC 1.00) is fully unseen. The 6
+  candidates were also ranked on these 30 clips, so the number is optimistic.
+- On its own, the face-swap test fires on **7 of 15** of those real clips and **21 of 39** webcam-quality real
+  clips. Its threshold was set on FaceForensics++, the dataset GenD was trained on, where it is overconfident about
+  real faces. The fusion turns most of these alarms into suspicious, not synthetic.
+- FaceForensics++ test (45 clips, its home ground: thresholds chosen there): AUC **0.61 → 0.945**. The method no
+  network saw (FaceShifter): **1 of 5** synthetic.
+- Honest: we chose the pair after seeing these results; on those clips it ties with the challenge winner alone
+  (+0.03 AUC, CI 0.00–0.09). 8 frames was picked for speed afterwards; with 4 or 16 frames one real clip would have
+  been called synthetic. Only 2019–2020 methods tested.
+- 10 booth demo clips: fakes synthetic **1 → 5 of 6**, reals authentic **3 of 4** (FF++ original stays 47,
+  suspicious). The 3 FF++ #069 fakes are in GenD's training data and the Celeb-DF pair is from Celeb-DF's training
+  portion; only our Wav2Lip lip-sync is a fully unseen catch. The DFD face-swap: **5 → 41** (suspicious; 44 on a
+  laptop that samples 32 frames). These scores are from the development Mac (48 frames); at 32 frames every verdict
+  is the same.
+- Cost on grainy real video: 39 real clips degraded like a cheap webcam went from **38/1/0 to 27/11/1**
+  (authentic/suspicious/synthetic).
+- On photos it would raise false alarms (real webcam-style photos flagged 1 → 4 of 49), so it is **video-only**.
+- Speed: about **5–6 s** per video on the development Mac; about **33–43 s** on a slow 4-core stand-in (the
+  face-swap step alone 19–26 s). RAM: about **3.6–3.7 GB** while analysing a video. Booth laptop: fill in on Friday.
 
 **Game and humans**
 - On the 30 game pictures, VERITAS gets **27** right. People in the 2022 study managed **48.2%**.
 
 **The system**
-- 14 tests, 3 pipelines. Verdicts: below 35 authentic, 35–65 suspicious, above 65 synthetic.
+- 15 tests, 3 pipelines. Verdicts: below 35 authentic, 35–65 suspicious, above 65 synthetic.
 - AI-image network: CommunityForensics ViT-Small, 87 MB, trained on images from **4,803** generators (CVPR 2025).
 - Voice: wav2vec2 layer-4 features (768 numbers per 4-second window) plus our own logistic-regression probe.
 - Faces: YuNet finds them, and MediaPipe gives **478** landmarks (468 face points plus 10 iris points).
-- Data: **171** images, **206** voice clips, **16** videos (6 for tuning, 10 outside research clips).
-- Speed: a photo takes about **0.9 s** on the development laptop and 3–5 s on a slow one. No internet. About 1.7 GB
+- Face-swap detector: GenD (CLIP ViT-L/14, 0.03% of its weights re-tuned on FaceForensics++) + DFDC-winning
+  EfficientNet-B7 (more than 100,000 clips of 3,426 actors). Each with its own face finder (SCRFD, MTCNN). 1.5 GB.
+- Data: **171** images, **206** voice clips, **91** videos (75 benchmark, 10 demo, 6 tuning).
+- Speed: a photo takes about **0.9 s** on the development laptop and 3–5 s on a slow one. No internet. About 3.5 GB
   to download once.
 
 ### Say this, never that
@@ -404,15 +447,17 @@ laptop. Thank you. We'd love your questions."
 | Never say | Say instead |
 |---|---|
 | "It's 91% accurate." | "On our held-out test it was 91.3%. Real life will be lower." |
-| "It can detect any deepfake." | "It catches AI-generated faces and images well. It misses most face-swaps and new voice clones." |
+| "It can detect any deepfake." | "It catches AI-generated faces well and, in video, most 2019–2020 face-swaps we tested. New voice clones and newer swap apps are untested or missed." |
 | "This proves it's fake." | "This is evidence. A human makes the decision." |
-| "We trained an AI." | "We chose a pretrained network by experiment, and trained a small probe on top of it." |
-| "Our dataset is huge." | "It's a school-scale experiment: 171 images, 206 voice clips, 16 videos." |
+| "We trained an AI." | "We chose pretrained networks by experiment and trained a small probe on top of one. For face-swaps we benchmarked six published detectors on a leak-free test set we built, and integrated two of them." |
+| "Our dataset is huge." | "It's a school-scale experiment: 171 images, 206 voice clips, 91 videos." |
+| "0.998, it's perfect." | "On 30 research clips from datasets it wasn't trained on; with so few clips the plausible range is 0.87 to 1.00. Five real ones came out suspicious, and newer swap apps were not tested." |
+| "On unseen datasets …" | "On datasets neither network was trained on." (GenD's checkpoint was picked using Celeb-DF++ videos.) |
 | "Nobody can fool it." | "Anyone with enough skill could. Here's how, and here's what would stop them." |
 
 ---
 
-## Appendix: all 49 story steps
+## Appendix: all 51 story steps
 
 Use this map for a longer tour, or to find your place after a question. "Step" is the counter at the bottom right.
 
@@ -441,11 +486,13 @@ Use this map for a longer tour, or to find your place after a question. "Step" i
 | 33–34 | 04 G | Blink EAR: real, then early deepfake | About 17 blinks a minute. Early fakes forgot; modern ones blink, and in our test it never fired. |
 | 35 | 04 H | Landmark jitter | Remove head motion, measure the shake. Honest result: only flicker fired on research clips. |
 | 36–37 | 04 I | Spectrogram: real mic, then clone | Some clones stop at 8 kHz, but so do phone calls: shown, not scored. |
-| 38 | 05 | "Fourteen tests. Three pipelines. One verdict." | |
-| 39–43 | 05 | Evidence → preprocess → detectors → fusion → gauge | Log-odds fusion. Real engine output for an FF++ face-swap: 76, confidence 0.63. Pretrained models credited. |
-| 44 | 06 | Image results | 91.3%, AUC 0.971, 0 false alarms out of 49. |
-| 45 | 06·2 | Voice, video, the hard cases | Fakes caught 2/6 (voice) and 2/6 (video); all reals cleared. Where it fails. |
-| 46 | 07 | Three limits | New generators, compression, adversarial noise (an illustration). |
-| 47 | 07·2 | Layers of trust and our ethics rules | Provenance, watermarks, detection, literacy and law. |
-| 48 | 08 | "Your turn, detective." Three doors into the lab | Hand over to the demo. |
-| 49 | 08 | Credits and the 22 sources | |
+| 38 | 04 J | Face-swap detector (pretrained) | Two published networks we benchmarked and chose: GenD (CLIP) + the DFDC winner. One-sided. |
+| 39 | 05 | "Fifteen tests. Three pipelines. One verdict." | |
+| 40–44 | 05 | Evidence → preprocess → detectors → fusion → gauge | Log-odds fusion. Real engine output for a Wav2Lip lip-sync: 70, confidence 0.49 (14 without the face-swap detector). Pretrained models credited. |
+| 45 | 06 | Image results | 91.3%, AUC 0.971, 0 false alarms out of 49. |
+| 46 | 06·2 | Voices and the hard cases | Voice fakes caught 2/6; all real voices cleared. Where it fails. |
+| 47 | 06·3 | Face-swaps: before and after | 75 leak-free clips. Celeb-DF + DFD (not in training): AUC 0.60 → 0.998 (range 0.87–1.00); fakes synthetic 0 → 12 of 15; 5 of 15 reals now suspicious. |
+| 48 | 07 | Three limits | New generators, compression, adversarial noise (an illustration). |
+| 49 | 07·2 | Layers of trust and our ethics rules | Provenance, watermarks, detection, literacy and law. |
+| 50 | 08 | "Your turn, detective." Three doors into the lab | Hand over to the demo. |
+| 51 | 08 | Credits and the 30 sources | |

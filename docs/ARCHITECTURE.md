@@ -81,7 +81,7 @@ Common report shape:
 Verdict thresholds: score < 35 authentic, 35–65 suspicious, > 65 synthetic.
 
 Test ids — image: `ai_face`, `ai_generated`, `ela`, `noise`, `fft`, `jpeg_quant`, `metadata`.
-Video adds: `blink`, `landmark_jitter`, `temporal_flicker`, `ai_face` (per-frame avg). Audio: `ai_voice`, `spectral_cutoff`, `prosody`, `breath_silence`, `spectrogram` (visual).
+Video adds: `blink`, `landmark_jitter`, `temporal_flicker`, `ai_face` (per-frame avg), `face_swap` (one-sided). Audio: `ai_voice`, `spectral_cutoff`, `prosody`, `breath_silence`, `spectrogram` (visual).
 Errors: HTTP 4xx/5xx with `{ "error": "message" }`.
 
 Engine notes (additive, nothing above changed): video reports contain the tests `ai_face`, `ai_generated` (12 frames),
@@ -148,6 +148,37 @@ These describe the shipped behaviour; nothing in the API contract above changed.
   is a deliberate miss; the locker footnote says the others were chosen to show each test working.
 - **Kiosk privacy.** Analyze forgets Live Cam captures and closes a finished report after 150 s without input
   (`?idle=SECONDS`); Live Cam pauses the camera after 90 s with no face (button "Wake").
-- **Story chapter 05** shows the engine's real output for the FF++ Deepfakes 069 clip (76, confidence 0.63) and
-  credits the pretrained networks (refs [23]-[25]). Chapter 06 computes exact 95% intervals in the browser from the
+- **Story chapter 05** shows the engine's real output for the Wav2Lip lip-sync demo clip (70, confidence 0.49; 14
+  without the face-swap test; until 19 Nov it showed the FF++ Deepfakes 069 clip, 76) and credits the pretrained
+  networks (refs [23]-[25], [27]-[29]). Chapter 06 computes exact 95% intervals in the browser from the
   confusion matrix and reads `image_details.external_video_stills.real_as_photo` for the "Real video stills" chip.
+
+## Face-swap detector (19 Nov 2026, additive; nothing above changed)
+- **Video test `face_swap`** ("Face-Swap Detector", category `ai_model`), second in the video `tests` list (after
+  `ai_face`). Two pretrained networks, GenD (CLIP ViT-L/14) + the DFDC-winning EfficientNet-B7, each with its own
+  face detector (SCRFD / MTCNN), on 8 evenly spaced sampled frames; `server/forensics/face_swap.py`, models in
+  `models/face_swap/`. `status` is `skipped` when neither face detector finds a face, `error` when the model files are
+  missing. It is **one-sided**: `weight` is 0 when its `score` < 50, and the fused score is max(without, with) it.
+  Its `metrics` include `GenD_mean_P(fake)`, `B7_mean_P(fake)`, their FF++ thresholds, frames with a face,
+  `networks_voting`, `one_sided: true`; its `visual` is the grid of the 8 aligned faces with per-frame scores.
+- **`/api/health`** `models` gains `face_swap` (true when loaded, or when switched off with `VERITAS_FACESWAP=off`);
+  `detail.model_names.face_swap` names the active mode. The lab shows "Online · 3/4 models" if it is missing.
+- **`timeline`** points may carry `swap` (the face-swap detector's per-frame score, on its 8 frames). **`keyframes`**
+  carry `by`: `ai_face` | `face_swap` | `ai_generated` (which test rated that frame most suspicious).
+- **`web/data/results.json`**: `video.benchmark` = the 75-clip benchmark (`parts.{ffpp,celebdf,dfd,cross,all}.
+  {before,after}.{auc,auc_ci95,accuracy_at_50,fakes,reals,...}`, `per_method[]`, `face_swap_test`, `cross_gain`,
+  `clips[]`), `video.clips[].before` / `before_verdict` (the engine without the face-swap test), `video.summary_before`,
+  `image_details.faceswap_on_stills` (why the detector is video-only). Story chapter 06·3 (`#results-video`) reads them.
+- **Modes:** `VERITAS_FACESWAP` = `fp32` (default) | `int8` | `b7` | `off` (server/config.py `FACESWAP_MODES`;
+  quotes are stripped, an unknown value logs a warning and uses `fp32`). The start scripts print the mode and frames.
+- **Frames (release fix, 19 Nov):** the engine samples 48 frames on a 10+ thread CPU, otherwise **32** (24 only via
+  `VERITAS_VIDEO_FRAMES`). At 24 the face-swap test saw different frames and published demo scores moved (Wav2Lip
+  70 -> 64); at 32 all 40 checked clips keep their verdict.
+- **results.json additions (review fixes):** `parts.*.{before,after}.auc_ci95_newcombe` and
+  `face_swap_test.*.auc_ci95_newcombe` (Newcombe Wilson-type AUC intervals; the story shows these),
+  `video.clips[].celebdf_train_portion` (‡ on 06·3). `scripts/evaluate_video.py --restat` rebuilds them and the notes
+  from the saved per-clip rows without re-running any clip.
+- **Lab:** a silent one-sided test (score < 50) is grey everywhere: card, scan pipeline, face tiles
+  (`charts.faceswap_figure(silent=True)`), timeline diamonds and keyframes it picked; it never looks like it vouches.
+- **Self-test:** `scripts/selftest.py` also checks the face-swap test on both locker videos (status ok, score ±5 of
+  16 / 0 in `fp32`, frames with a face GenD/B7 = 8/8 on the real video and 0/8 on the talking photo).

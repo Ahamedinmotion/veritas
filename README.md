@@ -16,7 +16,9 @@ The **engine** (`server/`) is a FastAPI app. It serves both pages and the analys
 voice clip goes through a battery of independent tests, and the engine combines their scores into one verdict:
 
 - **Photos:** AI-image network, AI-face network, error level analysis, noise residual, FFT spectrum, JPEG tables, metadata.
-- **Videos:** per-frame face model, blink rate (eye aspect ratio), landmark jitter, temporal flicker, AI frames, container metadata.
+- **Videos:** per-frame face model, **face-swap detector** (two pretrained published networks, GenD + the Deepfake
+  Detection Challenge winner, two of the 6 we benchmarked), blink rate (eye aspect ratio), landmark jitter, temporal
+  flicker, AI frames, container metadata.
 - **Voice:** wav2vec2 voice network and breath/silence analysis. A spectrogram, pitch track and spectral cut-off are shown but not scored.
 
 Verdict: score < 35 **authentic**, 35–65 **suspicious**, > 65 **synthetic**. Our measured accuracy, and where the
@@ -24,18 +26,20 @@ engine fails, are in story chapter 06 and in `web/data/results.json`. Be honest 
 
 ## Run it
 
-You need internet **once** to install Python, the libraries and the models (models about 530 MB, Python environment
-about 1.3 GB; keep 6 GB free). After that, no internet is needed. No internet on the laptop at all? Use the offline
+You need internet **once** to install Python, the libraries and the models (models about 2.4 GB including the 1.5 GB
+face-swap detector, Python environment about 1.4 GB; keep 8 GB free). The engine uses about 3.6-3.7 GB of RAM while
+it analyses a video, and a video takes 5-6 s on the development Mac and 33-43 s on a slow 4-core laptop. After that, no internet is needed. No internet on the laptop at all? Use the offline
 kit (Route C in `docs/SETUP_WINDOWS.md`).
 
 ### Windows (the booth laptop)
 1. Copy the `veritas` folder to `C:\veritas` (not inside OneDrive). **Leave out `.venv`, `eval_data` and `.git`.**
-   Copying `models\` saves a 530 MB download.
+   **Copy `models\`** (2.4 GB): the face-swap detector's verified files cannot simply be re-downloaded.
 2. With internet, double-click `scripts\setup_windows.bat` once. It takes 5–15 minutes, runs a self-test and ends
    with `ALL PASS` and `SETUP COMPLETE`.
 3. Every time after that, double-click **`scripts\start_windows.bat`**. Keep the black window open and don't click
    in it. Edge opens `http://127.0.0.1:8000/` by itself when the engine is ready (about 30 s; the very first start
-   after setup can take 2–4 minutes).
+   after setup can take 2–4 minutes). Start it at least 2 minutes before visitors: video analysis warms up in the
+   background for another 20–30 s.
 4. Quick health check any time: `scripts\selftest_windows.bat` must say `ALL PASS`.
 
 The full checklist (Friday tests, speed table, troubleshooting) and the **fallback plan** (`emergency_browser.bat`,
@@ -52,7 +56,8 @@ uv run python scripts/download_models.py  # once, with internet
 # or by hand:
 uv run uvicorn server.app:app --host 127.0.0.1 --port 8000
 ```
-Use Chrome or Edge. Health check: `http://127.0.0.1:8000/api/health` should show `"ok": true` with all three models `true`.
+Use Chrome or Edge. Health check: `http://127.0.0.1:8000/api/health` should show `"ok": true` with all four models
+`true` (`face_deepfake`, `ai_generated`, `audio_deepfake`, `face_swap`).
 
 ## The three lab modes
 
@@ -99,12 +104,14 @@ veritas/
   README.md              this file
   pyproject.toml uv.lock exact Python 3.12 dependencies (CPU-only PyTorch on Windows/Linux)
   server/                FastAPI engine: app.py (API + static files), pipeline.py / video_pipeline.py /
-                         audio_pipeline.py, fusion.py (score fusion), forensics/ (one module per test),
+                         audio_pipeline.py, fusion.py (score fusion), forensics/ (one module per test; face_swap.py
+                         = the pretrained face-swap detector), vendor/ (MTCNN, MIT),
                          calibration.json (fitted calibration, written by scripts/evaluate.py)
-  models/                downloaded AI models (gitignored; copy to the booth laptop)
+  models/                downloaded AI models (gitignored; copy to the booth laptop); models/face_swap/ = 1.5 GB
   scripts/               setup_windows.bat, start_windows.bat, selftest(.py/_windows.bat), emergency_browser.bat,
                          start_windows_kit.bat + build_winkit.sh (offline kit), start_mac.sh, download_models.py,
-                         evaluate.py (the experiment), build_samples.py (lab + game samples), build_eval_data.py, ...
+                         evaluate.py (the experiment), evaluate_video.py (75-clip video benchmark),
+                         evaluate_faceswap_images.py, export_faceswap_onnx.py, build_samples.py, build_eval_data.py, ...
   eval_data/             evaluation images and audio (gitignored)
   web/
     index.html           THE STORY        css/story.css   js/story/
@@ -138,7 +145,8 @@ veritas/
 | Port 8000 already in use | Another copy is running. Close all black windows and start once. |
 | Story stutters on the TV | Set the TV to 1920×1080 at 100 % scaling, use Edge or Chrome with F11, and plug in the charger. |
 | Engine cannot run at all | `scripts\emergency_browser.bat`: story, Live Cam and Spot the Fake work without Python (see the fallback plan). |
-| A model shows `false` in `/api/health` | `models\` is incomplete. Run `setup_windows.bat` again with internet. |
+| A model shows `false` in `/api/health` | `models\` is incomplete. Copy it from the USB stick, or run `setup_windows.bat` again with internet. |
+| Video analysis runs out of memory or is too slow | Use the face-swap fallback ladder in `docs/SETUP_WINDOWS.md` (`set VERITAS_FACESWAP=int8`, `b7` or `off`). |
 
 More detail: `docs/SETUP_WINDOWS.md` (booth), `docs/ENGINE.md` (science and limits), `docs/ARCHITECTURE.md` (API).
 
@@ -148,11 +156,15 @@ dataset or was made by us from research-dataset material (GAN faces of people wh
 FFHQ/COCO photos, one consenting paid actor from Google DFD, public-domain audiobook readings), and exists only to
 test the detector.
 
-**What is pretrained, and what is ours.** The two AI networks are open, pretrained models we chose by experiment
-(best of 12 image and 7 voice candidates): CommunityForensics ViT (Park & Owens, CVPR 2025, MIT) and
-wav2vec2-base-960h fine-tuned on In-the-Wild deepfake speech (abhishtagatya, Apache-2.0); faces are found by YuNet
-(OpenCV Zoo, MIT) and MediaPipe Face Landmarker (Apache-2.0). Ours: the classic tests, the voice probe on top of
-wav2vec2, the calibration, the fusion rule, the whole evaluation, the lab and the story.
+**What is pretrained, and what is ours.** Every AI network is an open, pretrained model we chose by experiment:
+CommunityForensics ViT (Park & Owens, CVPR 2025, MIT; best of 12 image candidates), wav2vec2-base-960h fine-tuned on
+In-the-Wild deepfake speech (abhishtagatya, Apache-2.0; best of 7 voice candidates), and for video face-swaps GenD
+(Yermakov et al., WACV 2026, MIT) plus the Deepfake Detection Challenge 1st-place EfficientNet-B7 (Seferbekov 2020,
+MIT), two of the 6 published detectors we benchmarked on 75 leak-free research clips we assembled (our
+pre-registered rule picked the DFDC winner alone; we added GenD after seeing the results). Faces are found by YuNet (OpenCV
+Zoo, MIT), MediaPipe Face Landmarker (Apache-2.0), SCRFD (InsightFace, non-commercial research licence) and MTCNN
+(facenet-pytorch, MIT). Ours: the classic tests, the voice probe on top of wav2vec2, the calibration, the fusion rule,
+the face-swap benchmark and its integration, the whole evaluation, the lab and the story.
 Analysis never leaves the laptop. Sources and licences are listed in `docs/DATA_SOURCES.md` and `docs/SOURCES_STORY.md`.
 Some evaluation material (FFHQ, research deepfake datasets) is non-commercial. Check those terms before publishing
 this repository or the samples anywhere public.

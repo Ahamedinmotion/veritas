@@ -1,4 +1,4 @@
-# VERITAS: the 25 hardest judge questions
+# VERITAS: the 26 hardest judge questions
 
 These are model answers for **Khais (K)** and **Prithvi (P)**. Each question names an **owner**, who answers
 first. The partner adds at most one sentence. Every number here comes from `web/data/results.json`,
@@ -20,8 +20,8 @@ and fix this file.
 | A · The science | 1–7 | K (1, 2, 3, 5, 7), P (4, 6) |
 | B · The numbers | 8–13 | P |
 | C · Limits and attacks | 14–18 | K (15, 16, 17), P (14, 18) |
-| D · What we built | 19–20 | K |
-| E · Ethics, privacy, the real world | 21–25 | P (21, 22, 25), K (23, 24) |
+| D · What we built | 19–21 | K (19, 20), P (21) |
+| E · Ethics, privacy, the real world | 22–26 | P (22, 23, 26), K (24, 25) |
 
 ---
 
@@ -116,7 +116,7 @@ A second test, **breaths and silence**, looks for digitally clean pauses and mis
 the spectral cut-off are shown as pictures but carry no weight, because they scored at chance (AUC 0.52 and 0.42).
 Clips with less than 1 second of clear speech get "not enough speech to judge" instead of a verdict.
 
-### 7. How do fourteen tests become one score? *(K)*
+### 7. How do fifteen tests become one score? *(K)*
 Each test gives a score *s* from 0 to 100. We turn it into **log-odds**, ln(s / (100 − s)), take a weighted
 average, apply two calibration constants, and turn it back with the sigmoid:
 **S = 100·σ(z),  z = a·Σ wᵢ·ln(sᵢ / (100 − sᵢ)) + b.**
@@ -127,9 +127,15 @@ networks carry about 70% of the weight. A test that can't run (no face, no speec
 weights are rescaled. The **confidence** number is how much the tests agree, blended with how far the score is
 from 50.
 
+One exception: the **face-swap detector is one-sided**. It votes only when its score is 50 or more, and the final
+score is the higher of "with it" and "without it". Its networks call fully AI-generated faces "real" (they were
+trained on swaps), so it may raise an alarm but must never vouch for a video.
+
 **Honest part:** we set the weights by hand. Only the calibration curves and the photo gain and bias were fitted,
-and only on the calibration split.
-**Show:** story `[5]`, then → five times. The gauge example (80) is computed with the engine's real formula.
+and only on the calibration split. The face-swap test's weight (1.25) and thresholds were chosen on FaceForensics++
+clips only.
+**Show:** story `[5]`, then → five times. The gauge example (70, a Wav2Lip lip-sync that scored 14 before the
+face-swap detector) is computed with the engine's real formula.
 
 ---
 
@@ -176,7 +182,8 @@ No, and we say so on the screen. There are three reasons.
   flagged.
 
 That's why we don't give one headline number. We give three: 91% on photos, 2 of 6 outside voice fakes caught,
-and 2 of 6 research video fakes caught (all real voices and videos cleared).
+and for video face-swaps on 30 clips from datasets neither network was trained on, 12 of 15 fakes called
+synthetic, with 5 of 15 real clips called "suspicious" (none synthetic, but with 15 clips that is thin evidence).
 
 ### 11. Aren't your demo samples cherry-picked? *(P)*
 Yes, the evidence locker is chosen on purpose, and the lab says so under the locker. Each exhibit shows one test
@@ -197,8 +204,13 @@ Stress tests on copies of the held-out real photos:
 - after a phone "beauty" filter: 4 of 49
 - after WhatsApp-style compression: 0 of 49
 
-The weak spots are stills from compressed real videos (5 of 12 flagged) and everyday-microphone voices (75%
-flagged when that dataset was left out of tuning). So:
+The weak spots are stills from compressed real videos (5 of 12 flagged), everyday-microphone voices (75%
+flagged when that dataset was left out of tuning) and, since the face-swap detector, grainy real **videos**: of 39
+real clips degraded like a cheap webcam, 11 came out "suspicious" and 1 "synthetic" (before: 1 and 0). On its own,
+the face-swap test fires on 7 of 15 real Celeb-DF/DFD clips and 21 of those 39 webcam-quality real clips. Its
+threshold was set on FaceForensics++, the dataset GenD was trained on, where it is overconfident about real faces.
+The fusion turns most of these alarms into "suspicious", not "synthetic". That is why the face-swap detector is
+one-sided and not used on photos or Live Cam frames. So:
 - scores from 35 to 65 are shown as "suspicious", not "fake";
 - every report lists which tests fired;
 - our rule is that **a score is evidence, never a verdict**. A human decides.
@@ -228,19 +240,42 @@ LibriSpeech speaker 260 (4 of the clips) and the HiFi-GAN vocoder type were in o
 
 ## C · Limits and attacks
 
-### 14. Your video test caught only 2 of 6 fakes. Why can't it catch face-swaps? *(P)*
-Our main detector is a *general AI-image* detector. It catches faces that were generated whole: GAN faces,
-diffusion, "talking photos". A face-swap is different. Most of the pixels are real video, and only the inner face
-is replaced and blended, keeping real skin texture and real motion. The network was never trained on swaps,
-reenactment or lip-sync.
+### 14. Your video test used to miss face-swaps. What changed, and does it work now? *(P)*
+**What was wrong.** Our first video face test reused the *general AI-image* detector. It catches faces generated
+whole, but a face-swap keeps real skin and real motion, and that network never saw a swap. On 30 research clips
+from datasets neither face-swap network was trained on (Celeb-DF and Google DFD) the engine's score was close to a
+coin toss: AUC 0.60, and 0 of 15 fakes got a "synthetic" verdict.
 
-On 10 research clips, all 4 real clips scored under 50, but only 2 of 6 fakes were caught. The Google DFD
-face-swap scored 5, and the Wav2Lip lip-sync scored 14. Our own classic face-swaps were caught 2 times out of 9.
+**What we did.** We benchmarked six published face-swap detectors on 75 leak-free research clips and added a pair
+of them as one more test: GenD (a CLIP vision transformer, WACV 2026) together with the Deepfake Detection
+Challenge winner (an EfficientNet-B7). Our pre-registered rule picked the challenge winner alone; we added GenD
+after seeing the results because it also catches reenactment (Face2Face, NeuralTextures). It is one-sided, and its
+thresholds were chosen on FaceForensics++ only.
 
-**"Then why was the face-swap in your locker caught (97)?"** Because the face we pasted is itself GAN-generated,
-and the face model recognises a generated face. A swap of a real person's face mostly gets through. The fix is a
-dedicated detector trained on face-swap data such as FaceForensics++, plus a lip-sync check. That's our first
-piece of future work.
+**Result, on the same 30 clips:** AUC **0.998**, fakes called synthetic **0 → 12 of 15** (the other 3
+"suspicious"), real clips called synthetic 0 → 0. With so few clips the plausible range of the AUC is about
+**0.87 to 1.00**; 12 of 15 has an exact range of 52–96 %, and 0 of 15 reals still allows up to 22 %.
+
+**Limits, said first:**
+- More real clips now read "suspicious": **5 of 15**, up from 2. Worse on grainy video: 39 real clips degraded like
+  a cheap webcam went from 1 suspicious and 0 synthetic to **11 suspicious and 1 synthetic**.
+- These 30 clips are not a clean test. Our rule ranked the six candidates by their score on them, and we chose
+  the pair *after* seeing them; on them the pair is statistically tied with the challenge winner alone (+0.03 AUC,
+  CI 0.00–0.09). And GenD's authors chose their checkpoint using Celeb-DF++ validation videos, so Celeb-DF is unseen
+  in training but not in model selection. Only Google DFD (5 real + 5 fake, AUC 1.00) is fully unseen.
+- "No real clip called synthetic" is fragile: we picked 8 frames for speed, and with 4 or 16 frames our benchmark
+  simulation called one real clip synthetic.
+- On its own, the face-swap test fires on 7 of 15 of these real clips; the fusion keeps them at "suspicious".
+- Only 2019–2020 methods were tested. FaceShifter, a method neither network saw, was caught 1 time out of 5.
+  Modern swap apps were not tested.
+- Our booth clips FF++ #069 are in GenD's training data, so they prove nothing, and the Celeb-DF booth pair comes
+  from Celeb-DF's training portion. The Google DFD face-swap stays "suspicious" (41). Only our Wav2Lip lip-sync is a
+  fully unseen catch, and we looked at it when we chose the pair.
+
+**"Then why not use it on photos too?"** We tested that. On single still images it flagged real faces (after
+webcam-style and video-style compression), so it scores videos only. The locker's face-swap *photo* (97) is caught
+because the pasted face is itself GAN-generated; real-face photo swaps mostly get through (2 of 9).
+**Show:** story `[6]` → → (06·3).
 
 ### 15. Can it detect generators it has never seen? *(K)*
 Partly, and we can't prove it for tools that don't exist yet. Our image network was trained on 4,803 generators,
@@ -301,16 +336,23 @@ because a webcam smooths and re-encodes every frame.
 ## D · What we built
 
 ### 19. What did *you* build, and what was pretrained? *(K)*
-**Pretrained, downloaded and not trained by us:** four networks.
+**Pretrained, downloaded and not trained by us:** eight networks.
 - The CommunityForensics image network (photos and face crops)
 - The wav2vec2 voice network
-- YuNet, which finds faces
+- GenD (CLIP ViT-L/14) and the DFDC-winning EfficientNet-B7: the face-swap detector
+- YuNet, SCRFD and MTCNN, which find faces
 - MediaPipe FaceLandmarker (478 points)
 
 **Ours:**
 - **The experiment.** We compared 12 image models and 7 voice models on our calibration split. We built the
   group-aware split, the laundering, five stress tests (webcam, beauty filter, video still, small copy, WhatsApp),
   the leave-one-dataset-out test, and the outside checks on 10 voice clips and 10 videos.
+- **The face-swap benchmark.** A leak-free test set of 75 research clips (FaceForensics++ and Celeb-DF from their
+  official test splits, checked against the published split files, plus Google DFD clips no candidate trained on),
+  six published detectors, each run with its own face detector and crop, checked against the official code (B7
+  crops pixel-identical; GenD's alignment differs by 0.00003 px, which does not change the fp32 model's
+  decisions), the choice, an independent re-check that changed our pick from int8 to the exact fp32 weights, the
+  conversion to ONNX (checked to match the originals), and the integration as a one-sided test.
 - **The voice probe.** Transfer learning on wav2vec2 layer-4 features, with the layer chosen by
   cross-validation.
 - **The physics tests.** ELA with texture matching, sensor noise, FFT, JPEG tables, metadata (including AI-tool
@@ -341,11 +383,36 @@ research group. So we did the parts a small team can do properly:
 Our biggest lesson was that **diversity of training data beat model size**. The winning image model was the
 smallest one we tried, and the large popular ones were near coin-toss level.
 
+### 21. Did you train the face-swap detector yourselves? *(P)*
+**No, and we say so on screen.** We benchmarked six published detectors on a leak-free test set we built, chose
+two of them and integrated the pair. GenD was trained by researchers at the Czech Technical University and CISPA on
+FaceForensics++, and the B7 won Meta's Deepfake Detection Challenge on more than 100,000 clips of paid actors. Training
+something comparable needs that data and weeks of GPU time.
+
+What we did ourselves:
+- **Built the test set.** 75 clips: FaceForensics++ and Celeb-DF from their official *test* splits, and Google
+  DFD clips that no candidate trained on. We checked this against the published split files and removed whole
+  identities that appear in our demo clips.
+- **Ran every detector the way its authors did.** Each one used its own face detector and crop. Feeding them our
+  own crops changed scores by up to 0.22.
+- **Chose thresholds and the weight on FaceForensics++ only,** then tested on Celeb-DF and Google DFD. Honest
+  exception: the candidates were ranked on those clips, and we picked the pair (rather than B7 alone) after seeing
+  those results.
+- **Had the result checked independently.** The re-check found that the smaller int8 version flipped 5 of 91
+  decisions under a 0.00003-pixel change, so we switched to the exact published weights.
+- **Integrated it** as a one-sided test, and measured speed and memory on our laptop and on a slow-laptop
+  stand-in.
+
+**Honest part:** we picked the pair after seeing the cross-dataset numbers. Our own pre-registered rule would have
+picked the challenge winner alone, and on those clips the two are statistically tied. GenD itself was trained on
+FaceForensics++, and its authors chose their checkpoint using Celeb-DF++ videos.
+**Show:** story `[4]` → exhibit J, then `[6]` → → (06·3); `docs/MODEL_SELECTION.md`.
+
 ---
 
 ## E · Ethics, privacy and the real world
 
-### 21. Did you make deepfakes? Of whom? *(P)*
+### 22. Did you make deepfakes? Of whom? *(P)*
 Yes, but only test fakes, and our rule was **no one famous and no one we know**.
 - **Fake faces:** StyleGAN faces of people who do not exist.
 - **Face-swaps:** those non-existent faces pasted onto public research photos (FFHQ, COCO). We deleted three
@@ -359,7 +426,7 @@ The research deepfakes we tested (FaceForensics++, Celeb-DF) appear only as numb
 their file names, and we follow their non-commercial licences. Every fake is labelled and exists only as a test
 exhibit.
 
-### 22. Where does my photo or face go? *(P)*
+### 23. Where does my photo or face go? *(P)*
 Nowhere. Nothing leaves this laptop.
 - The engine runs at 127.0.0.1, which is the laptop talking to itself, and the Wi-Fi is off.
 - It reads a file into memory, analyses it and keeps no copy. (The web framework may put a large upload into a
@@ -373,7 +440,7 @@ Nowhere. Nothing leaves this laptop.
 Each report shows the file's SHA-256 fingerprint, so an investigator can prove which file was checked without
 keeping a copy.
 
-### 23. Who would actually use this? Should a score be used as proof? *(K)*
+### 24. Who would actually use this? Should a score be used as proof? *(K)*
 As a **triage tool** for people who check media: fact-checkers, newsroom desks, school cyber-safety clubs, police
 cyber cells and bank fraud teams. It says "look closer, and here's why". It is **not proof**. Scores from 35 to 65
 are labelled "suspicious", and every report shows which tests fired.
@@ -383,12 +450,15 @@ screen. **Watermarks** like Google's SynthID mark AI output. But most content on
 screenshots and re-uploads strip them, so detection covers everything else. For ordinary people the best defence
 is a habit: if a call asks for money, hang up and call back on a number you already know.
 
-### 24. What does it cost, and why offline? *(K)*
-- **Software cost: zero.** Everything is open-source: Python, FastAPI, PyTorch, MediaPipe and OpenCV. The models
-  are MIT- or Apache-licensed.
+### 25. What does it cost, and why offline? *(K)*
+- **Software cost: zero.** Everything is open-source: Python, FastAPI, PyTorch, ONNX Runtime, MediaPipe and
+  OpenCV. The networks are MIT- or Apache-licensed; the face-swap detector's face finder (SCRFD) and its training
+  data are for non-commercial research only, which a school exhibit is. A product would need other licences.
 - **Hardware:** an ordinary 8 GB laptop with no graphics card. A photo takes about 0.9 s on our development
   laptop and about 3–5 s on a slow one. *(Fill in the booth laptop's time from Friday.)*
-- **Setup:** one download of about 1.7 GB, then it never needs the internet again.
+- **Setup:** one download of about 3.5 GB (libraries 1.4 GB + models 2.1 GB, of which the face-swap detector is
+  1.5 GB), then it never needs the internet again. The engine uses about 3.6–3.7 GB of RAM while it analyses a
+  video, and a video takes about 5–6 s on our development Mac and 33–43 s on a slow 4-core stand-in.
 
 We made it offline for three reasons:
 - **privacy:** faces and voices never leave the laptop;
@@ -397,10 +467,11 @@ We made it offline for three reasons:
 
 Cloud detection services usually charge per scan. Ours costs electricity.
 
-### 25. What would you do with six more months? *(P)*
+### 26. What would you do with six more months? *(P)*
 In order of impact:
-1. **A face-swap and lip-sync detector.** Fine-tune on face-swap research data, and check whether lip shapes
-   match the sounds. This is our biggest gap: on research videos it caught only 2 of 6 fakes.
+1. **Modern face-swaps and lip-sync.** Our face-swap detector was tested only on 2019–2020 methods. We would test
+   today's swap apps, add an audio-visual check of whether lip shapes match the sounds, and add real Indian video
+   to cut the "suspicious" verdicts on grainy real clips (5 of 15 Celeb-DF/DFD real clips).
 2. **Indian voices.** Real speech in Malayalam, Hindi and Indian English, recorded on phones and through
    WhatsApp, so it stops flagging everyday microphones.
 3. **Verify Content Credentials** cryptographically, instead of only reading them.
@@ -425,7 +496,8 @@ In order of impact:
 - **What does "confidence" mean?** It measures how much the tests agree, blended with how far the score is from 50.
   It is *not* the probability of being right.
 - **How long does an analysis take?** On the development laptop, a photo takes about 0.9 s, a voice clip 0.3–1.6 s
-  and a video 2–5 s. On a slow laptop, roughly 3–5 s, 2–4 s and 15–25 s.
+  and a video 4–6 s. On a slow 4-core stand-in, roughly 3–5 s, 2–4 s and 23–32 s (the face-swap detector adds
+  13–19 s of that).
 - **What is the SHA-256 for?** It's a fingerprint of the exact bytes. Change one bit and it changes completely.
   It proves which file was checked.
 - **What does YuNet do?** It's a tiny face-finding network (228 KB). We only score faces it is at least 85% sure
@@ -444,4 +516,8 @@ In order of impact:
 ## Words to avoid
 
 "100% accurate" · "detects all deepfakes" · "can't be fooled" · "proof" · "we trained the AI" (say *which* small
-model you trained) · "real-world accuracy" (say "on our held-out test").
+model you trained) · "our face-swap model" (say "the published detectors we benchmarked and chose") ·
+"0.998 means it's perfect" (say "on 30 clips from datasets it wasn't trained on; the plausible range is 0.87 to
+1.00, and 5 real clips came out suspicious") · "unseen datasets" (GenD's checkpoint was picked on Celeb-DF++ videos:
+say "datasets neither network was trained on") · "real-world accuracy"
+(say "on our held-out test").

@@ -8,9 +8,9 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from . import charts, config, fusion
-from .forensics import ai_face, blink, face_track, landmark_jitter, temporal_flicker, video_meta
+from .forensics import ai_face, blink, face_swap, face_track, landmark_jitter, temporal_flicker, video_meta
 from .forensics.base import calibrated, make_test, safe_run
-from .models import REGISTRY
+from .models import INFER_LOCK, REGISTRY
 from .util import Timer, jpeg_uri
 from .video_io import read_video
 
@@ -90,6 +90,24 @@ def analyze_video(data: bytes, name: str, rep: dict) -> dict:
         for i, p in zip(sel, probs):
             per_frame[i]["frame"] = calibrated("ai_generated", p * 100)
     timer.mark("frames")
+    # ---- face-swap detector (GenD + DFDC-B7, each with its own face detector) on 8 evenly spaced sampled frames
+    fsw = REGISTRY.face_swap
+    fs_idx = face_swap.pick_frames(len(sampled)) if fsw else []
+    fs_res = None
+    if fsw and fs_idx:
+        try:
+            with INFER_LOCK:
+                fs_res = fsw.analyze([sampled[i][1] for i in fs_idx])
+            for j, i in enumerate(fs_idx):
+                per_frame[i]["swap"] = fs_res["frame_scores"][j]
+                b = next((fs_res["boxes"][k][j] for k in fs_res["boxes"] if fs_res["boxes"][k][j]), None)
+                if b:   # the face-swap detector's own face box (keyframe thumbnail when YuNet missed the face)
+                    H, W = sampled[i][1].shape[:2]
+                    per_frame[i]["swap_box"] = [b[0] / W, b[1] / H, (b[2] - b[0]) / W, (b[3] - b[1]) / H]
+        except Exception as e:  # noqa: BLE001
+            log.warning("face-swap detector failed: %s", e)
+            fs_res = None
+    timer.mark("face_swap")
 
     tests = {}
     face_scores = [f["face"] for f in per_frame if f["face"] is not None]
@@ -150,9 +168,18 @@ def analyze_video(data: bytes, name: str, rep: dict) -> dict:
             tests[tid] = make_test(tid, mod.NAME, cat, status="error", score=None,
                                    finding="Face landmark tracker unavailable.", explain=mod.EXPLAIN)
     tests["metadata"], md = video_meta.run(vid["tags"], data, vid["codec"])
+    if config.faceswap_mode() != "off":
+        if fsw is None:
+            tests["face_swap"] = face_swap.make_report_test(None, [])
+        elif fs_res is None:
+            tests["face_swap"] = make_test("face_swap", face_swap.NAME, "ai_model", status="error", score=None,
+                                           finding="The face-swap detector could not run on this video.",
+                                           explain=face_swap.EXPLAIN)
+        else:
+            tests["face_swap"] = face_swap.make_report_test(fs_res, [sampled[i][0] for i in fs_idx])
 
-    order = ["ai_face", "ai_generated", "blink", "landmark_jitter", "temporal_flicker", "metadata"]
-    rep["tests"] = [tests[k] for k in order]
+    order = ["ai_face", "face_swap", "ai_generated", "blink", "landmark_jitter", "temporal_flicker", "metadata"]
+    rep["tests"] = [tests[k] for k in order if k in tests]
 
     # ---- timeline + keyframes (frame score = face score where a face exists, else frame detector)
     frame_scores = [f["frame"] for f in per_frame]
@@ -168,19 +195,33 @@ def analyze_video(data: bytes, name: str, rep: dict) -> dict:
         elif np.isfinite(filled[i]) if len(filled) else False:
             v = float(filled[i])
         else:
-            continue
-        f["score"] = v
-        timeline.append({"t": round(float(f["t"]), 2), "score": int(round(v))})
-    rep["timeline"] = timeline
-    ranked = sorted([i for i, f in enumerate(per_frame) if "score" in f], key=lambda i: per_frame[i]["score"], reverse=True)
+            v = None
+        pt = {"t": round(float(f["t"]), 2)}
+        if v is not None:
+            f["score"] = v
+            pt["score"] = int(round(v))
+        if f.get("swap") is not None:   # the face-swap detector's own per-frame score (8 frames; additive key)
+            pt["swap"] = int(round(f["swap"]))
+        if len(pt) > 1:
+            timeline.append(pt)
+    rep["timeline"] = [p if "score" in p else {**p, "score": p["swap"]} for p in timeline]
+    # keyframes: the most suspicious frames by EITHER per-frame test (key "by" says which one rated it)
+    for f in per_frame:
+        cand = [(f.get("score"), "ai_face" if f["face"] is not None else "ai_generated"), (f.get("swap"), "face_swap")]
+        cand = [c for c in cand if c[0] is not None]
+        if cand:
+            f["kscore"], f["by"] = max(cand, key=lambda c: c[0])
+    ranked = sorted([i for i, f in enumerate(per_frame) if "kscore" in f], key=lambda i: per_frame[i]["kscore"], reverse=True)
     picks = []
     for i in ranked:  # spread keyframes out in time
         if all(abs(per_frame[i]["t"] - per_frame[j]["t"]) > max(0.6, vid["analysed"] / 12) for j in picks):
             picks.append(i)
         if len(picks) == 4:
             break
-    rep["keyframes"] = [{"t": round(float(per_frame[i]["t"]), 2), "score": int(round(per_frame[i]["score"])),
-                         "thumb": _thumb(sampled[i][1], per_frame[i]["box"], per_frame[i]["score"])}
+    rep["keyframes"] = [{"t": round(float(per_frame[i]["t"]), 2), "score": int(round(per_frame[i]["kscore"])),
+                         "by": per_frame[i]["by"],
+                         "thumb": _thumb(sampled[i][1], per_frame[i]["box"] or per_frame[i].get("swap_box"),
+                                         per_frame[i]["kscore"])}
                         for i in sorted(picks, key=lambda i: per_frame[i]["t"])]
     # poster: first sampled frame with a face (or the middle frame)
     pi = next((i for i, f in enumerate(per_frame) if f["box"] is not None), len(sampled) // 2)

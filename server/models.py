@@ -5,6 +5,8 @@
 * audio_deepfake - wav2vec2-style synthetic-speech detector  (models/audio_deepfake/)
 * face detector  - OpenCV YuNet ONNX (fallback: Haar cascade bundled with OpenCV)
 * face landmarker- MediaPipe FaceLandmarker .task (478 landmarks, used for blink / jitter / flicker)
+* face_swap      - GenD (CLIP ViT-L/14) + DFDC-winner EfficientNet-B7, ONNX Runtime, each with its own face
+                   detector (SCRFD / MTCNN)                  (models/face_swap/, server/forensics/face_swap.py)
 
 Everything is loaded with local_files_only=True and HF_HUB_OFFLINE=1 - no network at runtime.
 """
@@ -326,6 +328,7 @@ class Registry:
         self.ai_generated: ImageClassifier | None = None
         self.audio_deepfake: AudioClassifier | None = None
         self.face_detector: FaceDetector | None = None
+        self.face_swap = None   # forensics.face_swap.FaceSwapDetector (video only)
         self.landmarker_model: bytes | None = None
         self.errors: dict[str, str] = {}
         self.loaded = False
@@ -364,8 +367,32 @@ class Registry:
         self.landmarker_model = landmarker_bytes()
         if self.landmarker_model is None:
             self.errors["face_landmarker"] = "face_landmarker.task not found"
+        self.load_face_swap()
         self.loaded = True
         log.info("models ready in %.1fs", time.perf_counter() - t0)
+
+    def load_face_swap(self):
+        """GenD + DFDC-B7 face-swap detector (video). VERITAS_FACESWAP=fp32 (default) | int8 | b7 | off."""
+        mode = config.faceswap_mode()
+        if mode == "off":
+            log.info("face-swap detector switched off (VERITAS_FACESWAP=off)")
+            return
+        try:
+            from .forensics.face_swap import FaceSwapDetector
+
+            use = config.FACESWAP_MODES[mode][0]
+            need = {"gend": "gend_clip.onnx", "gend_int8": "gend_clip_int8.onnx", "dfdc": "dfdc_b7.onnx"}
+            files = [need[k] for k in use] + (["det_10g.onnx", "clip_preprocessor/preprocessor_config.json"]
+                                              if any(k.startswith("gend") for k in use) else [])
+            missing = [f for f in files if not (config.FACE_SWAP_DIR / f).exists()]
+            if missing:
+                raise FileNotFoundError(f"models/face_swap/{', '.join(missing)} missing - run scripts/download_models.py")
+            self.face_swap = FaceSwapDetector(config.FACE_SWAP_DIR, use=use, threads=config.torch_threads())
+            self.face_swap.mode = mode
+        except Exception as e:  # noqa: BLE001
+            self.face_swap = None
+            self.errors["face_swap"] = str(e)
+            log.error("could not load the face-swap detector: %s", e)
 
     def warmup(self):
         t0 = time.perf_counter()
@@ -377,6 +404,12 @@ class Registry:
             self.audio_deepfake.predict_windows(np.zeros(16000 * 2, dtype=np.float32) + 1e-4)
         if self.face_detector:
             self.face_detector.detect(np.asarray(img))
+        if self.face_swap:
+            try:
+                with INFER_LOCK:
+                    self.face_swap.warmup()
+            except Exception as e:  # noqa: BLE001
+                log.warning("face-swap warm-up failed: %s", e)
         try:
             lm = new_landmarker(video=False)
             if lm:
@@ -396,6 +429,8 @@ class Registry:
             "audio_deepfake": self.audio_deepfake is not None,
             "face_detector": self.face_detector is not None,
             "face_landmarker": self.landmarker_model is not None and "face_landmarker" not in self.errors,
+            # the face-swap test is required unless it was switched off on purpose (VERITAS_FACESWAP=off)
+            "face_swap": self.face_swap is not None or config.faceswap_mode() == "off",
         }
 
 

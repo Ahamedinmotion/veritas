@@ -10,6 +10,8 @@ How it works (the version the students explain):
      because ordinary phone denoising, webcams and video compression produce it too.
   4. Weighted mean log-odds -> back to 0-100 with a gain/bias learnt on the calibration split.
   5. Hard evidence overrides: an AI-tool tag in the metadata guarantees at least 88.
+  6. ONE-SIDED tests (the video face-swap detector, t["_onesided"]): they vote only when their score is 50 or more,
+     and the result is max(fused without them, fused with them) - they can raise an alarm but never vouch for a file.
 Confidence = how much the tests agree with the final call, blended with how far the score is from 50.
 """
 from __future__ import annotations
@@ -25,7 +27,7 @@ NAMES_SHORT = {  # kept for other modules that import it
     "noise": "noise analysis", "fft": "frequency spectrum", "jpeg_quant": "JPEG table check",
     "metadata": "metadata check", "blink": "blink-rate test", "landmark_jitter": "landmark-jitter test",
     "temporal_flicker": "flicker test", "ai_voice": "AI-voice detector", "spectral_cutoff": "spectral cut-off test",
-    "prosody": "pitch analysis", "breath_silence": "breath and silence analysis",
+    "prosody": "pitch analysis", "breath_silence": "breath and silence analysis", "face_swap": "face-swap detector",
 }
 AMPLIFY = 2.0   # extra weight multiplier (x(1+AMPLIFY)) for a classic test at score 100
 # categories whose high scores are specific evidence by default; compression / noise / frequency tests opt in per
@@ -56,6 +58,9 @@ def fuse(kind: str, tests: list[dict], hard_ai_marker: bool = False) -> dict:
         if t["status"] != "ok" or t["score"] is None or w <= 0:
             t["weight"] = 0.0
             continue
+        if t.get("_onesided") and t["score"] < 50:   # one-sided: silent unless it raises an alarm
+            t["weight"] = 0.0
+            continue
         eff = w
         amplify = t.get("_amplify", t["category"] in AMPLIFY_DEFAULT)
         if t["category"] != "ai_model" and amplify and t["score"] > config.THRESH_SYNTHETIC:
@@ -66,12 +71,21 @@ def fuse(kind: str, tests: list[dict], hard_ai_marker: bool = False) -> dict:
             t["weight"] = 0.0
         return {"score": 50, "verdict": "suspicious", "confidence": 0.0,
                 "summary": "No test could analyse this file, so no verdict is possible."}
-    tot = sum(e for _, e in active)
-    Z = 0.0
-    for t, e in active:
-        t["weight"] = round(e / tot, 3)
-        Z += (e / tot) * _logit(t["score"])
-    score = 100.0 / (1.0 + math.exp(-(gain * Z + bias)))
+
+    def combine(items):
+        tot = sum(e for _, e in items)
+        z = sum((e / tot) * _logit(t["score"]) for t, e in items)
+        return 100.0 / (1.0 + math.exp(-(gain * z + bias))), {id(t): e / tot for t, e in items}
+
+    all_active = list(active)
+    score, wts = combine(active)
+    rest = [a for a in active if not a[0].get("_onesided")]
+    if rest and len(rest) < len(active):
+        s0, w0 = combine(rest)
+        if s0 > score:   # a weakly firing one-sided test must not pull an already-higher score down
+            score, wts, active = s0, w0, rest
+    for t, _ in all_active:
+        t["weight"] = round(wts.get(id(t), 0.0), 3)
     if hard_ai_marker:
         score = max(score, 88.0)
     score = float(np.clip(score, 0, 100))
@@ -98,6 +112,7 @@ FAKE_PHRASE = {
     "blink": "the face hardly blinks",
     "landmark_jitter": "the face geometry moves unnaturally",
     "temporal_flicker": "the face flickers on its own",
+    "face_swap": "the face-swap detector found blending traces",
     "ai_voice": "the AI-voice detector found synthetic-voice traces",
     "breath_silence": "the pauses are unnaturally silent",
 }
@@ -105,7 +120,7 @@ REAL_PHRASE = {
     "ai_generated": "the AI-image detector", "ai_face": "the face analysis", "ela": "error-level analysis",
     "noise": "the noise analysis", "fft": "the frequency spectrum", "jpeg_quant": "the JPEG tables",
     "metadata": "the metadata", "blink": "the blink rate", "landmark_jitter": "the landmark motion",
-    "temporal_flicker": "the lighting", "ai_voice": "the AI-voice detector", "breath_silence": "the pause analysis",
+    "temporal_flicker": "the lighting", "face_swap": "the face-swap detector", "ai_voice": "the AI-voice detector", "breath_silence": "the pause analysis",
 }
 
 

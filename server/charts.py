@@ -6,6 +6,7 @@ Palette (fixed meanings, matches web/css/tokens.css):
 from __future__ import annotations
 
 import io
+import math
 import threading
 from pathlib import Path
 
@@ -258,4 +259,39 @@ def face_strip(crops: list[np.ndarray], scores: list[float | None], size: int = 
                 s.set_color(col)
                 s.set_linewidth(2.2)
             ax.set_xlabel("n/a" if sc is None else f"{sc:.0f}% synthetic", color=col, fontsize=10, labelpad=6)
+        return _finish(fig)
+
+
+def faceswap_figure(crops: list, frame_scores: list, times: list, size: int = 200, silent: bool = False) -> str:
+    """The aligned faces the face-swap detector judged (2 x 4 grid), framed by each frame's score; a frame where no
+    face was found is shown as an empty tile. silent=True (the one-sided test stayed below 50): every frame and label
+    is drawn in neutral grey, because a silent test never vouches that a face is real."""
+    with _lock:
+        n = max(1, len(crops))
+        cols = min(4, n)
+        rows = int(math.ceil(n / cols))
+        fig, axes = plt.subplots(rows, cols, figsize=(2.15 * cols, 2.45 * rows))
+        axes = np.atleast_1d(axes).ravel()
+        for k, ax in enumerate(axes):
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.grid(False)
+            if k >= n:
+                ax.axis("off")
+                continue
+            crop, sc = crops[k], frame_scores[k]
+            t = times[k] if k < len(times) else None
+            if crop is not None:
+                ax.imshow(np.asarray(Image.fromarray(crop).resize((size, size), Image.Resampling.LANCZOS)))
+            else:
+                ax.imshow(np.zeros((size, size, 3), dtype=np.uint8) + 10)
+                ax.text(0.5, 0.5, "NO FACE", color=FAINT, fontsize=9, ha="center", va="center", transform=ax.transAxes)
+            col = FAINT if silent else score_color(sc)
+            for s in ax.spines.values():
+                s.set_visible(True)
+                s.set_color(col)
+                s.set_linewidth(2.2)
+            ts = "" if t is None else f"{t:.1f} s · "
+            ax.set_xlabel(f"{ts}{'n/a' if sc is None else f'{sc:.0f}'}", color=col, fontsize=9.5, labelpad=5)
+        fig.subplots_adjust(wspace=0.08, hspace=0.32)
         return _finish(fig)

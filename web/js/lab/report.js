@@ -49,7 +49,8 @@ export function renderReport(entry, { fresh = false, onNew, onOpenTest } = {}) {
   const redFlags = flags.filter((x) => x.level !== 'info');
   const conf = r.confidence == null ? null : clamp(r.confidence, 0, 1);
 
-  const ok = tests.filter((t) => t.status !== 'skipped' && t.status !== 'error' && t.score != null);
+  // a one-sided test (the face-swap detector) below 50 is silent: it neither flags nor clears the file
+  const ok = tests.filter((t) => t.status !== 'skipped' && t.status !== 'error' && t.score != null && !isSilent(t));
   const tally = {
     flag: ok.filter((t) => t.score > 65).length,
     mid: ok.filter((t) => t.score >= 35 && t.score <= 65).length,
@@ -191,10 +192,13 @@ function setGauge(svg, v, verdict, done = false) {
 
 /* ------------------------------------------------------------------ test cards */
 const PIC_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1" fill="none" stroke="currentColor"/><circle cx="5.5" cy="6.5" r="1.5" fill="currentColor"/><path d="M2 12l4-4 3 3 2-2 3.5 3.5" fill="none" stroke="currentColor"/></svg>';
+/** One-sided tests (metrics.one_sided) only vote when they raise an alarm; below 50 they are shown in neutral grey. */
+export const isSilent = (t) => !!(t && t.metrics && t.metrics.one_sided && t.score != null && t.score < 50);
+
 function testCard(t, i, n) {
   const skipped = t.status === 'skipped' || t.status === 'error';
   const visualOnly = !skipped && t.score == null;
-  const b = skipped || visualOnly ? 'none' : band(t.score);
+  const b = skipped || visualOnly || isSilent(t) ? 'none' : band(t.score);
   const sc = skipped ? '—' : visualOnly ? '' : Math.round(t.score);
   return `<li class="tc-li"><button type="button" class="tc ${skipped ? 'is-skipped' : ''} ${visualOnly ? 'is-visual' : ''}" data-i="${i}" data-band="${b}" style="--i:${i};--c:${BAND_VAR[b]};--s:${skipped || visualOnly ? 0 : t.score / 100}"
       aria-label="${esc(`${t.name}: ${skipped ? t.status : visualOnly ? 'visual' : `score ${sc} of 100`}. ${t.finding || ''}. Open details.`)}">
@@ -235,6 +239,8 @@ function videoEvidence(entry) {
   const r = entry.report; const f = r.file || {};
   const tl = (r.timeline || []).filter((p) => p && p.t != null && p.score != null);
   const kf = r.keyframes || [];
+  const hasSwap = tl.some((p) => p.swap != null);
+  const swSilentR = isSilent((r.tests || []).find((t) => t.id === 'face_swap'));
   const dur = +f.duration || (tl.length ? tl[tl.length - 1].t : 0) || 1;
   const box = html(`<div class="ev ev-video">
     <div class="ev-head"><span class="label">Exhibit · video</span><span class="sec-note">${tl.length} sampled frames${f.duration ? ` · ${(+f.duration).toFixed(1)} s` : ''}</span></div>
@@ -246,13 +252,14 @@ function videoEvidence(entry) {
       <button class="ev-play" type="button" aria-label="Play video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></button>
     </div>
     <div class="tl-wrap">
-      <div class="ev-head"><span class="label">Face model · frame by frame</span><span class="sec-note">click to seek</span></div>
+      <div class="ev-head"><span class="label">${hasSwap ? 'Per-frame scores' : 'Face model · frame by frame'}</span><span class="sec-note">click to seek</span></div>
+      ${hasSwap ? `<p class="tl-leg"><span class="tl-leg-line"><i></i>AI-face model · every sampled frame</span><span class="tl-leg-sw"><i></i>Face-swap detector · 8 frames${swSilentR ? ' · silent, so grey' : ''}</span></p>` : ''}
       <div class="tline" role="slider" tabindex="0" aria-label="Video timeline" aria-valuemin="0" aria-valuemax="${dur.toFixed(1)}" aria-valuenow="0"></div>
-      <p class="tl-note">One test (the AI-face model) scored on each sampled frame. The verdict weighs all ${(r.tests || []).length || 6} tests together, so single frames can spike without the video being fake.</p>
+      <p class="tl-note">${hasSwap ? 'Two tests score single frames: the AI-face model (line) and the face-swap detector (diamonds).' : 'One test (the AI-face model) scored on each sampled frame.'} The verdict weighs all ${(r.tests || []).length || 6} tests together, so single frames can spike without the video being fake.</p>
     </div>
-    ${kf.length ? `<div class="kf-wrap"><div class="ev-head"><span class="label">Frames the face model rated highest</span></div>
-      <ol class="kf">${kf.map((k, i) => `<li><button type="button" class="kf-b" data-t="${+k.t}" style="--c:${BAND_VAR[band(k.score)]}">
-        ${k.thumb ? `<img src="${esc(k.thumb)}" alt="">` : ''}<span class="kf-t">${fmtTenths(+k.t)}</span><span class="kf-s">${Math.round(k.score)}</span><span class="kf-n">K${i + 1}</span></button></li>`).join('')}</ol></div>` : ''}
+    ${kf.length ? `<div class="kf-wrap"><div class="ev-head"><span class="label">${kf.some((k) => k.by === 'face_swap') ? 'Most suspicious frames' : 'Frames the face model rated highest'}</span></div>
+      <ol class="kf">${kf.map((k, i) => `<li><button type="button" class="kf-b" data-t="${+k.t}" style="--c:${k.by === 'face_swap' && swSilentR ? BAND_VAR.none : BAND_VAR[band(k.score)]}" title="${esc(KF_BY[k.by] || '')}">
+        ${k.thumb ? `<img src="${esc(k.thumb)}" alt="">` : ''}<span class="kf-t">${fmtTenths(+k.t)}</span><span class="kf-s">${Math.round(k.score)}</span><span class="kf-n">K${i + 1}${k.by === 'face_swap' ? ' · swap' : ''}</span></button></li>`).join('')}</ol></div>` : ''}
   </div>`);
 
   const fig = box.querySelector('.ev-fig');
@@ -301,6 +308,8 @@ function videoEvidence(entry) {
   return box;
 }
 
+const KF_BY = { face_swap: 'Rated by the face-swap detector', ai_face: 'Rated by the AI-face model', ai_generated: 'Rated by the AI-frame detector' };
+
 /** 3.96 -> "0:04.0" (round once, then split) */
 function fmtTenths(t) {
   const r = Math.round((+t || 0) * 10) / 10;
@@ -320,6 +329,10 @@ function drawTimeline(host, pts, kf, dur, r) {
     const X = (t) => pad.l + (t / dur) * iw, Y = (s) => pad.t + ih - (s / 100) * ih;
     geom = { X, iw, W };
     const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(p.t).toFixed(1)} ${Y(p.score).toFixed(1)}`).join('');
+    const sw = pts.filter((p) => p.swap != null);
+    // silent face-swap test (< 50): its diamonds are grey, so they never seem to vouch for the face
+    const swSilent = isSilent((r.tests || []).find((t) => t.id === 'face_swap'));
+    const swFill = (v) => (swSilent ? 'var(--bone-dim)' : BAND_VAR[band(v)]);
     const area = pts.length ? `${line}L${X(pts[pts.length - 1].t).toFixed(1)} ${Y(0)}L${X(pts[0].t).toFixed(1)} ${Y(0)}Z` : '';
     let xt = ''; const step = dur > 40 ? 10 : dur > 16 ? 4 : dur > 8 ? 2 : 1;
     for (let t = 0; t <= dur + 0.001; t += step) xt += `<text x="${X(t).toFixed(1)}" y="${H - 7}" class="tl-x">${fmtClock(t)}</text><line x1="${X(t).toFixed(1)}" x2="${X(t).toFixed(1)}" y1="${pad.t}" y2="${pad.t + ih}" class="tl-grid"/>`;
@@ -338,7 +351,9 @@ function drawTimeline(host, pts, kf, dur, r) {
       ${kf.map((k, i) => `<g class="tl-kf" data-t="${k.t}"><line x1="${X(k.t)}" x2="${X(k.t)}" y1="${pad.t}" y2="${pad.t + ih}"/><text x="${X(k.t)}" y="${pad.t - 5}">K${i + 1}</text></g>`).join('')}
       <path d="${area}" fill="url(#tlg)" class="tl-area"/>
       <path d="${line}" class="tl-line" style="stroke:${vcol}"/>
-      ${pts.map((p) => `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.score).toFixed(1)}" r="3.2" class="tl-pt" style="fill:${BAND_VAR[band(p.score)]}"><title>${p.t.toFixed(1)} s · ${Math.round(p.score)}</title></circle>`).join('')}
+      ${pts.map((p) => `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.score).toFixed(1)}" r="3.2" class="tl-pt" style="fill:${BAND_VAR[band(p.score)]}"><title>${p.t.toFixed(1)} s · AI-face ${Math.round(p.score)}</title></circle>`).join('')}
+      ${sw.length > 1 ? `<path d="${sw.map((p, i) => `${i ? 'L' : 'M'}${X(p.t).toFixed(1)} ${Y(p.swap).toFixed(1)}`).join('')}" class="tl-swline"/>` : ''}
+      ${sw.map((p) => `<path d="M${X(p.t).toFixed(1)} ${(Y(p.swap) - 5).toFixed(1)}l5 5l-5 5l-5 -5z" class="tl-sw" style="fill:${swFill(p.swap)}"><title>${p.t.toFixed(1)} s · face-swap ${Math.round(p.swap)}${swSilent ? ' (test silent: below 50 overall)' : ''}</title></path>`).join('')}
       <g class="tl-ph" transform="translate(${X(playT)} 0)"><line y1="${pad.t - 4}" y2="${pad.t + ih + 2}"/><rect x="-4" y="${pad.t - 8}" width="8" height="8" rx="1"/></g>`;
     if (!pts.length) svg.insertAdjacentHTML('beforeend', `<text x="${W / 2}" y="${H / 2}" class="tl-empty">No per-frame scores returned</text>`);
   };
