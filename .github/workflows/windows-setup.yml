@@ -4,10 +4,17 @@
 # the way the "VERITAS" shortcut does, and analyse Evidence-locker samples through the real HTTP API.
 # Nothing is cached on purpose (no pip/uv/model cache): a cache could hide a fresh-install bug.
 # Two installs run side by side: the default %USERPROFILE%\VERITAS, and a VERITAS_HOME with spaces and brackets.
+# Optional (Run workflow -> arm64): a third, default install on a Windows on ARM runner (Snapdragon laptops; x64 Python
+# under emulation).
 name: Windows one-click setup
 
 on:
   workflow_dispatch:
+    inputs:
+      arm64:
+        description: "Also test a Windows on ARM laptop (Snapdragon: x64 Python under emulation)"
+        type: boolean
+        default: false
   push:
     tags: ["v*"]
 
@@ -16,15 +23,20 @@ permissions:
 
 jobs:
   setup:
-    name: setup (${{ matrix.install }})
-    runs-on: windows-latest
+    name: setup (${{ matrix.install }}${{ matrix.os == 'windows-11-arm' && ', Windows on ARM' || '' }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
+        os: [windows-latest, windows-11-arm]
+        install: [default, spaces-and-brackets]
+        exclude:
+          - os: windows-11-arm
+            install: spaces-and-brackets
+          # the ARM job runs only when asked for (Run workflow -> arm64)
+          - os: ${{ github.event.inputs.arm64 == 'true' && 'arm64-requested' || 'windows-11-arm' }}
         include:
-          - install: default
-            home: ""
           - install: spaces-and-brackets
             home: 'C:\Users\runneradmin\VERITAS lab (CI test)'
     env:
@@ -32,6 +44,12 @@ jobs:
       DL_DIR: 'C:\Users\runneradmin\Downloads\VERITAS-Windows (1)'
     steps:
       - uses: actions/checkout@v4
+
+      # only for the build script and check_api.py on the ARM image; VERITAS itself always uses its own uv-managed Python
+      - uses: actions/setup-python@v5
+        if: matrix.os == 'windows-11-arm'
+        with:
+          python-version: "3.12"
 
       - name: Build VERITAS-Windows.zip
         shell: pwsh
@@ -175,12 +193,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: veritas-windows-logs-${{ matrix.install }}
+          name: veritas-windows-logs-${{ matrix.install }}${{ matrix.os == 'windows-11-arm' && '-arm64' || '' }}
           if-no-files-found: warn
           path: ${{ runner.temp }}/veritas-logs/
 
       - name: Upload the tested zip
-        if: matrix.install == 'default'
+        if: matrix.install == 'default' && matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: VERITAS-Windows-zip
