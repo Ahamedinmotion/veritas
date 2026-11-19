@@ -611,7 +611,7 @@ function paintModeNote(e) {
       <p class="mn-sub">Meanwhile the exhibits open saved reports; a file you drop waits here until the engine answers.</p>`;
   } else if (e.state === 'showcase') {
     h = `<p><b class="mn-k">Showcase mode</b>No engine is reachable, so the exhibits open real reports our engine saved.</p>
-      <p class="mn-sub">Analysing your own files needs the engine: the booth laptop or the online engine. <button type="button" class="mn-btn" data-act="retry">Check again</button></p>`;
+      <p class="mn-sub">Analysing your own files needs VERITAS running on a laptop. <button type="button" class="mn-btn" data-act="retry">Check again</button></p>`;
   }
   n.dataset.state = e.state;
   if (n.innerHTML !== h) n.innerHTML = h;
@@ -699,7 +699,7 @@ function showcaseNotice(file, kind, meta) {
     eyebrow: 'Showcase mode',
     title: 'Analysing new files needs <em>the engine.</em>',
     msg: `No forensic engine is reachable from this page right now, so nothing was uploaded: your ${what} stays in this browser.`,
-    help: 'To analyse your own photo, video or voice clip, use the VERITAS booth laptop, or come back when the online engine is running. Meanwhile, every exhibit in the Evidence locker opens a real report our engine saved.',
+    help: 'To analyse your own photo, video or voice clip, use VERITAS on a laptop: the booth laptop, or the free Windows download on GitHub. Meanwhile, every exhibit in the Evidence locker opens a real report our engine saved.',
     actions: [['new', 'Open the Evidence locker'], ['retry', 'Check again']],
   });
 }

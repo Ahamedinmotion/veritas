@@ -22,6 +22,8 @@ Tokens in guide.html and how they are filled from the links file
   * A value that is missing or still a "{{TOKEN}}" stays visible as an amber placeholder (and its QR code
     becomes a "link not set yet" box). Re-run this script once the real links are in the links file.
   * "school": null removes the school line on the cover (the <!--IF:school--> block).
+  * "space_url": null (no online engine: the online lab runs in showcase mode) removes every <!--IF:space_url-->
+    block and keeps the <!--IFNOT:space_url--> blocks (the showcase-mode wording) instead.
 
 The build fails (exit 1) if any page overflows or clips text, or if the PDF has more than 8 pages.
 """
@@ -131,7 +133,7 @@ def load_links(path: Path) -> dict:
     links["online_url"] = site if known(site) else (space if known(space) else "{{SITE_URL}}")
     for k in ("repo_url", "site_url", "space_url", "online_url", "school"):
         v = links.get(k)
-        print(f"  {k:<11} {v if known(v) else ('(removed)' if v is None and k == 'school' else '(placeholder)')}")
+        print(f"  {k:<11} {v if known(v) else ('(removed)' if v is None and k in ('school', 'space_url') else '(placeholder)')}")
     return links
 
 
@@ -154,11 +156,15 @@ def qr_svg(url) -> str:
 def fill(src: str, links: dict) -> str:
     # 1. drop the developer comment at the top
     src = re.sub(r"<!--\s*VERITAS Guide - source.*?-->\n?", "", src, count=1, flags=re.S)
-    # 2. conditional blocks: removed when the value is null / empty (a "{{TOKEN}}" value keeps them, as a placeholder)
-    def cond(m):
-        v = links.get(m.group(1))
-        return m.group(2) if (v is not None and str(v).strip()) else ""
-    src = re.sub(r"<!--IF:(\w+)-->(.*?)<!--/IF:\1-->", cond, src, flags=re.S)
+    # 2. conditional blocks: IF is removed when the value is null / empty (a "{{TOKEN}}" value keeps it, as a
+    #    placeholder); IFNOT is the opposite and is kept only when the value is null / empty
+    def present(key):
+        v = links.get(key)
+        return v is not None and bool(str(v).strip())
+    src = re.sub(r"<!--IF:(\w+)-->(.*?)<!--/IF:\1-->", lambda m: m.group(2) if present(m.group(1)) else "",
+                 src, flags=re.S)
+    src = re.sub(r"<!--IFNOT:(\w+)-->(.*?)<!--/IFNOT:\1-->", lambda m: "" if present(m.group(1)) else m.group(2),
+                 src, flags=re.S)
     # 3. QR codes
     src = src.replace("<!--QR:repo-->", qr_svg(links.get("repo_url")))
     src = src.replace("<!--QR:online-->", qr_svg(links.get("online_url")))

@@ -155,7 +155,7 @@ function savedRibbon(sv) {
   const when = d && !isNaN(d) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   return `<p class="rp-saved" role="note"><span class="rp-saved-k">Saved report from our engine</span>
     <span class="rp-saved-x">The real report VERITAS wrote for this exhibit${when ? `, recorded ${esc(when)}` : ''}${sv.where ? ` on ${esc(sv.where)}` : ''}, opened from a file.
-    Analysing your own files needs the engine: the booth laptop or the online engine.</span></p>`;
+    Analysing your own files needs VERITAS running on a laptop.</span></p>`;
 }
 
 /* ------------------------------------------------------------------ gauge */

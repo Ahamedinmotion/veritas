@@ -5,6 +5,7 @@
   Tokens filled by build_guide.py from ../_incoming/publish.json:
     {{REPO_URL}} {{RELEASE_ZIP_URL}} {{SITE_URL}} {{SPACE_URL}} {{SCHOOL}} {{ONLINE_URL}} (site, else space)
   IF:school comment pairs are removed (with what they wrap) when "school" is null.
+  IF:space_url pairs are removed and IFNOT:space_url pairs kept when "space_url" is null (showcase mode).
   QR:repo and QR:online comments become QR codes.
   Every number must match web/data/results.json, docs/PITCH.md and docs/JUDGE_QA.md.
 -->
@@ -161,7 +162,7 @@
 
     <div class="evidence-rule">
       <div class="qt">A score is <em>evidence,</em><br>never a verdict.</div>
-      <p>Runs offline on an ordinary laptop with no graphics card: faces and voices never leave it. The online version runs the same lab in any browser. Full numbers: story chapter 06 and <span class="mono">docs/PITCH.md</span>.</p>
+      <p>Runs offline on an ordinary laptop with no graphics card: faces and voices never leave it. <!--IF:space_url-->The online version runs the same lab in any browser.<!--/IF:space_url--><!--IFNOT:space_url-->The online version shows the story and the lab's saved reports in any browser.<!--/IFNOT:space_url--> Full numbers: story chapter 06 and <span class="mono">docs/PITCH.md</span>.</p>
     </div>
   </main>
   <footer class="pf"><span><b>VERITAS</b> · INFINIA 2026 · Khais Mohammed &amp; Prithvi</span><span>A score is evidence, never a verdict</span></footer>
@@ -509,7 +510,8 @@
       <div class="q">
         <h3><span class="qn">12</span>Where does my photo go?<span class="who p">P</span></h3>
         <p>Nowhere. At the booth the engine runs on this laptop and needs no internet. It reads the file, analyses it and keeps no copy. Live Cam's face tracking runs inside the browser; only when you press Capture does one frame go to the engine, on this same laptop.</p>
-        <p class="honest hazard"><b>Online</b>If we are using the online version, the file is sent to our online engine for that analysis. Say so.</p>
+        <!--IF:space_url--><p class="honest hazard"><b>Online</b>If we are using the online version, the file is sent to our online engine for that analysis. Say so.</p><!--/IF:space_url-->
+        <!--IFNOT:space_url--><p class="honest hazard"><b>Online</b>The online version uploads nothing: it can only open saved reports. To analyse a visitor's own file, use this laptop.</p><!--/IFNOT:space_url-->
       </div>
     </div>
 
@@ -548,15 +550,18 @@
       <tr><td>Live Cam says "Camera paused"</td><td>Click <b>Wake</b>. It rests when nobody is in view.</td></tr>
       <tr><td>The story stutters on the TV</td><td>Press <span class="kbd">F</span> twice (leave and re-enter fullscreen).</td></tr>
       <tr><td>Setup says "SETUP DID NOT FINISH"</td><td>Do what its <b>What to do</b> line says (usually: check the internet, then double-click <b>1 - SETUP (run once).bat</b> again; finished parts are kept). Still failing: take a photo of the window and use the online version below.</td></tr>
-      <tr class="big"><td>The laptop is broken, or VERITAS will not start at all</td><td>Use <b>VERITAS online</b> on any laptop, tablet or phone (it needs internet; a phone hotspot works): <a class="url" href="{{SITE_URL}}">{{SITE_URL}}</a>, or <a class="url" href="{{SPACE_URL}}">{{SPACE_URL}}</a>. Same story, same lab.</td></tr>
+      <tr class="big"><td>The laptop is broken, or VERITAS will not start at all</td><td>Use <b>VERITAS online</b> on any laptop, tablet or phone (it needs internet; a phone hotspot works): <a class="url" href="{{SITE_URL}}">{{SITE_URL}}</a><!--IF:space_url-->, or <a class="url" href="{{SPACE_URL}}">{{SPACE_URL}}</a>. Same story, same lab.<!--/IF:space_url--><!--IFNOT:space_url-->. Same story; the lab shows saved reports (see below).<!--/IFNOT:space_url--></td></tr>
     </table>
 
     <div class="online">
       <div>
         <h3>VERITAS <em>online</em></h3>
-        <p>The online lab does <b>real analysis</b> on a free Hugging Face server. If that server is asleep or can't be reached, the lab switches to <b>showcase mode</b>: the 9 Evidence-locker exhibits open their real saved reports.</p>
+        <!--IF:space_url--><p>The online lab does <b>real analysis</b> on a free Hugging Face server. If that server is asleep or can't be reached, the lab switches to <b>showcase mode</b>: the 9 Evidence-locker exhibits open their real saved reports.</p>
         <p>Open it a few minutes before you need it: a sleeping server can take a while to wake up. Online analysis can be slower than the laptop.</p>
-        <div class="limits"><b>ONLINE UPLOADS</b> photo up to 15 MB · voice up to 20 MB and 60 s · video up to 40 MB and 30 s</div>
+        <div class="limits"><b>ONLINE UPLOADS</b> photo up to 15 MB · voice up to 20 MB and 60 s · video up to 40 MB and 30 s</div><!--/IF:space_url-->
+        <!--IFNOT:space_url--><p>The online lab runs in <b>showcase mode</b>: the 9 Evidence-locker exhibits open the <b>real reports our engine saved</b>, and Live Cam and Spot the Fake work in the browser.</p>
+        <p>It does <b>not</b> analyse new files: nothing is uploaded. To analyse your own photo, video or voice clip, you need VERITAS on a laptop.</p>
+        <div class="limits"><b>SHOWCASE MODE</b> saved reports · Live Cam · Spot the Fake · nothing is uploaded</div><!--/IFNOT:space_url-->
       </div>
       <div class="qr"><!--QR:repo--><div class="cap">GitHub page<br>download &amp; setup</div><div class="sub">{{REPO_URL}}</div></div>
       <div class="qr"><!--QR:online--><div class="cap">VERITAS online<br>story &amp; lab</div><div class="sub">{{ONLINE_URL}}</div></div>

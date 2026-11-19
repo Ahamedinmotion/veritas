@@ -13,6 +13,8 @@ uv run docs/guide/build_guide.py
 - Links are read from `../_incoming/publish.json` (`repo_url`, `site_url`, `space_url`, `school`); use
   `--links FILE` for another file. Unknown links stay visible as amber `{{SITE_URL}}`-style placeholders, and their
   QR code becomes a "link not set yet" box. `"school": null` removes the school line on the cover.
+  `"space_url": null` (no online engine) removes the `IF:space_url` blocks and keeps the `IFNOT:space_url` ones, so the
+  guide describes the online lab as showcase mode (saved reports, Live Cam, Spot the Fake; nothing uploaded).
 - Needs `uv` and Google Chrome (or Edge, or a Playwright Chromium). The script checks every page for overflow and
   clipped text and fails if there is any, or if the PDF has more than 8 pages.
 - `--png DIR` also saves one PNG per page for a quick visual check.

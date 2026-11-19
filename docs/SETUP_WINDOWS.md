@@ -38,9 +38,9 @@ finished downloads are kept.
      share or copy them for anyone. The Celeb-DF pair shows real celebrities: use it only if a judge asks.
    - Our own Wav2Lip clip is not downloaded (we do not publish it); copy it from the team's USB stick if wanted.
 5. Something freezes? Close the black window and double-click VERITAS again (about 30 s).
-6. The laptop fails completely? On any phone or laptop with internet open **https://ahamedinmotion.github.io/veritas/**: the online lab analyses
-   uploads for real while the online engine is up, and otherwise opens the saved Evidence-locker reports (showcase
-   mode).
+6. The laptop fails completely? On any phone or laptop with internet open **https://veritas-infinia-2026.tocodex42.chatgpt.site/**: the story plays as
+   usual and the online lab runs in showcase mode (the Evidence-locker exhibits open their real saved reports; Live Cam
+   and Spot the Fake work). It cannot analyse new files: say so.
 
 Scores of the research clips on the development Mac (fp32 face-swap mode, 48 frames; the booth laptop can differ by a
 few points, more in int8 mode):
@@ -172,7 +172,7 @@ another to stay within 8 GB of RAM.
 | Tier | When | What to do |
 |---|---|---|
 | **0** | Anything freezes | Close the black window, double-click VERITAS again (about 30 s). |
-| **1** | The engine cannot run at all (VC++ runtime, antivirus, broken install) | Online: open **https://ahamedinmotion.github.io/veritas/** (real analysis while the online engine is up, otherwise showcase mode). Offline: `%USERPROFILE%\VERITAS\scripts\emergency_browser.bat` opens the story from the folder; Analyze then needs `lab.html?mock=1&samples=1` and you must **tell visitors it is demo data**. |
+| **1** | The engine cannot run at all (VC++ runtime, antivirus, broken install) | Online: open **https://veritas-infinia-2026.tocodex42.chatgpt.site/** (the story, plus the lab in showcase mode: saved reports, Live Cam and Spot the Fake; it cannot analyse new files). Offline: `%USERPROFILE%\VERITAS\scripts\emergency_browser.bat` opens the story from the folder; Analyze then needs `lab.html?mock=1&samples=1` and you must **tell visitors it is demo data**. |
 | **2** | The laptop misbehaves | Play the backup demo video recorded on this laptop. |
 | **3** | The laptop is dead | The development Mac with a USB-C to HDMI adapter: `./scripts/start_mac.sh` works with no network. |
 

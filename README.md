@@ -1,18 +1,19 @@
 <p align="center">
-  <a href="https://ahamedinmotion.github.io/veritas/"><img src="docs/readme/banner.webp" width="100%" alt="VERITAS: Seeing is no longer believing. A deepfake forensics lab, shown here with the opening screen of its story: a 3-D face mesh next to the headline."></a>
+  <a href="https://veritas-infinia-2026.tocodex42.chatgpt.site/"><img src="docs/readme/banner.webp" width="100%" alt="VERITAS: Seeing is no longer believing. A deepfake forensics lab, shown here with the opening screen of its story: a 3-D face mesh next to the headline."></a>
 </p>
 
 <h3 align="center">A deepfake detective you can run on any Windows laptop.<br>Give it a photo, a video or a voice clip, and it shows you, test by test, whether AI made it.</h3>
 
 <p align="center">
-  <a href="https://ahamedinmotion.github.io/veritas/"><img src="docs/readme/btn-site.png" width="260" alt="Open the live site"></a>
-  <a href="https://ahamedinmotion.github.io/veritas/lab.html"><img src="docs/readme/btn-lab.png" width="260" alt="Try the online lab"></a>
+  <a href="https://veritas-infinia-2026.tocodex42.chatgpt.site/"><img src="docs/readme/btn-site.png" width="260" alt="Open the live site"></a>
+  <a href="https://veritas-infinia-2026.tocodex42.chatgpt.site/lab.html"><img src="docs/readme/btn-lab.png" width="260" alt="Try the online lab"></a>
   <a href="https://github.com/Ahamedinmotion/veritas/releases/latest/download/VERITAS-Windows.zip"><img src="docs/readme/btn-download.png" width="260" alt="Download for Windows (VERITAS-Windows.zip)"></a>
 </p>
 
 <p align="center">
   <a href="https://github.com/Ahamedinmotion/veritas/releases/latest/download/VERITAS-Guide.pdf"><b>Read the step-by-step guide (PDF)</b></a>
   &nbsp;·&nbsp; Built by Khais Mohammed and Prithvi, CNPS, for INFINIA 2026
+  <br><sub>Website: <a href="https://veritas-infinia-2026.tocodex42.chatgpt.site/">veritas-infinia-2026.tocodex42.chatgpt.site</a> &nbsp;·&nbsp; mirror: <a href="https://ahamedinmotion.github.io/veritas/">ahamedinmotion.github.io/veritas</a></sub>
 </p>
 
 ---
@@ -91,12 +92,10 @@ it can raise an alarm but can never vouch for a video. Details: [`docs/ENGINE.md
 - **Spot the Fake:** ten pictures, real or AI. Play against VERITAS and see who wins.
 
 **Online or offline?** On the booth laptop (the Windows version) VERITAS runs completely offline: nothing you
-analyse leaves the laptop. The [online lab](https://ahamedinmotion.github.io/veritas/lab.html) is different: when an online engine is running, the lab sends
-your file to it. That engine is the same VERITAS engine on a free shared computer at Hugging Face; it analyses your
-file in memory and does not save it. It is slower (a video can take a minute or two) and has upload limits:
-**photos up to 15 MB, voice clips up to 20 MB and 60 seconds, videos up to 40 MB and 30 seconds**. If no online
-engine is running, or it is asleep or cannot be reached, the lab switches to **showcase mode**: nothing is uploaded,
-and the 9 Evidence-locker exhibits still open their real, saved engine reports.
+analyse leaves the laptop. The [online lab](https://veritas-infinia-2026.tocodex42.chatgpt.site/lab.html) runs in **showcase mode** and uploads nothing: the 9
+Evidence-locker exhibits open the real reports our engine saved, and Live Cam and Spot the Fake work right in your
+browser. It does not analyse new files. To check your own photos, videos and voice clips, run VERITAS on a laptop:
+the Windows download above, or from source on macOS or Linux (see *For developers* below).
 
 ---
 
@@ -216,7 +215,7 @@ On Windows from a clone: `scripts\setup_windows.bat` once, then `scripts\start_w
 - `server/`: the FastAPI engine. `pipeline.py`, `video_pipeline.py` and `audio_pipeline.py` run the tests in
   `server/forensics/` (one module per test), `fusion.py` combines them. It also serves the web pages.
 - `web/index.html` is the story, `web/lab.html` the lab (`web/js/story/`, `web/js/lab/`). Fonts and libraries
-  are bundled, so the pages load nothing from other websites (apart from the online engine, when the lab uses one).
+  are bundled, so the pages load nothing from other websites (the lab only asks whether an online engine is configured and answering).
 - The lab looks for an engine in this order: the same server (`/api/health`), then
   `window.VERITAS_CONFIG.onlineApi` from `web/js/config.js`, then showcase mode (saved reports).
 - API contract: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). How every test works and its limits:
