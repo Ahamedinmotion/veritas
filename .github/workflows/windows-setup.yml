@@ -60,12 +60,32 @@ jobs:
           "START_BAT=$(Join-Path $root '2 - START VERITAS.bat')" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
           Get-Command uv -ErrorAction SilentlyContinue | Format-List Source
 
+      # Explorer runs a .bat double-clicked INSIDE a zip from %TEMP%\Temp1_<zip name>.zip\..., without the other files.
+      - name: Double-click inside the zip without extracting - must say "Please UNZIP" and change nothing
+        shell: pwsh
+        run: |
+          $d = Join-Path $env:TEMP 'Temp1_VERITAS-Windows.zip\VERITAS'
+          New-Item -ItemType Directory -Force -Path $d | Out-Null
+          Copy-Item -LiteralPath $env:SETUP_BAT -Destination $d
+          $bat = Join-Path $d '1 - SETUP (run once).bat'
+          $o = Join-Path $env:RUNNER_TEMP 'not-extracted.txt'
+          $p = Start-Process -FilePath $env:ComSpec -ArgumentList ('/d /s /c ""' + $bat + '""') -Wait -PassThru -NoNewWindow -RedirectStandardOutput $o
+          $text = Get-Content -LiteralPath $o -Raw
+          $text
+          if ($p.ExitCode -ne 1 -or $text -notmatch 'Please UNZIP') { throw "the not-extracted message did not appear (exit $($p.ExitCode))" }
+          if (Test-Path -LiteralPath $env:VH) { throw "setup started from inside the zip: $env:VH exists" }
+
       - name: Run "1 - SETUP (run once).bat" (VERITAS_CI=1)
         shell: cmd
         run: |
           echo VERITAS_HOME=[%VERITAS_HOME%]  install dir=[%VH%]
           call "%SETUP_BAT%"
           if errorlevel 1 exit /b 1
+
+      - name: Setup timings
+        if: always() && env.VH != ''
+        shell: pwsh
+        run: python .github/scripts/setup_timings.py (Join-Path $env:VH 'setup-log.txt') '${{ matrix.install }}'
 
       - name: Check the install, the shortcuts and the demo clips
         shell: pwsh
@@ -90,36 +110,48 @@ jobs:
           $n = (Get-ChildItem -LiteralPath $clips -Filter '*.mp4' -File).Count
           "research demo clips downloaded: $n of 9 (non-fatal by design)"
           if (Test-Path -LiteralPath (Join-Path $env:VH 'models\face_swap\gend_clip_int8.onnx')) { 'int8 face-swap file: present' } else { 'int8 face-swap file: MISSING (auto mode then stays on fp32)' }
+          # Windows' 260-character path limit: this runner may have long paths enabled, a school laptop usually not.
+          # Report the longest file path inside the install, so a long user name's headroom is known.
+          $lp = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -ErrorAction SilentlyContinue).LongPathsEnabled
+          $long = Get-ChildItem -LiteralPath $env:VH -Recurse -File -Force -ErrorAction SilentlyContinue | Sort-Object { $_.FullName.Length } -Descending | Select-Object -First 1
+          $rel = $long.FullName.Length - $env:VH.Length
+          "longest path: $($long.FullName.Length) chars ($rel after the install folder): $($long.FullName)"
+          "LongPathsEnabled on this runner: $lp. Default install C:\Users\<name>\VERITAS stays under 260 for user names up to $(259 - 17 - $rel) characters."
 
       - name: Start the engine like the Desktop shortcut, then analyse samples through the API
         shell: pwsh
         run: |
-          $desk = [Environment]::GetFolderPath('Desktop')
-          $s = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desk 'VERITAS.lnk'))
-          $out = Join-Path $env:RUNNER_TEMP 'server-log.txt'
-          $err = Join-Path $env:RUNNER_TEMP 'server-err.txt'
-          # cmd /s /c ""<target>"" keeps the quotes around a path with spaces and brackets
-          $p = Start-Process -FilePath $env:ComSpec -ArgumentList ('/d /s /c ""' + $s.TargetPath + '""') `
-                 -WorkingDirectory $s.WorkingDirectory -RedirectStandardOutput $out -RedirectStandardError $err -PassThru -NoNewWindow
-          try {
-            $t0 = Get-Date; $up = $false
-            while (((Get-Date) - $t0).TotalMinutes -lt 20) {
-              if ($p.HasExited) { break }
-              try { $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 http://127.0.0.1:8000/api/health; if ($r.StatusCode -eq 200) { $up = $true; break } } catch {}
-              Start-Sleep -Seconds 5
-            }
-            "engine up: $up after $([int]((Get-Date) - $t0).TotalSeconds) s"
-            if (-not $up) { Get-Content $out, $err -ErrorAction SilentlyContinue | Select-Object -Last 80; throw "engine did not answer /api/health" }
-            # a second start (the zip's "2 - START VERITAS.bat") must notice the running engine and just exit
-            $q = Start-Process -FilePath $env:ComSpec -ArgumentList ('/d /s /c ""' + $env:START_BAT + '""') -Wait -PassThru -NoNewWindow
-            if ($q.ExitCode -ne 0) { throw "2 - START VERITAS.bat did not detect the running engine (exit $($q.ExitCode))" }
-            python .github/scripts/check_api.py http://127.0.0.1:8000 (Join-Path $env:VH 'web\samples\lab')
-            if ($LASTEXITCODE -ne 0) { throw "API check failed" }
-          } finally {
-            taskkill /PID $p.Id /T /F 2>$null | Out-Null
-            Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'python.exe' -and $_.CommandLine -like '*uvicorn*server.app*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-            $global:LASTEXITCODE = 0   # taskkill's exit code must not decide the step; the checks above throw on failure
-          }
+          # auto mode on this 16 GB runner must pick fp32 (the benchmarked setting)
+          & .github/scripts/engine_check.ps1 -Label auto -ExpectFaceSwap fp32
+
+      # The int8 RAM fallback is what "auto" picks on a laptop with less than 12 GB of RAM. The runner has 16 GB, so the
+      # threshold is raised for this one engine start (test hook in server/config.py); the same API checks must pass.
+      - name: Auto mode on a low-RAM laptop (threshold forced) - int8 face-swap detector, same API checks
+        if: matrix.install == 'default'
+        shell: pwsh
+        env:
+          VERITAS_TEST_AUTO_INT8_BELOW_GB: "64"
+        run: |
+          & .github/scripts/engine_check.ps1 -Label auto-int8 -ExpectFaceSwap int8
+
+      # A teammate who is unsure will double-click SETUP again: it must repair without downloading anything twice.
+      - name: Run "1 - SETUP" a second time (repair) - keeps every download, self-test must pass again
+        if: matrix.install == 'spaces-and-brackets'
+        shell: cmd
+        run: |
+          call "%SETUP_BAT%"
+          if errorlevel 1 exit /b 1
+
+      - name: Repair run - timings, nothing downloaded twice
+        if: matrix.install == 'spaces-and-brackets'
+        shell: pwsh
+        run: |
+          python .github/scripts/setup_timings.py (Join-Path $env:VH 'setup-log.txt') 'second run (repair)'
+          $log = Get-Content -LiteralPath (Join-Path $env:VH 'setup-log.txt') -Raw
+          $again = [regex]::Matches($log, '(?m)^\s+downloading .*$|: downloading from .*$') | ForEach-Object { $_.Value.Trim() }
+          if ($again) { $again; throw "the repair run downloaded models or clips again" }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:VH 'setup-log-previous.txt'))) { throw "the first setup log was not kept" }
+          'repair run: no model or clip downloaded again'
 
       # (copied to a folder without brackets first: upload-artifact treats some characters in paths as glob syntax)
       - name: Collect setup and server logs
@@ -133,10 +165,6 @@ jobs:
               $p = Join-Path $env:VH $f
               if (Test-Path -LiteralPath $p) { Copy-Item -LiteralPath $p -Destination (Join-Path $d ($f -replace '\\', '_')) }
             }
-          }
-          foreach ($f in 'server-log.txt', 'server-err.txt') {
-            $p = Join-Path $env:RUNNER_TEMP $f
-            if (Test-Path -LiteralPath $p) { Copy-Item -LiteralPath $p -Destination $d }
           }
           Get-ChildItem -LiteralPath $d | Format-Table Name, Length
 

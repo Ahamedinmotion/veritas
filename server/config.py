@@ -112,6 +112,12 @@ def weights_for(kind: str) -> dict:
 #   off  : no face-swap test (the engine as it was before 19 Nov 2026)
 FACESWAP_MODES = {"fp32": (("gend", "dfdc"), 1.25), "int8": (("gend_int8", "dfdc"), 1.5), "b7": (("dfdc",), 2.0)}
 AUTO_INT8_BELOW_GB = 12.0   # "auto" picks int8 when the machine has less total RAM than this
+# Test hook only (GitHub Actions runs the auto -> int8 path on a 16 GB runner by raising the threshold); never set it
+# on the booth laptop.
+try:
+    AUTO_INT8_BELOW_GB = float(os.environ.get("VERITAS_TEST_AUTO_INT8_BELOW_GB", "").strip() or AUTO_INT8_BELOW_GB)
+except ValueError:
+    pass
 
 
 _WARNED_MODE: set = set()
