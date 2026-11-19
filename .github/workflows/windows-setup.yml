@@ -110,6 +110,9 @@ jobs:
           $n = (Get-ChildItem -LiteralPath $clips -Filter '*.mp4' -File).Count
           "research demo clips downloaded: $n of 9 (non-fatal by design)"
           if (Test-Path -LiteralPath (Join-Path $env:VH 'models\face_swap\gend_clip_int8.onnx')) { 'int8 face-swap file: present' } else { 'int8 face-swap file: MISSING (auto mode then stays on fp32)' }
+          $slog = Get-Content -LiteralPath (Join-Path $env:VH 'setup-log.txt') -Raw
+          if ($slog -notmatch 'laptop kept awake during setup: yes') { throw "the keep-awake helper did not start (setup-log.txt)" }
+          'keep-awake helper: ran during setup'
           # Windows' 260-character path limit: this runner may have long paths enabled, a school laptop usually not.
           # Report the longest file path inside the install, so a long user name's headroom is known.
           $lp = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -ErrorAction SilentlyContinue).LongPathsEnabled

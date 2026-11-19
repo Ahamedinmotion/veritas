@@ -86,6 +86,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference = 'S
 if errorlevel 1 echo  NOTE: the internet does not seem to work. Setup needs it the first time - connect to Wi-Fi.
 if errorlevel 1 echo.
 
+REM ---- keep the laptop awake while setup runs: a laptop that falls asleep stops the downloads. A background helper
+REM      asks Windows not to sleep (no admin needed; the screen may still turn off). It ends with setup or this window.
+set "VERITAS_AWAKE=%TEMP%\veritas-awake-%RANDOM%%RANDOM%.flag"
+> "%VERITAS_AWAKE%" echo running
+start "" /b powershell -NoProfile -ExecutionPolicy Bypass -Command "$f = $env:VERITAS_AWAKE; try { $q = [char]34; Add-Type -Name Awake -Namespace Veritas -MemberDefinition ('[DllImport(' + $q + 'kernel32.dll' + $q + ')] public static extern uint SetThreadExecutionState(uint f);'); if ([Veritas.Awake]::SetThreadExecutionState([uint32]2147483649)) { Set-Content -LiteralPath ($f + '.on') -Value 'on' } } catch {}; while (Test-Path -LiteralPath $f) { Start-Sleep -Seconds 5 }" >nul 2>nul
+
 REM =========================================================================== STEP 1
 echo  Step 1 of 5: copying VERITAS to your user folder (1 minute) ...
 >> "%LOG%" echo.
@@ -173,6 +179,8 @@ if not "%SELFTEST_RC%"=="0" goto fail_selftest
 
 REM =========================================================================== DONE
 >> "%LOG%" echo.
+if exist "%VERITAS_AWAKE%.on" >> "%LOG%" echo laptop kept awake during setup: yes
+call :awake_stop
 >> "%LOG%" echo SETUP COMPLETE - %DATE% %TIME%
 echo.
 echo  ==============================================================
@@ -217,6 +225,7 @@ goto fail
 
 :fail
 call :ticker_stop
+call :awake_stop
 >> "%LOG%" echo.
 >> "%LOG%" echo SETUP FAILED - %DATE% %TIME% - %FIX%
 echo.
@@ -249,4 +258,10 @@ exit /b 0
 :ticker_stop
 if defined VERITAS_TICK del /q "%VERITAS_TICK%" >nul 2>nul
 set "VERITAS_TICK="
+exit /b 0
+
+:awake_stop
+if not defined VERITAS_AWAKE exit /b 0
+del /q "%VERITAS_AWAKE%" "%VERITAS_AWAKE%.on" >nul 2>nul
+set "VERITAS_AWAKE="
 exit /b 0
