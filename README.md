@@ -33,6 +33,8 @@ After that, VERITAS works with no internet at all.
    a few minutes; after that about 30 seconds. No internet needed.
 
 > [!TIP]
+> **Edge says the download "isn't commonly downloaded"?** Click **…** next to it, then **Keep**, then **Keep anyway**.
+>
 > **Windows says "Windows protected your PC"?** Click **More info**, then **Run anyway**. Windows shows this blue
 > box for every new program that is not from a big company. VERITAS is safe to run.
 
