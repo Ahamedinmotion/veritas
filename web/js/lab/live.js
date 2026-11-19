@@ -103,10 +103,16 @@ async function start() {
   } catch (err) {
     starting = false; els.stage.dataset.state = 'error'; stopTracks();
     const n = err?.name;
-    if (n === 'NotAllowedError' || n === 'SecurityError') msg('err', 'Camera access <em>blocked.</em>', 'Ask a team member to allow the camera for this page (camera icon in the address bar → Allow; press F to leave fullscreen first), then press Retry. If it still fails: Windows Settings → Privacy &amp; security → Camera → turn on camera access and “Let desktop apps access your camera”, and open the laptop’s camera shutter.', { label: 'Retry', fn: () => start() });
+    const booth = /^(localhost|127\.\d+\.\d+\.\d+|\[::1\])$/i.test(location.hostname);
+    if (n === 'NotAllowedError' || n === 'SecurityError') msg('err', 'Camera access <em>blocked.</em>', booth
+      ? 'Ask a team member to allow the camera for this page (camera icon in the address bar → Allow; press F to leave fullscreen first), then press Retry. If it still fails: Windows Settings → Privacy &amp; security → Camera → turn on camera access and “Let desktop apps access your camera”, and open the laptop’s camera shutter.'
+      : 'Allow the camera for this page (the camera icon in the address bar, or the site settings of your browser), then press Retry. The face tracking runs in your browser: nothing is recorded or uploaded unless you press Capture &amp; analyze. Spot the fake works without a camera.', { label: 'Retry', fn: () => start() });
+    else if (n === 'NotSupportedError' || n === 'TypeError') msg('err', 'Camera not <em>available</em> here.', 'This browser cannot open a camera on this page. Try Chrome, Edge or Safari over https://. Spot the fake and the Evidence locker still work.', { label: 'Retry', fn: () => start() });
     else if (n === 'NotFoundError' || n === 'OverconstrainedError') msg('err', 'No camera <em>found.</em>', 'Plug in a webcam (or enable the laptop camera), then press Retry.', { label: 'Retry', fn: () => start() });
     else if (n === 'NotReadableError' || n === 'AbortError') msg('err', 'Camera is <em>busy.</em>', 'Another app (Teams, Zoom, Camera) may be using it. Close that app, then press Retry. If it still fails: Windows Settings → Privacy &amp; security → Camera → turn on camera access and “Let desktop apps access your camera”, and open the laptop’s camera shutter.', { label: 'Retry', fn: () => start() });
-    else if (n === 'NoAPI') msg('err', 'Camera not <em>available</em> here.', 'Open this page through the local engine (http://localhost:8000/lab.html) in Chrome or Edge.');
+    else if (n === 'NoAPI') msg('err', 'Camera not <em>available</em> here.', window.isSecureContext === false
+      ? 'Browsers only allow the camera on secure pages. Open the lab through an https:// address (or on the booth laptop), in Chrome, Edge or Safari.'
+      : 'This browser cannot open a camera. Try Chrome, Edge or Safari. Spot the fake and the Evidence locker still work.');
     else msg('err', 'Camera could not <em>start.</em>', String(err?.message || err), { label: 'Retry', fn: () => start() });
     return;
   }

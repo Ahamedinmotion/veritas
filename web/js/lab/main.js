@@ -1,7 +1,7 @@
 // VERITAS lab — bootstrap: tabs/router, engine status light, fullscreen, kiosk niceties.
 
 import { $, $$, MOCK, isTyping, emit, on, pad, toast } from './util.js';
-import * as api from './api.js';
+import * as engine from './engine.js';
 import * as analyze from './analyze.js';
 
 const VIEWS = ['analyze', 'live', 'game'];
@@ -52,50 +52,89 @@ function moveInk() {
   ink.style.width = `${r.width}px`;
 }
 
-/* ------------------------------------------------------------------ engine status */
+/* ------------------------------------------------------------------ engine status
+   The chip says which engine answers: this laptop, the online engine (a free shared server) or none (showcase mode:
+   saved real reports). engine.js decides; this paints the chip and the banner under the header. */
 let engineState = 'checking';
-let healthTimer = 0;
+let wakeTick = 0;
+const CHIP = {
+  checking: ['Engine', 'Connecting…'],
+  local: ['Engine', 'This laptop'],
+  degraded: ['Engine', 'This laptop'],
+  offline: ['Engine', 'Offline'],
+  online: ['Engine', 'Online (free shared server)'],
+  waking: ['Engine', 'Waking up…'],
+  showcase: ['Showcase mode', 'Saved real reports'],
+  mock: ['Engine', 'Mock data'],
+};
 
-function setEngine(state, h) {
-  engineState = state;
-  const el = $('#engine'); const v = $('#engine-v');
-  el.dataset.state = state;
-  if (state === 'online') {
-    const models = h?.models || {};
-    const vals = Object.values(models);
-    const up = vals.filter(Boolean).length;
-    const dev = String(h?.device || 'cpu').toUpperCase();
-    if (MOCK) v.textContent = 'Mock data';
-    else if (vals.length && up < vals.length) { el.dataset.state = 'degraded'; v.textContent = `Online · ${up}/${vals.length} models`; }
-    else v.textContent = `Online · ${dev}`;
-    el.title = `Forensic engine ${h?.version || ''} on ${dev}. Models: ${Object.entries(models).map(([k, b]) => `${k} ${b ? '✓' : '✗'}`).join(', ') || 'n/a'}`;
-  } else if (state === 'offline') {
-    v.textContent = 'Offline';
-    el.title = 'Forensic engine not reachable. Run start_windows.bat.';
-  } else v.textContent = 'Checking…';
+function paintEngine(s) {
+  engineState = s.state;
+  const el = $('#engine');
+  el.dataset.state = s.state;
+  el.dataset.mode = s.mode;
+  const [k, v] = CHIP[s.state] || CHIP.checking;
+  $('#engine-k').textContent = k;
+  $('#engine-v').textContent = v;
+  const h = s.health;
+  const models = h?.models || {};
+  const vals = Object.values(models);
+  if (s.state === 'degraded') $('#engine-v').textContent = `This laptop · ${vals.filter(Boolean).length}/${vals.length} models`;
+  const modelList = Object.entries(models).map(([m, b]) => `${m} ${b ? '✓' : '✗'}`).join(', ') || 'n/a';
+  el.title = {
+    local: `The forensic engine is running on this laptop (VERITAS ${h?.version || ''}, CPU). Models: ${modelList}`,
+    degraded: `The forensic engine is running on this laptop, but some models are missing. Models: ${modelList}`,
+    offline: s.mode === 'online' ? 'The online engine is not answering right now. This page keeps checking.' : 'The forensic engine on this laptop is not answering. Double-click the VERITAS icon on the desktop.',
+    online: `The online engine: VERITAS ${h?.version || ''} on a free shared server (CPU). Files are analysed in memory and not stored.`,
+    waking: 'The free online engine sleeps when nobody uses it. Waking it usually takes under 2 minutes.',
+    showcase: 'No forensic engine is reachable from this page. The Evidence-locker exhibits open real reports our engine saved earlier.',
+    mock: 'Mock data (?mock=1): generated fixtures, not the engine.',
+  }[s.state] || 'Looking for the forensic engine…';
+  clearInterval(wakeTick);
+  if (s.state === 'waking') { tickWake(); wakeTick = setInterval(tickWake, 1000); }
   updateBanner();
-  emit('engine', { state: el.dataset.state, health: h });
 }
 
+function tickWake() {
+  const t = engine.wakeSeconds();
+  const m = Math.floor(t / 60); const sec = Math.floor(t % 60);
+  const clock = `${m}:${pad(sec)}`;
+  $('#engine-v').textContent = `Waking up · ${clock}`;
+  const bar = $('#banner .banner-prog i'); const out = $('#banner .banner-t');
+  // honest progress: elapsed against the usual 2 minutes, never "done" until the engine actually answers
+  if (bar) bar.style.transform = `scaleX(${Math.min(0.96, t / engine.WAKE_TYPICAL_S)})`;
+  if (out) out.textContent = clock;
+}
+
+const BANNERS = {
+  offline: () => `<span class="banner-dot" aria-hidden="true"></span><strong>Engine offline</strong>
+    <span class="banner-x">Analysis is paused. Double-click the <b>VERITAS</b> icon on the desktop, then wait for the light to turn green. Live cam keeps working.</span>
+    <button class="banner-retry" type="button" data-act="retry">Check again</button>`,
+  offlineOnline: () => `<span class="banner-dot" aria-hidden="true"></span><strong>Engine not answering</strong>
+    <span class="banner-x">The online engine may be restarting. This page keeps checking; the exhibits still open saved reports.</span>
+    <button class="banner-retry" type="button" data-act="retry">Check again</button>`,
+  waking: () => `<span class="banner-dot" aria-hidden="true"></span><strong>Waking up the online engine…</strong>
+    <span class="banner-x">usually under 2 minutes · free servers sleep when nobody uses them</span>
+    <span class="banner-prog" aria-hidden="true"><i></i></span><span class="banner-t mono">0:00</span>
+    <button class="banner-retry" type="button" data-act="skip" title="Open the exhibits' saved reports now; the online engine keeps waking in the background">Use saved reports</button>`,
+};
+
 function updateBanner() {
-  const b = $('#offline-banner');
-  b.hidden = !(engineState === 'offline' && current !== 'game');
+  const b = $('#banner');
+  const kind = current === 'game' ? null
+    : engineState === 'waking' ? 'waking'
+    : engineState === 'offline' ? (engine.mode() === 'online' ? 'offlineOnline' : 'offline')
+    : null;
+  if (b.dataset.kind !== (kind || '')) {
+    b.dataset.kind = kind || '';
+    b.innerHTML = kind ? BANNERS[kind]() : '';
+    if (kind === 'waking') tickWake();
+  }
+  b.hidden = !kind;
   document.body.classList.toggle('has-banner', !b.hidden);
 }
 
-async function checkHealth() {
-  clearTimeout(healthTimer);
-  try {
-    const h = await api.health();
-    setEngine('online', h);
-    healthTimer = setTimeout(checkHealth, 15000);
-  } catch {
-    setEngine('offline');
-    healthTimer = setTimeout(checkHealth, 5000);
-  }
-}
-export const engineOnline = () => engineState === 'online';
-
+export const engineOnline = () => engine.ready();
 /* ------------------------------------------------------------------ fullscreen + cursor */
 function toggleFullscreen() {
   if (document.fullscreenElement) document.exitFullscreen?.();
@@ -117,6 +156,7 @@ function tick() {
 /* ------------------------------------------------------------------ boot */
 function boot() {
   if (MOCK) document.body.classList.add('is-mock');
+  paintEngine(engine.snapshot());
   analyze.init();
 
   window.addEventListener('hashchange', route);
@@ -135,7 +175,14 @@ function boot() {
   }
 
   $('#fs-btn').addEventListener('click', toggleFullscreen);
-  $('#banner-retry').addEventListener('click', () => { setEngine('checking'); checkHealth(); });
+  $('#banner').addEventListener('click', (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'retry') engine.resolve();
+    if (act === 'skip') engine.skipWaiting();
+  });
+  on('engine', paintEngine);
+  on('engine-woke', () => toast('The online engine is awake: you can analyse your own files now', 'ok', 5000));
+  on('engine-found', () => toast('The online engine is available again: you can analyse your own files now', 'ok', 5000));
   document.addEventListener('fullscreenchange', () => {
     document.body.classList.toggle('is-fullscreen', !!document.fullscreenElement);
     wakeCursor(); setTimeout(moveInk, 60);
@@ -155,7 +202,7 @@ function boot() {
 
   tick(); setInterval(tick, 1000);
   route();
-  checkHealth();
+  engine.resolve();
   document.fonts?.ready.then(() => { moveInk(); document.body.classList.remove('is-booting'); });
   setTimeout(() => document.body.classList.remove('is-booting'), 1500);
 }

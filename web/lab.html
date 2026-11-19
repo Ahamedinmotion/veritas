@@ -12,6 +12,9 @@
   <link rel="preload" href="assets/fonts/ibm-plex-sans-condensed-normal-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/lab.css">
+  <!-- Where the online engine lives (window.VERITAS_CONFIG.onlineApi). Optional: without it the lab uses the engine on
+       this laptop, or shows the saved reports (showcase mode). -->
+  <script src="js/config.js"></script>
   <script type="module" src="js/lab/main.js"></script>
 </head>
 <body class="lab is-booting">
@@ -41,8 +44,8 @@
       <div class="engine" id="engine" role="status" aria-live="polite" data-state="checking" title="Forensic engine status">
         <span class="engine-dot" aria-hidden="true"></span>
         <span class="engine-text">
-          <span class="engine-k">Engine</span>
-          <span class="engine-v" id="engine-v">Checking…</span>
+          <span class="engine-k" id="engine-k">Engine</span>
+          <span class="engine-v" id="engine-v">Connecting…</span>
         </span>
       </div>
       <span class="hdr-clock" id="clock" aria-hidden="true">--:--:--</span>
@@ -53,12 +56,7 @@
     </div>
   </header>
 
-  <div class="banner" id="offline-banner" role="alert" hidden>
-    <span class="banner-dot" aria-hidden="true"></span>
-    <strong>Engine offline</strong>
-    <span>Analysis is offline. Run <code>start_windows.bat</code> on this laptop, then wait for the light to turn green. Live cam keeps working.</span>
-    <button class="banner-retry" type="button" id="banner-retry">Check again</button>
-  </div>
+  <div class="banner" id="banner" role="status" aria-live="polite" data-kind="" hidden></div>
 
   <main id="main" tabindex="-1">
     <!-- ============================== 01 ANALYZE ============================== -->
@@ -73,25 +71,29 @@
         </div>
 
         <div class="intake-grid">
-          <div class="drop" id="drop" role="button" tabindex="0" aria-describedby="drop-hint" aria-label="Choose an image, video or audio file to analyze">
-            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-            <div class="drop-reticle" aria-hidden="true">
-              <svg viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="44" class="r1"/>
-                <circle cx="60" cy="60" r="28" class="r2"/>
-                <path d="M60 4v24M60 92v24M4 60h24M92 60h24" class="r3"/>
-                <path d="M60 46v28M46 60h28" class="r4"/>
-              </svg>
+          <div class="intake-left">
+            <div class="drop" id="drop" role="button" tabindex="0" aria-describedby="drop-hint" aria-label="Choose an image, video or audio file to analyze">
+              <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+              <div class="drop-reticle" aria-hidden="true">
+                <svg viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="44" class="r1"/>
+                  <circle cx="60" cy="60" r="28" class="r2"/>
+                  <path d="M60 4v24M60 92v24M4 60h24M92 60h24" class="r3"/>
+                  <path d="M60 46v28M46 60h28" class="r4"/>
+                </svg>
+              </div>
+              <p class="drop-title">Drop evidence here</p>
+              <p class="drop-hint" id="drop-hint">or <span class="u">click to choose a file</span><span class="drop-paste"> &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>V</kbd> to paste</span></p>
+              <ul class="drop-kinds" aria-label="Supported files">
+                <li><span class="k-ic k-image" aria-hidden="true"></span>Image <span>JPG · PNG · WEBP</span></li>
+                <li><span class="k-ic k-video" aria-hidden="true"></span>Video <span>MP4 · MOV · WEBM</span></li>
+                <li><span class="k-ic k-audio" aria-hidden="true"></span>Audio <span>WAV · MP3 · M4A · OGG</span></li>
+              </ul>
+              <input type="file" id="file-input" accept="image/*,video/*,audio/*,.heic,.heif,.wav,.mp3,.m4a,.ogg,.flac,.webm,.mov,.mp4" hidden>
+              <div class="drop-over" aria-hidden="true"><span>Release to open case</span></div>
             </div>
-            <p class="drop-title">Drop evidence here</p>
-            <p class="drop-hint" id="drop-hint">or <span class="u">click to choose a file</span> &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>V</kbd> to paste</p>
-            <ul class="drop-kinds" aria-label="Supported files">
-              <li><span class="k-ic k-image" aria-hidden="true"></span>Image <span>JPG · PNG · WEBP</span></li>
-              <li><span class="k-ic k-video" aria-hidden="true"></span>Video <span>MP4 · MOV · WEBM</span></li>
-              <li><span class="k-ic k-audio" aria-hidden="true"></span>Audio <span>WAV · MP3 · M4A · OGG</span></li>
-            </ul>
-            <input type="file" id="file-input" accept="image/*,video/*,audio/*,.heic,.heif,.wav,.mp3,.m4a,.ogg,.flac,.webm,.mov,.mp4" hidden>
-            <div class="drop-over" aria-hidden="true"><span>Release to open case</span></div>
+
+            <div class="mode-note" id="mode-note" hidden></div>
           </div>
 
           <aside class="locker" aria-labelledby="locker-h">

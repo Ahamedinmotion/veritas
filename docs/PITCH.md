@@ -50,7 +50,7 @@ shows `07 / 51`).
       exist, and you need it for the liveness trick. Backup: the same file on a phone at full brightness.
 - [ ] Saturday morning, after your own test games: on the Spot the Fake screen press **Shift+R** twice. This
       resets the booth scoreboard so it counts only visitors.
-- [ ] `[School Name]` is replaced in `web/index.html`, and you say the school name in the opening line below.
+- [ ] You say the school name, CNPS, in the opening line below (the story's credits already show it).
 
 ### Keys you need
 
@@ -85,7 +85,7 @@ Start with the story on step 01 ("Seeing is no longer believing.").
 ### 00 · Opening (K, 0:00–0:20)
 *(01 · "Seeing is no longer believing.")*
 
-**K:** "Good morning. We're Khais and Prithvi from [School Name]. AI can now forge a face, a voice, even a whole
+**K:** "Good morning. We're Khais and Prithvi from CNPS. AI can now forge a face, a voice, even a whole
 video call. VERITAS is the lab we built to catch it."
 
 → *(02 · the face mesh with labels)* **K:** "This is how a machine sees your face: 468 points. Just coordinates."
@@ -187,7 +187,7 @@ to Part 3.
 
 Start on step 01. About 150 words.
 
-**K:** "We're Khais and Prithvi from [School Name]. Seeing is no longer believing."
+**K:** "We're Khais and Prithvi from CNPS. Seeing is no longer believing."
 
 `[1]` *(05 · Arup)* **K:** "In 2024 a company in Hong Kong lost two hundred million Hong Kong dollars on a video
 call where every face was fake. And people can't spot AI faces: in one study they were right 48 percent of the

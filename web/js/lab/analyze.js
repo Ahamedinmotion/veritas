@@ -3,6 +3,7 @@
 import { $, $$, esc, html, fileKind, fmtBytes, fmtElapsed, sha256Hex, shortHash, sleep, toast, on, emit,
   band, BAND_VAR, CATEGORY_LABEL, pad, reducedMotion, isTyping, MOCK, params } from './util.js';
 import * as api from './api.js';
+import * as engine from './engine.js';
 import { renderReport, stopMedia } from './report.js';
 
 /* Pipeline shown while the engine works (names follow docs/ARCHITECTURE.md test ids).
@@ -26,8 +27,15 @@ const PIPE = {
   ],
 };
 // Booth laptop is CPU-only: keep the expectations generous (re-time on the Windows laptop if needed).
-const TYPICAL = { image: 'usually under 15 s', video: 'usually under 1 min on CPU', audio: 'usually under 20 s' };
-const SLOW_S = { image: 45, video: 120, audio: 45 };   // when to say "taking longer than usual"
+const TYPICAL_LOCAL = { image: 'usually under 15 s', video: 'usually under 1 min on CPU', audio: 'usually under 20 s' };
+const SLOW_LOCAL = { image: 45, video: 120, audio: 45 };   // when to say "taking longer than usual"
+// The online engine is a free shared server (2 CPU cores, one analysis at a time).
+const TYPICAL_ONLINE = { image: 'usually under 30 s online', video: 'about 1–2 minutes online', audio: 'usually under 30 s online' };
+const SLOW_ONLINE = { image: 90, video: 240, audio: 90 };
+const onlineish = () => engine.isOnline() || engine.mode() === 'waking';
+const typical = (k) => (onlineish() ? TYPICAL_ONLINE : TYPICAL_LOCAL)[k];
+const slowAfter = (k) => (onlineish() ? SLOW_ONLINE : SLOW_LOCAL)[k];
+const NOUN = { image: 'Photos', video: 'Videos', audio: 'Voice clips' };
 const BUSY_RETRY_S = 6;                                  // auto-retry delay after HTTP 503 (engine busy)
 const TRUTH_WORDS = { real: 'real', authentic: 'real', genuine: 'real', fake: 'fake', synthetic: 'fake', ai: 'fake', deepfake: 'fake', generated: 'fake' };
 
@@ -53,7 +61,11 @@ export function init() {
   S.intake = 1;
   bindIntake();
   loadLocker();
-  on('engine', ({ state }) => { S.engine = state; });
+  on('engine', (e) => { S.engine = e.state; paintModeNote(e); });
+  $('#mode-note').addEventListener('click', (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'retry') engine.resolve();
+  });
   on('analyze-file', ({ file, meta }) => { emit('goto', 'analyze'); setTimeout(() => start(file, meta || {}), 30); });
   setState('intake');
   bindIdleReset();
@@ -178,8 +190,12 @@ async function loadLocker() {
       if (card.classList.contains('is-loading')) return;
       card.classList.add('is-loading');
       try {
-        const f = await api.lockerFile(it);
-        start(f, { origin: 'locker', truth, exhibit: letter, title: it.title });
+        // No engine ready (showcase mode, or the online engine is still waking): open the engine's saved report.
+        if (!MOCK && !engine.ready() && it.report) await openSaved(it, { truth, exhibit: letter, title: it.title });
+        else {
+          const f = await api.lockerFile(it);
+          start(f, { origin: 'locker', truth, exhibit: letter, title: it.title, item: it });
+        }
       } catch (err) { toast(err.message || 'Could not open that exhibit', 'warn'); }
       finally { card.classList.remove('is-loading'); }
     });
@@ -197,6 +213,7 @@ async function loadLocker() {
   box.addEventListener('scroll', cue, { passive: true });
   new ResizeObserver(cue).observe(box);
   requestAnimationFrame(cue);
+  paintModeNote(engine.snapshot());
 }
 
 function waveGlyph(seed, broken = false) {
@@ -220,7 +237,7 @@ function releaseScan() {
   const job = scanJob; scanJob = null;
   if (job) {
     for (const fn of job.cleanups.splice(0)) { try { fn(); } catch { /* ignore */ } }
-    if (job.url && !S.history.some((h) => h.url === job.url)) URL.revokeObjectURL(job.url);
+    if (job.url && job.url.startsWith('blob:') && !S.history.some((h) => h.url === job.url)) URL.revokeObjectURL(job.url);
   }
   for (const m of scanEl.querySelectorAll('video, audio')) { try { m.pause(); m.removeAttribute('src'); m.load(); } catch { /* ignore */ } }
   scanEl.innerHTML = '';
@@ -250,6 +267,13 @@ async function start(file, meta = {}) {
     return;
   }
   if (file.size > 200 * 1024 * 1024) { toast('That file is over the engine’s 200 MB limit — please trim it first.', 'warn'); return; }
+  if (!MOCK) {
+    // Still looking for an engine: wait a moment (at most a few seconds) before deciding.
+    if (engine.mode() === 'checking') await Promise.race([engine.whenReady(), sleep(8000)]);
+    if (engine.isShowcase()) { showcaseNotice(file, kind, meta); return; }
+    const over = await overLimit(file, kind);
+    if (over) { limitNotice(file, kind, meta, over); return; }
+  }
   if (S.job) cancel(true);
   closeOverlay();
   releaseScan();
@@ -287,9 +311,9 @@ async function start(file, meta = {}) {
     elapsedEl.textContent = fmtElapsed(t); tcEl.textContent = fmtElapsed(t);
     if (job.phase === 'engine') {
       const e = (performance.now() - job.engineT0) / 1000;
-      if (e > 4 && !job.said4) { job.said4 = true; log(kind === 'video' ? 'decoding & sampling up to 48 frames…' : 'neural models are running on the CPU…', 'dim'); }
+      if (e > 4 && !job.said4) { job.said4 = true; log(kind === 'video' ? 'decoding & sampling the frames…' : 'neural models are running on the CPU…', 'dim'); }
       if (e > 12 && !job.said12) { job.said12 = true; log(kind === 'video' ? 'still working — every sampled frame gets a face check' : 'still working — larger files take longer', 'dim'); }
-      if (e > SLOW_S[kind] && !job.said30) { job.said30 = true; log('this is taking longer than usual · you can cancel with Esc', 'warn'); }
+      if (e > slowAfter(kind) && !job.said30) { job.said30 = true; log('this is taking longer than usual · you can cancel with Esc', 'warn'); }
     }
   }, 100);
 
@@ -305,9 +329,23 @@ async function start(file, meta = {}) {
     if (h && el) { el.textContent = shortHash(h, 12, 8); log(`sha-256 fingerprint · ${h.slice(0, 16)}… <span class="dim">(computed in this browser)</span>`); }
   });
 
+  if (!MOCK && !engine.ready() && engine.mode() !== 'local') {
+    // The online engine is still waking up: the file waits here, in this browser, until it answers.
+    log('waiting for the online engine to wake up · usually under 2 minutes', 'warn');
+    $s('.up-pct').textContent = 'wait';
+    const title = $s('.scan-title'); const was = title.innerHTML;
+    title.innerHTML = 'Waking the <em>online engine</em><span class="dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span>';
+    const ok = await engine.whenReady();
+    if (job.aborted || scanJob !== job) return;
+    if (!ok) { clearInterval(job.timer); S.job = null; showcaseNotice(file, kind, meta); return; }
+    title.innerHTML = was;
+    log('online engine is awake', 'ok');
+    $s('.fact-note').textContent = typical(kind);
+  }
   if (S.engine === 'offline' && !MOCK) log('engine status light is red — trying anyway', 'warn');
   if (performance.now() - S.cancelledAt < 120000) log('the engine may still be finishing the cancelled case · this one waits its turn', 'dim');
-  log(`uploading to engine…`);
+  if (engine.isOnline()) log('uploading to the online engine · analysed in memory, not stored');
+  else log(`uploading to engine…`);
   const upBar = $s('.up-bar i'); const upPct = $s('.up-pct');
   const req = api.analyze(kind, file, {
     onUpload: (f) => {
@@ -348,7 +386,7 @@ async function start(file, meta = {}) {
   const entry = { report, url, truth: meta.truth || null, origin: meta.origin, title: meta.title };
   entry.thumb = report.preview || null;
   S.history.unshift(entry);
-  while (S.history.length > 12) { const old = S.history.pop(); if (old.url) URL.revokeObjectURL(old.url); }
+  while (S.history.length > 12) { const old = S.history.pop(); if (old.url && old.url.startsWith('blob:')) URL.revokeObjectURL(old.url); }
   S.job = null;
   showReport(entry, true);
 }
@@ -379,12 +417,12 @@ function scanTemplate(file, kind, pipe, meta) {
       <p class="eyebrow"><span class="eyebrow-n">§ 02</span> Examination in progress <span class="eyebrow-sep">/</span> Intake #${pad(S.intake, 4)}</p>
       <h2 class="scan-title">Examining the <em>${esc(kind === 'audio' ? 'recording' : kind === 'video' ? 'footage' : 'image')}</em><span class="dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></h2>
       <div class="scan-facts">
-        <div class="fact"><span class="label">Elapsed</span><span class="scan-elapsed mono">00:00.0</span><span class="fact-note">${TYPICAL[kind]}</span></div>
+        <div class="fact"><span class="label">Elapsed</span><span class="scan-elapsed mono">00:00.0</span><span class="fact-note">${typical(kind)}</span></div>
         <div class="fact"><span class="label">Size</span><span class="mono fact-v">${fmtBytes(file.size)}</span><span class="fact-note">${esc((file.type || kind).toLowerCase())}</span></div>
         <div class="fact fact-wide"><span class="label">SHA-256</span><span class="mono fact-v" data-k="sha">hashing…</span><span class="fact-note">evidence fingerprint</span></div>
       </div>
       <div class="upload"><span class="label">Upload</span><span class="up-bar"><i></i></span><span class="up-pct mono">0%</span></div>
-      <div class="pipe-head"><span class="label">Test battery</span><span class="fact-note">runs on the engine · results arrive together</span></div>
+      <div class="pipe-head"><span class="label">Test battery</span><span class="fact-note">runs on the ${onlineish() ? 'online ' : ''}engine · results arrive together</span></div>
       <ol class="pipe">${rows}</ol>
       <div class="scan-log mono" role="log" aria-label="Examination log"></div>
       <div class="scan-actions"><button class="btn btn-quiet" type="button" data-act="cancel">Cancel <kbd>Esc</kbd></button></div>
@@ -509,20 +547,26 @@ async function revealPipe(report, pipe) {
 
 function showError(err, file, meta) {
   // A reply without the engine's {error} body (404/501 from a plain file server, proxies…) means no engine is answering.
+  const online = onlineish();
   const offline = err.offline || err.status === 0 || (!err.fromEngine && (S.engine === 'offline' || [404, 405, 501, 502, 504].includes(err.status)));
   const busy = !offline && err.status === 503;
   const tooBig = !offline && err.status === 413;
+  const tooLong = !offline && err.status === 422 && err.fromEngine;
   if (offline && !err.offline) err.message = `No forensic engine answered (HTTP ${err.status}).`;
+  const retryS = busy ? Math.min(60, Math.max(BUSY_RETRY_S, Math.round(err.retryAfter || 0))) : BUSY_RETRY_S;
   const job = scanJob;
   const box = scanEl.querySelector('.scan-side');
   scanEl.querySelector('.panel-scan-inner').classList.add('is-error');
   const title = offline ? 'The engine is <em>not responding.</em>'
     : busy ? 'The engine is <em>busy.</em>'
     : tooBig ? 'That file is <em>too large.</em>'
+    : tooLong ? 'That clip is <em>too long.</em>'
     : 'The engine couldn’t <em>read this file.</em>';
-  const help = offline ? '<p class="err-help">On the booth laptop, double-click <code>start_windows.bat</code> and wait until the engine light in the top-right turns green.</p>'
-    : busy ? `<p class="err-help">It is still finishing the previous case. Trying again in <b class="err-count mono">${BUSY_RETRY_S}</b> s…</p>`
-    : tooBig ? '<p class="err-help">Trim the clip or pick a smaller file (the limit is 200 MB).</p>'
+  const help = offline ? (online
+      ? '<p class="err-help">The online engine may be restarting or asleep. Wait a minute and try again, or open an Evidence-locker exhibit to see a saved report.</p>'
+      : '<p class="err-help">On the booth laptop, double-click the <b>VERITAS</b> icon on the desktop and wait until the engine light in the top-right turns green.</p>')
+    : busy ? `<p class="err-help">${online ? 'The free online engine analyses one file at a time.' : 'It is still finishing the previous case.'} Trying again in <b class="err-count mono">${retryS}</b> s…</p>`
+    : tooBig || tooLong ? `<p class="err-help">${online ? `${limitsLine()}. The booth laptop takes bigger files.` : 'Trim the clip or pick a smaller file (the limit is 200 MB).'}</p>`
     : '<p class="err-help">Try a different file, or a common format such as JPG, MP4 or WAV.</p>';
   box.innerHTML = `
     <div class="err">
@@ -539,7 +583,7 @@ function showError(err, file, meta) {
   box.querySelector('[data-act="new"]').addEventListener('click', () => newCase());
   box.querySelector('[data-act="retry"]').focus();
   if (busy && job) {
-    let n = BUSY_RETRY_S; const out = box.querySelector('.err-count');
+    let n = retryS; const out = box.querySelector('.err-count');
     const t = setInterval(() => {
       if (scanJob !== job) return clearInterval(t);
       n -= 1; if (out) out.textContent = String(Math.max(0, n));
@@ -547,6 +591,139 @@ function showError(err, file, meta) {
     }, 1000);
     job.cleanups.push(() => clearInterval(t));
   }
+}
+
+/* ------------------------------------------------------------------ engine modes: online limits, showcase mode */
+function limitsLine(L = engine.limits() || engine.ONLINE_LIMITS) {
+  const a = L.audio || {}; const v = L.video || {}; const i = L.image || {};
+  return `Online limits: photos ${i.max_mb} MB · voice clips ${a.max_mb} MB / ${a.max_seconds} s · videos ${v.max_mb} MB / ${v.max_seconds} s`;
+}
+
+/** The note under the drop zone: privacy + limits online, what showcase mode means, or nothing (booth). */
+function paintModeNote(e) {
+  const n = $('#mode-note'); if (!n) return;
+  let h = '';
+  if (e.state === 'online') {
+    h = `<p><b class="mn-k">Online engine</b>Files are analysed in memory and not stored.</p>
+      <p class="mn-sub">${esc(limitsLine(e.limits || undefined))} · video takes about 1–2 minutes online</p>`;
+  } else if (e.state === 'waking') {
+    h = `<p><b class="mn-k">Waking up</b>The free online engine usually needs under 2 minutes.</p>
+      <p class="mn-sub">Meanwhile the exhibits open saved reports; a file you drop waits here until the engine answers.</p>`;
+  } else if (e.state === 'showcase') {
+    h = `<p><b class="mn-k">Showcase mode</b>No engine is reachable, so the exhibits open real reports our engine saved.</p>
+      <p class="mn-sub">Analysing your own files needs the engine: the booth laptop or the online engine. <button type="button" class="mn-btn" data-act="retry">Check again</button></p>`;
+  }
+  n.dataset.state = e.state;
+  if (n.innerHTML !== h) n.innerHTML = h;
+  n.hidden = !h;
+  const lc = $('#locker-count'); const count = $$('.lk').length;
+  if (lc && count) lc.textContent = e.state === 'showcase' || e.state === 'waking' ? `${count} exhibits · saved engine reports` : `${count} exhibits · picked to show each test`;
+}
+
+/** Duration of an audio/video file from its header, or null if the browser can't tell. */
+function mediaDuration(file, kind) {
+  return new Promise((resolve) => {
+    const m = document.createElement(kind === 'audio' ? 'audio' : 'video'); const u = URL.createObjectURL(file);
+    const done = (d) => { clearTimeout(t); m.removeAttribute('src'); m.load(); URL.revokeObjectURL(u); resolve(d); };
+    const t = setTimeout(() => done(null), 4000);
+    m.muted = true; m.preload = 'metadata';
+    m.onloadedmetadata = () => done(Number.isFinite(m.duration) && m.duration > 0 ? m.duration : null);
+    m.onerror = () => done(null);
+    m.src = u;
+  });
+}
+
+/** Online engine only: the contract limits (image 15 MB; audio 20 MB and 60 s; video 40 MB and 30 s). */
+async function overLimit(file, kind) {
+  const L = engine.limits()?.[kind];
+  if (!L) return null;
+  const maxB = Number(L.max_bytes) || (Number(L.max_mb) || 0) * 1024 * 1024;   // MB here = MiB, same as the server
+  if (maxB && file.size > maxB) return { what: 'size', limit: `${L.max_mb} MB`, actual: fmtBytes(file.size) };
+  if (L.max_seconds && (kind === 'video' || kind === 'audio')) {
+    const d = await mediaDuration(file, kind);
+    if (d && d > L.max_seconds + 0.5) return { what: 'length', limit: `${L.max_seconds} s`, actual: `${Math.round(d)} s` };
+  }
+  return null;
+}
+
+/** A calm, non-error panel in place of the scan: the file stays in this browser. */
+function notice(file, kind, meta, { eyebrow, title, msg, help, actions }) {
+  if (S.job) cancel(true);
+  closeOverlay();
+  releaseScan();
+  const url = URL.createObjectURL(file);
+  const job = { file, kind, url, meta, aborted: true, cleanups: [], notice: true };
+  scanJob = job;
+  const el = html(`
+  <div class="panel-scan-inner is-error is-notice" data-kind="${kind}">
+    <div class="stage bracketed" data-kind="${kind}">
+      <div class="stage-media"></div>
+      <div class="stage-grid" aria-hidden="true"></div>
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <span class="hud hud-tl">Your ${esc(kind === 'audio' ? 'recording' : kind)} · not uploaded</span>
+      <span class="hud hud-bl">${esc(file.name || 'untitled')}</span>
+    </div>
+    <div class="scan-side">
+      <div class="err notice">
+        <p class="eyebrow"><span class="eyebrow-n">§ 02</span> ${eyebrow}</p>
+        <h2 class="err-title">${title}</h2>
+        <p class="err-msg">${msg}</p>
+        <p class="err-help">${help}</p>
+        <div class="err-actions">${actions.map((a, i) => `<button class="btn ${i ? 'btn-ghost' : 'btn-primary'}" type="button" data-act="${a[0]}">${a[1]}</button>`).join('')}</div>
+      </div>
+    </div>
+  </div>`);
+  scanEl.appendChild(el);
+  mountStageMedia(el.querySelector('.stage-media'), file, kind, url, () => {});
+  setState('scanning');
+  const side = el.querySelector('.scan-side');
+  side.addEventListener('click', async (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (!act) return;
+    if (act === 'new') newCase();
+    if (act === 'retry') {
+      const b = e.target.closest('button'); b.disabled = true; b.textContent = 'Checking…';
+      engine.resolve();
+      const ok = await engine.whenReady();
+      if (scanJob !== job) return;
+      if (ok) start(file, meta);
+      else { b.disabled = false; b.textContent = 'Check again'; toast('Still no engine reachable. The exhibits open saved reports.', 'warn', 4200); }
+    }
+  });
+  side.querySelector('[data-act]')?.focus({ preventScroll: true });
+}
+
+function showcaseNotice(file, kind, meta) {
+  const what = { image: 'photo', video: 'video', audio: 'voice clip' }[kind] || 'file';
+  notice(file, kind, meta, {
+    eyebrow: 'Showcase mode',
+    title: 'Analysing new files needs <em>the engine.</em>',
+    msg: `No forensic engine is reachable from this page right now, so nothing was uploaded: your ${what} stays in this browser.`,
+    help: 'To analyse your own photo, video or voice clip, use the VERITAS booth laptop, or come back when the online engine is running. Meanwhile, every exhibit in the Evidence locker opens a real report our engine saved.',
+    actions: [['new', 'Open the Evidence locker'], ['retry', 'Check again']],
+  });
+}
+
+function limitNotice(file, kind, meta, over) {
+  notice(file, kind, meta, {
+    eyebrow: 'Online engine',
+    title: over.what === 'size' ? 'That file is <em>too large</em> to analyse online.' : 'That clip is <em>too long</em> to analyse online.',
+    msg: `${esc(NOUN[kind])} up to ${esc(over.limit)} can be analysed online; this one is ${esc(over.actual)}. Nothing was uploaded.`,
+    help: `${esc(limitsLine())}. Trim it or pick a smaller file. The VERITAS booth laptop takes bigger files.`,
+    actions: [['new', 'Choose another file']],
+  });
+}
+
+/** Showcase mode: open the report the real engine saved for this exhibit (web/samples/lab/reports/). */
+async function openSaved(it, meta) {
+  const report = await api.lockerReport(it);
+  if (S.job) cancel(true);
+  const entry = { report, url: it.src, truth: meta.truth || null, origin: 'locker', title: meta.title, saved: report._showcase || {} };
+  entry.thumb = report.preview || null;
+  S.history = S.history.filter((h) => !(h.saved && h.url === it.src));
+  S.history.unshift(entry);
+  while (S.history.length > 12) { const old = S.history.pop(); if (old.url && old.url.startsWith('blob:')) URL.revokeObjectURL(old.url); }
+  showReport(entry, true);
 }
 
 function cancel(silent = false) {

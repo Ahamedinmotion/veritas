@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<!--
+  VERITAS Guide - source of dist/VERITAS-Guide.pdf (A4, 7 pages).
+  Rebuild from the repo root:   uv run docs/guide/build_guide.py
+  Tokens filled by build_guide.py from ../_incoming/publish.json:
+    {{REPO_URL}} {{RELEASE_ZIP_URL}} {{SITE_URL}} {{SPACE_URL}} {{SCHOOL}} {{ONLINE_URL}} (site, else space)
+  IF:school comment pairs are removed (with what they wrap) when "school" is null.
+  QR:repo and QR:online comments become QR codes.
+  Every number must match web/data/results.json, docs/PITCH.md and docs/JUDGE_QA.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VERITAS Guide - Deepfake Forensics Lab</title>
+<link rel="stylesheet" href="../../web/assets/fonts/fonts.css" data-build="fonts">
+<link rel="stylesheet" href="guide.css" data-build="css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-ar" viewBox="0 0 16 10"><path d="M1 5h13M10 1.2 14 5l-4 3.8"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 32 32"><path d="M5 8l11 18L27 8"/><circle cx="16" cy="12.5" r="2.6"/></symbol>
+</svg>
+
+<!-- =========================================================== 1 · COVER -->
+<section class="page cover" id="p1">
+  <div class="tape-x bleed">CASE FILE · VERITAS · INFINIA 2026 · CASE FILE · VERITAS · INFINIA 2026 · CASE FILE</div>
+  <i class="vf tl"></i><i class="vf tr"></i><i class="vf bl"></i><i class="vf br"></i>
+  <div class="inner">
+    <div class="cv-top">
+      <div class="cv-brand">
+        <svg class="mark"><use href="#i-mark"/></svg>
+        <div><b>VERITAS</b><small>DEEPFAKE FORENSICS LAB</small></div>
+      </div>
+    </div>
+
+    <div class="cv-hero">
+      <div class="cv-eyebrow"><i></i>Field guide for the booth team</div>
+      <div class="cv-title">VERITAS</div>
+      <div class="cv-sub">Deepfake Forensics Lab</div>
+      <div class="cv-lede">Seeing is no longer <em>believing.</em></div>
+    </div>
+
+    <div class="cv-mid">
+      <p class="cv-intro">VERITAS checks whether a <b>photo</b>, a <b>video</b> or a <b>voice</b> was made or changed by AI, and shows its reasons.
+        This guide has everything the team needs: what it is, how to <b>set it up tonight</b>, how to run the booth, and how to answer the judges.
+        Read it once. Keep it at the booth.</p>
+      <svg class="gauge" viewBox="0 0 200 128" aria-label="Verdict gauge">
+        <path d="M18 105A82 82 0 0 1 62.77 31.94" fill="none" stroke="#08876a" stroke-width="13"/>
+        <path d="M62.77 31.94A82 82 0 0 1 137.23 31.94" fill="none" stroke="#ffb020" stroke-width="13"/>
+        <path d="M137.23 31.94A82 82 0 0 1 182 105" fill="none" stroke="#d0223f" stroke-width="13"/>
+        <g stroke="#f4f0e6" stroke-width="1.6"><path d="M62.77 31.94 66.4 39"/><path d="M137.23 31.94 133.6 39"/></g>
+        <path d="M100 105 138.79 51.6" stroke="#12151b" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="100" cy="105" r="6" fill="#12151b"/>
+        <text x="18" y="122" text-anchor="middle" font-size="7.5" fill="#66686c">0</text>
+        <text x="55" y="22" text-anchor="middle" font-size="7.5" fill="#66686c">35</text>
+        <text x="145" y="22" text-anchor="middle" font-size="7.5" fill="#66686c">65</text>
+        <text x="182" y="122" text-anchor="middle" font-size="7.5" fill="#66686c">100</text>
+        <text x="100" y="124" text-anchor="middle" font-size="7" fill="#12151b" letter-spacing="1.2" font-weight="600">ONE SCORE · 0-100</text>
+      </svg>
+    </div>
+
+    <div class="label-card">
+      <div class="f wide"><div class="k">Event</div><div class="v">INFINIA 2026 · South Zone Sahodaya inter-school science exhibition</div></div>
+      <div class="f l"><div class="k">Theme</div><div class="v"><em>Science for Tomorrow</em></div></div>
+      <div class="f"><div class="k">Sub-theme</div><div class="v"><em>Intelligence Beyond Humans</em></div></div>
+      <div class="f l"><div class="k">Category</div><div class="v">IV · Classes XI-XII</div></div>
+      <div class="f"><div class="k">Team</div><div class="v">Khais Mohammed &amp; Prithvi</div></div>
+      <!--IF:school--><div class="f wide"><div class="k">School</div><div class="v">{{SCHOOL}}</div></div><!--/IF:school-->
+    </div>
+
+    <nav class="toc">
+      <a href="#p2"><span class="n">P. 02</span><span class="t">VERITAS in one page</span></a>
+      <a href="#p3"><span class="n">P. 03</span><span class="t">Set it up tonight</span></a>
+      <a href="#p4"><span class="n">P. 04</span><span class="t">At the booth</span></a>
+      <a href="#p5"><span class="n">P. 05</span><span class="t">Judges' questions</span></a>
+      <a href="#p7"><span class="n">P. 07</span><span class="t">If something goes wrong</span></a>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================== 2 · ONE PAGE -->
+<section class="page" id="p2">
+  <i class="vf tl"></i><i class="vf tr"></i><i class="vf bl"></i><i class="vf br"></i>
+  <header class="rh"><span class="brand"><svg class="mark"><use href="#i-mark"/></svg>VERITAS<small>Field guide</small></span><span>Case VX-2611-21 · <b>02</b> / 07</span></header>
+  <div class="st">
+    <div class="no"><i></i>01 · The product</div>
+    <h1>VERITAS in <em>one page</em></h1>
+    <p>Drop in a photo, a video or a voice clip. VERITAS runs independent forensic tests and gives one score, with its reasons.</p>
+  </div>
+  <main class="pm">
+    <div class="flow">
+      <div class="box ev">
+        <span class="tag">Evidence</span>
+        <ul>
+          <li><svg viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="12" rx="1.5"/><circle cx="7" cy="8.5" r="1.6"/><path d="M3 15l5-5 4 4 2-2 3 3"/></svg>Photo</li>
+          <li><svg viewBox="0 0 20 20"><rect x="2" y="5" width="11" height="10" rx="1.5"/><path d="M13 9l5-3v8l-5-3"/></svg>Video</li>
+          <li><svg viewBox="0 0 20 20"><rect x="7.5" y="2.5" width="5" height="9" rx="2.5"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v3M7 18h6"/></svg>Voice</li>
+        </ul>
+      </div>
+      <div class="arrow"><svg><use href="#i-ar"/></svg></div>
+      <div class="box">
+        <span class="tag">15 independent tests</span>
+        <div class="tests">
+          <div class="grp"><b>AI networks: ~70% of the weight</b><span>AI-image, AI-face, face-swap (video) and AI-voice detectors. Pretrained, chosen by experiment.</span></div>
+          <div class="grp"><b>Physics &amp; signal tests</b><span>ELA error levels, sensor noise, FFT, JPEG tables, metadata, blink rate, face jitter, breaths.</span></div>
+        </div>
+        <p style="margin-top:1.6mm">Each test <b>explains itself</b>: an error map, a spectrum, a blink graph or a plain sentence.</p>
+      </div>
+      <div class="arrow"><svg><use href="#i-ar"/></svg></div>
+      <div class="box fus">
+        <span class="tag">Fusion</span>
+        <p class="f">A weighted vote</p>
+        <p>Scores are added as log-odds, so a confident 95 counts far more than a lukewarm 60.</p>
+      </div>
+      <div class="arrow"><svg><use href="#i-ar"/></svg></div>
+      <div class="box scorebox">
+        <span class="tag">One verdict</span>
+        <div class="big">0-100</div>
+        <div class="bands"><div class="bar"><i></i><i></i><i></i></div></div>
+        <ul class="vlist">
+          <li><span class="r">below 35</span><b class="v-auth">Authentic</b></li>
+          <li><span class="r">35-65</span><b class="v-susp">Suspicious</b></li>
+          <li><span class="r">above 65</span><b class="v-synt">Synthetic</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="h">The honest headline numbers</h2>
+    <div class="nums">
+      <div class="n">
+        <span class="tag">Photos</span>
+        <div class="fig">91.3<small>%</small></div>
+        <div class="what">accuracy on <b>104 held-out images</b> it never saw during tuning. AUC <b>0.971</b>. <b>0 of 49</b> real photos flagged; 46 of 55 fakes caught (GAN faces 22 of 22).</div>
+        <div class="but"><span class="hazard">Optimistic: 42 of the 49 real photos come from collections the network was trained on. Real life will be lower.</span></div>
+      </div>
+      <div class="n">
+        <span class="tag">Voices</span>
+        <div class="fig">2 <small>of</small> 6</div>
+        <div class="what">voice fakes caught in <b>10 outside clips</b> (generators never used for tuning). All <b>4 of 4</b> real voices cleared.</div>
+        <div class="but"><span class="hazard">Our weakest spot: new voice clones mostly get past it. Only 10 clips: a spot check.</span></div>
+      </div>
+      <div class="n">
+        <span class="tag">Video face-swaps</span>
+        <div class="fig">0 <svg class="ar" style="width:.7em;height:.5em"><use href="#i-ar"/></svg> 12 <small>of 15</small></div>
+        <div class="what">fakes called synthetic, on 30 research clips from <b>datasets neither network was trained on</b>, after we added two published face-swap detectors. AUC 0.60 <svg class="ar"><use href="#i-ar"/></svg> 0.998.</div>
+        <div class="but"><span class="hazard">Optimistic: the pair was chosen after seeing these clips (plausible range 0.87-1.00). 5 of 15 real clips now read suspicious; grainy webcam video: 11 of 39 real clips suspicious, 1 synthetic.</span></div>
+      </div>
+    </div>
+    <p class="game-line"><b>Spot the Fake:</b> on the 30 game pictures VERITAS gets <b>27</b> right. People in a 2022 study sorting real faces from GAN faces were right <b>48.2%</b> of the time: a coin toss.</p>
+
+    <h2 class="h">What it cannot do</h2>
+    <ul class="cannot">
+      <li><b>Prove anything.</b> A score is evidence. A human makes the decision.</li>
+      <li><b>Catch most new voice clones.</b> Only 2 of 6 outside fakes were caught.</li>
+      <li><b>Catch photo face-swaps made with a real person's face.</b> Only 2 of 9 caught in our test.</li>
+      <li><b>Always clear real people.</b> Grainy webcam video and compressed stills can read "suspicious" (5 of 12 real video stills flagged).</li>
+      <li><b>Vouch for new tools.</b> Only 2019-2020 face-swap methods were tested; newer swap apps and deliberate attacks were not.</li>
+      <li><b>Claim we trained the big networks.</b> They are published, pretrained models we chose by experiment, and we credit them.</li>
+    </ul>
+
+    <div class="evidence-rule">
+      <div class="qt">A score is <em>evidence,</em><br>never a verdict.</div>
+      <p>Runs offline on an ordinary laptop with no graphics card: faces and voices never leave it. The online version runs the same lab in any browser. Full numbers: story chapter 06 and <span class="mono">docs/PITCH.md</span>.</p>
+    </div>
+  </main>
+  <footer class="pf"><span><b>VERITAS</b> · INFINIA 2026 · Khais Mohammed &amp; Prithvi</span><span>A score is evidence, never a verdict</span></footer>
+</section>
+
+<!-- =========================================================== 3 · SETUP -->
+<section class="page" id="p3">
+  <i class="vf tl"></i><i class="vf tr"></i><i class="vf bl"></i><i class="vf br"></i>
+  <header class="rh"><span class="brand"><svg class="mark"><use href="#i-mark"/></svg>VERITAS<small>Field guide</small></span><span>Case VX-2611-21 · <b>03</b> / 07</span></header>
+  <div class="st">
+    <div class="no"><i></i>02 · On the booth laptop</div>
+    <h1>Set it up <em>tonight</em></h1>
+    <p>Three steps. No typing. Internet is needed once, for the setup; after that VERITAS works offline.</p>
+  </div>
+  <main class="pm">
+    <div class="steps">
+      <!-- STEP 1 -->
+      <div class="step">
+        <span class="time">a few minutes</span>
+        <div class="num">1</div>
+        <div>
+          <h3>Download it</h3>
+          <p class="do">On the laptop, open <a class="url" href="{{REPO_URL}}">{{REPO_URL}}</a> and click <span class="hl">Download for Windows</span>.</p>
+          <p class="do" style="margin-top:1.4mm">Right-click <b>VERITAS-Windows.zip</b> <svg class="ar"><use href="#i-ar"/></svg> <span class="hl">Extract All</span> <svg class="ar"><use href="#i-ar"/></svg> <b>Extract</b>.</p>
+        </div>
+        <svg class="ill" viewBox="0 0 300 150" font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif">
+          <rect x="1.5" y="6" width="196" height="132" rx="6" fill="#fffdf7" stroke="#12151b" stroke-width="1.4"/>
+          <path d="M1.5 25h196" stroke="#12151b" stroke-width="1"/>
+          <g fill="#12151b" opacity=".25"><circle cx="11" cy="15.5" r="2.3"/><circle cx="18.5" cy="15.5" r="2.3"/><circle cx="26" cy="15.5" r="2.3"/></g>
+          <rect x="34" y="10" width="156" height="11" rx="5.5" fill="#ebe5d7"/>
+          <text x="41" y="17.9" font-family="IBM Plex Mono, monospace" font-size="6.4" fill="#343943">github.com/Ahamedinmotion/veritas</text>
+          <g transform="translate(13,34)"><path d="M1 1.5l6 10 6-10" fill="none" stroke="#12151b" stroke-width="1.7"/><circle cx="7" cy="4.4" r="1.6" fill="#d0223f"/></g>
+          <text x="31" y="45" font-weight="700" font-size="12" letter-spacing="2.4" fill="#12151b">VERITAS</text>
+          <rect x="13" y="53" width="150" height="3.6" rx="1.8" fill="#12151b" opacity=".12"/>
+          <rect x="13" y="60" width="118" height="3.6" rx="1.8" fill="#12151b" opacity=".12"/>
+          <rect x="13" y="72" width="140" height="25" rx="4" fill="#12151b"/>
+          <g transform="translate(24,77.5)" stroke="#ffb020" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 0v8.5M1.4 5.2 5 8.8l3.6-3.6M0 13h10"/></g>
+          <text x="40" y="88.6" font-weight="600" font-size="10" fill="#f4f0e6">Download for Windows</text>
+          <rect x="13" y="107" width="104" height="3.6" rx="1.8" fill="#12151b" opacity=".12"/>
+          <rect x="13" y="114" width="132" height="3.6" rx="1.8" fill="#12151b" opacity=".12"/>
+          <rect x="13" y="121" width="90" height="3.6" rx="1.8" fill="#12151b" opacity=".12"/>
+          <path d="M141 86v17l4.2-4 3.2 7 2.8-1.3-3.2-6.8 5.8-.3z" fill="#fff" stroke="#12151b" stroke-width="1.1" stroke-linejoin="round"/>
+          <g transform="translate(213,8)">
+            <path d="M0 0h28l12 12v44H0z" fill="#fffdf7" stroke="#12151b" stroke-width="1.3" stroke-linejoin="round"/>
+            <path d="M28 0v12h12" fill="none" stroke="#12151b" stroke-width="1.1"/>
+            <rect x="15" y="0.7" width="7" height="30" fill="#ffb020"/>
+            <path d="M15 5h4M18 9h4M15 13h4M18 17h4M15 21h4M18 25h4" stroke="#12151b" stroke-width="1"/>
+            <rect x="13.5" y="30" width="10" height="9" rx="1.5" fill="#12151b"/>
+          </g>
+          <text x="233" y="74" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="6" fill="#12151b">VERITAS-Windows.zip</text>
+          <g transform="translate(222,82)">
+            <rect width="76" height="54" rx="3" fill="#fffdf7" stroke="#12151b" stroke-width="1.2"/>
+            <text x="8" y="13" font-size="8" fill="#343943">Open</text>
+            <rect x="3" y="19" width="70" height="15" rx="2" fill="#ffb020"/>
+            <text x="8" y="29.6" font-size="8.6" font-weight="700" fill="#12151b">Extract All...</text>
+            <text x="8" y="46" font-size="8" fill="#343943">Properties</text>
+          </g>
+          <path d="M276 106v17l4.2-4 3.2 7 2.8-1.3-3.2-6.8 5.8-.3z" fill="#fff" stroke="#12151b" stroke-width="1.1" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step">
+        <span class="time">15-30 minutes · needs internet</span>
+        <div class="num">2</div>
+        <div>
+          <h3>Run the setup once</h3>
+          <p class="do">Open the <b>VERITAS</b> folder and double-click <span class="hl">1 - SETUP (run once).bat</span></p>
+          <p class="do" style="margin-top:1.4mm">If Windows says <i>"Windows protected your PC"</i>: click <b>More info</b> <svg class="ar"><use href="#i-ar"/></svg> <b>Run anyway</b>.</p>
+          <p class="note">It downloads about 3.5 GB. Leave it alone until it says <b>ALL DONE</b>. It also puts two icons on the Desktop.</p>
+        </div>
+        <svg class="ill" viewBox="0 0 300 150" font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif">
+          <rect x="1.5" y="6" width="150" height="112" rx="5" fill="#fffdf7" stroke="#12151b" stroke-width="1.4"/>
+          <path d="M1.5 24h150" stroke="#12151b" stroke-width="1"/>
+          <path d="M9 11.5h5l1.6 1.6H22v7.4H9z" fill="none" stroke="#12151b" stroke-width="1.1"/>
+          <text x="27" y="19" font-size="8" font-weight="700" fill="#12151b">VERITAS</text>
+          <rect x="5" y="29" width="142" height="18" rx="2" fill="#ffb020" fill-opacity=".38" stroke="#ffb020" stroke-width="1"/>
+          <g fill="none" stroke="#12151b" stroke-width="1.1"><rect x="10" y="33" width="10" height="10" rx="1.6"/><path d="M12.5 38h5M15 35.5v5"/></g>
+          <text x="25" y="41.3" font-size="8.4" font-weight="700" fill="#12151b">1 - SETUP (run once).bat</text>
+          <g fill="none" stroke="#12151b" stroke-width="1.1"><rect x="10" y="51" width="10" height="10" rx="1.6"/><path d="M13 53.5v5l4-2.5z"/></g>
+          <text x="25" y="59.3" font-size="8.2" fill="#343943">2 - START VERITAS.bat</text>
+          <g fill="none" stroke="#12151b" stroke-width="1.1"><path d="M11 69h6l3 3v8h-9z"/></g>
+          <text x="25" y="77.3" font-size="8.2" fill="#343943">VERITAS Guide.pdf</text>
+          <path d="M10 88.5h4l1.4 1.4H20v6.6H10z" fill="none" stroke="#12151b" stroke-width="1.1"/>
+          <text x="25" y="95.3" font-size="8.2" fill="#343943">app</text>
+          <path d="M126 36v17l4.2-4 3.2 7 2.8-1.3-3.2-6.8 5.8-.3z" fill="#fff" stroke="#12151b" stroke-width="1.1" stroke-linejoin="round"/>
+          <g stroke="#12151b" stroke-width="1" stroke-linecap="round"><path d="M121 31l-2.5-2.5M126 29.5V26M131 31l2.5-2.5"/></g>
+          <text x="76" y="112" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="5.8" fill="#66686c">DOUBLE-CLICK</text>
+
+          <rect x="160" y="6" width="138" height="112" rx="3" fill="#1d5fa8"/>
+          <text x="168" y="26" font-size="11.5" font-weight="600" fill="#fff" font-family="IBM Plex Sans, Arial, sans-serif">Windows protected</text>
+          <text x="168" y="39" font-size="11.5" font-weight="600" fill="#fff" font-family="IBM Plex Sans, Arial, sans-serif">your PC</text>
+          <rect x="168" y="47" width="116" height="3" fill="#fff" opacity=".45"/>
+          <rect x="168" y="54" width="94" height="3" fill="#fff" opacity=".45"/>
+          <text x="168" y="71" font-size="8.4" font-weight="700" fill="#fff" text-decoration="underline">More info</text>
+          <circle cx="215" cy="68" r="6.2" fill="#ffb020"/><text x="215" y="71" text-anchor="middle" font-size="8.4" font-weight="700" fill="#12151b">1</text>
+          <path d="M160 90h138" stroke="#fff" stroke-opacity=".25"/>
+          <rect x="178" y="98" width="54" height="13" fill="none" stroke="#fff" stroke-width="1.2"/>
+          <text x="205" y="107.4" text-anchor="middle" font-size="7.8" font-weight="700" fill="#fff">Run anyway</text>
+          <rect x="238" y="98" width="52" height="13" fill="#fff"/>
+          <text x="264" y="107.4" text-anchor="middle" font-size="7.6" font-weight="600" fill="#1d5fa8">Don't run</text>
+          <circle cx="176" cy="98" r="6.2" fill="#ffb020"/><text x="176" y="101" text-anchor="middle" font-size="8.4" font-weight="700" fill="#12151b">2</text>
+
+          <rect x="1.5" y="125" width="296.5" height="23" rx="3" fill="#0a0e15"/>
+          <text x="9" y="139.6" font-family="IBM Plex Mono, monospace" font-size="6.8" fill="#a9a79f">VERITAS setup ... about 3.5 GB ...</text>
+          <text x="176" y="139.6" font-family="IBM Plex Mono, monospace" font-size="7.6" font-weight="600" fill="#3ef2c4">ALL PASS</text>
+          <text x="233" y="139.6" font-family="IBM Plex Mono, monospace" font-size="7.6" font-weight="600" fill="#e8e6df">ALL DONE</text>
+        </svg>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step">
+        <span class="time">every time</span>
+        <div class="num">3</div>
+        <div>
+          <h3>Start VERITAS</h3>
+          <p class="do">Double-click <span class="hl">VERITAS</span> on the Desktop. The story opens in the browser.</p>
+          <p class="note">A black engine window opens too: <b>leave it open</b> (you can minimise it). Closing it stops VERITAS. The very first start can take 2-4 minutes; after that about 30 seconds. No internet needed.</p>
+          <p class="note"><b>VERITAS demo clips</b>, the other Desktop icon, holds videos, photos and voices to drag into the lab. No VERITAS icon? Double-click <b>2 - START VERITAS.bat</b> in the downloaded folder.</p>
+        </div>
+        <svg class="ill" viewBox="0 0 300 150" font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif">
+          <defs><linearGradient id="wall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfd9e4"/><stop offset="1" stop-color="#edf0f3"/></linearGradient></defs>
+          <rect x="1.5" y="6" width="138" height="140" rx="5" fill="url(#wall)" stroke="#12151b" stroke-width="1.4"/>
+          <rect x="2.2" y="131" width="136.6" height="14.3" fill="#fffdf7" opacity=".85"/>
+          <path d="M1.5 131h138" stroke="#12151b" stroke-width="0.8"/>
+          <g fill="#12151b" opacity=".3"><rect x="60" y="135" width="6" height="6" rx="1"/><rect x="70" y="135" width="6" height="6" rx="1"/><rect x="80" y="135" width="6" height="6" rx="1"/></g>
+          <rect x="11" y="12" width="44" height="56" rx="3" fill="#ffb020" fill-opacity=".3" stroke="#ffb020" stroke-width="1"/>
+          <rect x="18" y="17" width="30" height="30" rx="6" fill="#0a0e15"/>
+          <path d="M24.5 25.5l8.5 14.5 8.5-14.5" fill="none" stroke="#e8e6df" stroke-width="2.4"/>
+          <circle cx="33" cy="29.6" r="2.2" fill="#ff3b5c"/>
+          <text x="33" y="60" text-anchor="middle" font-size="8.6" font-weight="700" fill="#12151b">VERITAS</text>
+          <path d="M45 34v17l4.2-4 3.2 7 2.8-1.3-3.2-6.8 5.8-.3z" fill="#fff" stroke="#12151b" stroke-width="1.1" stroke-linejoin="round"/>
+          <g stroke="#12151b" stroke-width="1" stroke-linecap="round"><path d="M42 31.5l-2.5-2.5M45 29.5V26M48 31.5l2.5-2.5"/></g>
+          <path d="M18 80h10.5l3 3H48v21H18z" fill="#fffdf7" stroke="#12151b" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M30 88.5l7.5 4.3-7.5 4.3z" fill="#12151b"/>
+          <text x="33" y="115" text-anchor="middle" font-size="8" font-weight="600" fill="#12151b">VERITAS</text>
+          <text x="33" y="124" text-anchor="middle" font-size="8" font-weight="600" fill="#12151b">demo clips</text>
+
+          <g fill="none" stroke="#12151b" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M146 50h12M154 46l4 4-4 4"/></g>
+
+          <rect x="164" y="6" width="134" height="92" rx="5" fill="#04060a" stroke="#12151b" stroke-width="1.2"/>
+          <path d="M164 20h134" stroke="#2a3140" stroke-width="1"/>
+          <g fill="#6b6a64"><circle cx="172" cy="13" r="2"/><circle cx="178.5" cy="13" r="2"/><circle cx="185" cy="13" r="2"/></g>
+          <rect x="194" y="9.6" width="96" height="7" rx="3.5" fill="#1a2230"/>
+          <rect x="164" y="20" width="134" height="2" fill="#ffb020" opacity=".9"/>
+          <text x="174" y="35" font-family="IBM Plex Mono, monospace" font-size="5.4" fill="#a9a79f" letter-spacing=".8">INFINIA 2026 · VERITAS</text>
+          <text x="174" y="57" font-family="Instrument Serif, serif" font-size="16" fill="#e8e6df">Seeing is no longer</text>
+          <text x="174" y="75" font-family="Instrument Serif, serif" font-style="italic" font-size="16" fill="#e8e6df">believing.</text>
+          <text x="174" y="90" font-family="IBM Plex Mono, monospace" font-size="5" fill="#6b6a64" letter-spacing=".6">01 / 51</text>
+
+          <rect x="176" y="106" width="122" height="38" rx="3" fill="#0a0e15" stroke="#12151b" stroke-width="1"/>
+          <text x="183" y="118" font-family="IBM Plex Mono, monospace" font-size="6.2" fill="#e8e6df">VERITAS engine</text>
+          <text x="183" y="129" font-family="IBM Plex Mono, monospace" font-size="6.2" font-weight="600" fill="#ffb020">KEEP THIS WINDOW OPEN</text>
+          <text x="183" y="139" font-family="IBM Plex Mono, monospace" font-size="5.6" fill="#a9a79f">minimise it, never close it</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="check">
+      <h2 class="h">Before the fair: three checks</h2>
+      <ul>
+        <li><span class="box-tick"></span><span><b>ALL PASS.</b> The setup window showed <b>ALL PASS</b> and then <b>ALL DONE</b>. If it said FAIL or SETUP DID NOT FINISH, see page 7.</span></li>
+        <li><span class="box-tick"></span><span><b>One analysis.</b> In the story press <span class="kbd">8</span>, click <b>LAB 01 Analyze</b>, then click any exhibit in the <b>Evidence locker</b>. A report with a verdict appears. The first one is the slowest.</span></li>
+        <li><span class="box-tick"></span><span><b>Camera.</b> In the lab press <span class="kbd">2</span> (Live Cam) and click <b>Allow</b>. Dots map your face. Then press <span class="kbd">1</span>.</span></li>
+      </ul>
+      <p class="foot">All three work? You are ready. Charge the laptop overnight and bring the charger.</p>
+    </div>
+  </main>
+  <footer class="pf"><span><b>VERITAS</b> · INFINIA 2026 · Khais Mohammed &amp; Prithvi</span><span>Setup needs internet once · then offline</span></footer>
+</section>
+
+<!-- =========================================================== 4 · BOOTH -->
+<section class="page" id="p4">
+  <i class="vf tl"></i><i class="vf tr"></i><i class="vf bl"></i><i class="vf br"></i>
+  <header class="rh"><span class="brand"><svg class="mark"><use href="#i-mark"/></svg>VERITAS<small>Field guide</small></span><span>Case VX-2611-21 · <b>04</b> / 07</span></header>
+  <div class="st">
+    <div class="no"><i></i>03 · Fair day</div>
+    <h1>At the <em>booth</em></h1>
+    <p>The speaker stands at the TV with the clicker. The partner stands at the laptop. Swap the clicker at each hand-over.</p>
+  </div>
+  <main class="pm">
+    <h2 class="h">Start 10 minutes early</h2>
+    <div class="early">
+      <div><b>01 · POWER</b><strong>Charger in.</strong> Close other programs.</div>
+      <div><b>02 · START</b>Double-click <strong>VERITAS</strong>. Wait for the story.</div>
+      <div><b>03 · WARM UP</b>In the lab, analyse <strong>one locker exhibit</strong> (the first is slowest). Press <span class="kbd">N</span>.</div>
+      <div><b>04 · CAMERA</b>Press <span class="kbd">2</span>, allow the camera, press <span class="kbd">1</span>. No pop-up later in front of a judge.</div>
+      <div><b>05 · TV</b>Story on the TV: <span class="kbd">F</span> for fullscreen, <span class="kbd">Home</span> for the first step.</div>
+    </div>
+    <div class="keys">
+      <div><span class="lbl">Story</span><span><span class="kbd"><svg class="ar"><use href="#i-ar"/></svg></span> / clicker next</span><span><span class="kbd"><svg class="ar" style="transform:scaleX(-1)"><use href="#i-ar"/></svg></span> back</span><span><span class="kbd">0</span>-<span class="kbd">8</span> chapter</span><span><span class="kbd">F</span> fullscreen</span></div>
+      <div><span class="lbl">Lab</span><span><span class="kbd">1</span> Analyze</span><span><span class="kbd">2</span> Live Cam</span><span><span class="kbd">3</span> Spot the Fake</span><span><span class="kbd">N</span> new case</span><span><span class="kbd">Esc</span> cancel</span></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h2 class="h">The 3-minute pitch</h2>
+        <table class="pitch">
+          <tr><td class="t">0:00</td><td class="c">Opening</td><td class="w"><span class="who">K</span></td><td><em>"Seeing is no longer believing."</em> AI can forge a face, a voice, a whole video call. VERITAS is the lab we built to catch it.</td></tr>
+          <tr><td class="t">0:20</td><td class="c">The threat</td><td class="w"><span class="who">K</span></td><td>Hong Kong, 2024: an Arup employee sent HK$200 million after a video call where every face was fake.</td></tr>
+          <tr><td class="t">0:45</td><td class="c">How fakes are made <span class="kbd">2</span></td><td class="w"><span class="who p">P</span></td><td>To catch a forger, first learn to forge. A GAN is two networks in a duel.</td></tr>
+          <tr><td class="t">1:05</td><td class="c">Can you tell? <span class="kbd">3</span></td><td class="w"><span class="who p">P</span></td><td>Which of three are real? People score 48.2% on GAN faces: a coin toss. So we measure.</td></tr>
+          <tr><td class="t">1:25</td><td class="c">The forensics <span class="kbd">4</span></td><td class="w"><span class="who">K</span></td><td>Every fake leaves a fingerprint. ELA finds the palm we pasted in: 2.5 times the error of the real one.</td></tr>
+          <tr><td class="t">1:55</td><td class="c">The system <span class="kbd">5</span></td><td class="w"><span class="who">K</span></td><td>15 tests, 3 pipelines, one verdict. Pretrained networks we chose by experiment, fused in log-odds. Our lip-sync clip: 70, synthetic (14 without the face-swap detector).</td></tr>
+          <tr><td class="t">2:15</td><td class="c">Results <span class="kbd">6</span></td><td class="w"><span class="who p">P</span></td><td>Photos 91.3%, no real photo flagged (optimistic). Voices: only 2 of 6 fakes caught. Face-swaps, on datasets neither network was trained on: 0 to 12 of 15. We show our failures.</td></tr>
+          <tr><td class="t">2:45</td><td class="c">Close <span class="kbd">8</span></td><td class="w"><span class="who p">P</span></td><td>Every detector is temporary: VERITAS is one layer, and a human decides. Then click <b>LAB 01</b>.</td></tr>
+        </table>
+        <p class="close-line">"Intelligence beyond humans, <em>kept honest by humans.</em>"</p>
+        <span class="tag">Full script and the 60-second version: docs/PITCH.md</span>
+      </div>
+
+      <div>
+        <h2 class="h">Best live demos, in this order</h2>
+        <ol class="demos">
+          <li>
+            <h4>The evidence locker <span class="kbd">1</span></h4>
+            Click an exhibit and talk while it scans. Its sealed answer opens after the verdict.
+            <div class="ex">
+              <span>Smartphone photo</span><span><span class="chip auth">Authentic · 1</span></span>
+              <span>GAN face</span><span><span class="chip synt">Synthetic · 100</span></span>
+              <span>AI voice</span><span><span class="chip synt">Synthetic · 82</span></span>
+              <span>A fake VERITAS misses <i>(it is fake)</i></span><span><span class="chip auth">Authentic · 34</span></span>
+            </div>
+            <span class="say">"No detector is perfect, and here's the proof."</span>
+          </li>
+          <li>
+            <h4>A judge's own photo</h4>
+            Ask for a photo from their phone (USB cable) and drag it into Analyze. Say first: <span class="say">"Whatever it says, a score is evidence, not proof."</span>
+          </li>
+          <li>
+            <h4>Live Cam <span class="kbd">2</span></h4>
+            Blink: the eye graph dips. Press <span class="kbd">L</span> and follow the random steps: <b>Challenge passed</b>. Then hold the GAN face (printed, or on a phone) over your face and press <span class="kbd">L</span>: <b>Not verified</b>. <span class="say">"Don't ask 'is there a face?' Ask 'can it respond?'"</span>
+          </li>
+          <li>
+            <h4>Spot the Fake <span class="kbd">3</span></h4>
+            The judge plays 10 pictures: <span class="kbd"><svg class="ar" style="transform:scaleX(-1)"><use href="#i-ar"/></svg></span> real, <span class="kbd"><svg class="ar"><use href="#i-ar"/></svg></span> AI, <span class="kbd">Enter</span> next. VERITAS gets 27 of the 30 game pictures right; people in a 2022 study managed 48.2%.
+          </li>
+          <li>
+            <h4>A research video <i style="font-weight:400">(if they ask about face-swaps)</i></h4>
+            Open <b>VERITAS demo clips</b> on the Desktop and drag a video into Analyze. The FaceForensics++ #069 face-swap comes out <span class="v-synt">synthetic</span>, but it is in one detector's training data: a demonstration, not proof. The Google DFD actor-09 face-swap reads about <span class="v-susp">44, suspicious</span>: <span class="say">"It misses this one, and we show it."</span> Video takes up to about 45 s on a slow laptop: keep talking. Keep the Celeb-DF clips out of the demo (one is a deepfake of a real celebrity).
+          </li>
+        </ol>
+      </div>
+    </div>
+  </main>
+  <footer class="pf"><span><b>VERITAS</b> · INFINIA 2026 · Khais Mohammed &amp; Prithvi</span><span>Never sit in silence during a scan</span></footer>
+</section>
+
+<!-- =========================================================== 5 · QUESTIONS (1) -->
+<section class="page" id="p5">
+  <i class="vf tl"></i><i class="vf tr"></i><i class="vf bl"></i><i class="vf br"></i>
+  <header class="rh"><span class="brand"><svg class="mark"><use href="#i-mark"/></svg>VERITAS<small>Field guide</small></span><span>Case VX-2611-21 · <b>05</b> / 07</span></header>
+  <div class="st">
+    <div class="no"><i></i>04 · Questions 1-6 of 12</div>
+    <h1>Judges' <em>questions</em></h1>
+    <p><span class="who">K</span> Khais answers first, <span class="who p">P</span> Prithvi answers first. The partner adds one sentence at most.</p>
+  </div>
+  <main class="pm">
+    <div class="rules">
+      <div><b>Answer first.</b>Your first sentence is the answer. Then the reason.</div>
+      <div><b>One real number.</b>Not five.</div>
+      <div><b>Limit first.</b>Name the weakness before they find it.</div>
+      <div><b>Don't invent.</b>"We didn't test that. Our best guess is X, because Y."</div>
+    </div>
+    <div class="qa">
+      <div class="q">
+        <h3><span class="qn">01</span>How does this fit "Intelligence Beyond Humans"?<span class="who">K</span></h3>
+        <p>AI now makes faces people can't tell from real ones: in a 2022 study, people were right 48.2% of the time. VERITAS uses machine intelligence to see what eyes can't: frequency grids, sensor grain, blink statistics. And our own results show machines fail too, so the final call stays human.</p>
+        <div class="show"><b>Show:</b> story chapter 3</div>
+      </div>
+      <div class="q">
+        <h3><span class="qn">02</span>How do fifteen tests become one score?<span class="who">K</span></h3>
+        <p>Each test gives a score from 0 to 100. We turn each one into log-odds and take a weighted vote, so a confident 95 counts far more than a lukewarm 60. The AI networks carry about 70% of the weight. Below 35 is authentic, 35 to 65 suspicious, above 65 synthetic.</p>
+        <p class="honest hazard"><b>Honest</b>We set the weights by hand. Only the calibration was fitted, and only on our calibration files.</p>
+        <div class="show"><b>Show:</b> story <span class="kbd">5</span>, then <svg class="ar"><use href="#i-ar"/></svg> five times</div>
+      </div>
+      <div class="q">
+        <h3><span class="qn">03</span>Did you train the AI yourselves?<span class="who">K</span></h3>
+        <p>No, and we say so on screen. A strong detector needs millions of images and a lot of GPU time. So we <b>chose published, pretrained networks by experiment</b>: 12 image models and 7 voice models. The best image model was also the smallest. We trained a small probe on top of the voice network. For face-swaps we benchmarked six published detectors on a test set we built and added two. Ours: the experiment, the physics tests, the fusion, the interface and the offline package.</p>
+        <div class="coach"><b>Be exact about who did what.</b> If you used AI coding assistants, tutorials or open-source code, say so plainly. Judges forgive help. They don't forgive over-claiming.</div>
+      </div>
+      <div class="q">
+        <h3><span class="qn">04</span>How accurate is it? Will 91% hold up in real life?<span class="who p">P</span></h3>
+        <p>No, real life will be lower, and we say so. On <b>104 held-out images</b> it never saw during tuning it scored <b>91.3%</b> and flagged none of the 49 real photos. But with 104 images the true accuracy could be anywhere from 84 to 96%. Most of our real photos come from collections the network was trained on, so "no false alarms" is optimistic. And stills of real people from compressed videos were flagged 5 times out of 12.</p>
+        <div class="show"><b>Show:</b> story <span class="kbd">6</span></div>
+      </div>
+      <div class="q">
+        <h3><span class="qn">05</span>What is AUC?<span class="who p">P</span></h3>
+        <p>Pick one fake and one real file at random: AUC is the chance that the fake gets the higher score. 0.5 is a coin toss, 1.0 is perfect; ours is <b>0.971</b> on photos. It judges the ranking, whatever cut-off you choose. Our voice test shows why that matters: AUC 0.92 on 10 outside clips, yet only 2 of 6 fakes crossed our cut-off.</p>
+      </div>
+      <div class="q">
+        <h3><span class="qn">06</span>Aren't your demos cherry-picked?<span class="who p">P</span></h3>
+        <p>Yes, the evidence locker is chosen on purpose, like textbook examples, and the lab says so. That's why one exhibit is <b>"A fake VERITAS misses"</b>. The real results are in chapter 6, on files never used for tuning, failures included. And you don't have to trust our samples: give us your own photo and we'll analyse it now.</p>
+      </div>
+    </div>
+    <div class="quick never-box">
+      <h2 class="h">Say this, never that</h2>
+      <table class="never">
+        <tr><td>"It's 91% accurate."</td><td>"On our held-out test it was 91.3%. Real life will be lower."</td></tr>
+        <tr><td>"It can detect any deepfake."</td><td>"It catches AI-generated faces well, and most 2019-2020 face-swaps we tested. New voice clones get past it."</td></tr>
+        <tr><td>"This proves it's fake."</td><td>"This is evidence. A human makes the decision."</td></tr>
+        <tr><td>"0.998: it's perfect."</td><td>"On 30 clips from datasets neither network was trained on; the plausible range is 0.87 to 1.00."</td></tr>
+      </table>
+    </div>
+  </main>
+  <footer class="pf"><span><b>VERITAS</b> · INFINIA 2026 · Khais Mohammed &amp; Prithvi</span><span>All 26 questions: docs/JUDGE_QA.md</span></footer>
+</section>
+
+<!-- =========================================================== 6 · QUESTIONS (2) -->
+<section class="page" id="p6">
+  <i class="vf tl"></i><i class="vf tr"></i><i class="vf bl"></i><i class="vf br"></i>
+  <header class="rh"><span class="brand"><svg class="mark"><use href="#i-mark"/></svg>VERITAS<small>Field guide</small></span><span>Case VX-2611-21 · <b>06</b> / 07</span></header>
+  <div class="st">
+    <div class="no"><i></i>04 · Questions 7-12 of 12</div>
+    <h1>Judges' <em>questions</em></h1>
+    <p>Limits, attacks and privacy: say the weakness first.</p>
+  </div>
+  <main class="pm">
+    <div class="qa">
+      <div class="q">
+        <h3><span class="qn">07</span>What if it calls a real person fake?<span class="who p">P</span></h3>
+        <p>That's the error we worry about most, because it can hurt someone. On held-out photos it flagged <b>none of the 49</b> real images; the price is that it missed 9 of 55 fakes. Its weak spot is grainy real video: of 39 webcam-quality real clips, 11 came out suspicious and 1 synthetic. That's why 35 to 65 says "suspicious", not "fake", and why a score is evidence, never a verdict. A human decides.</p>
+      </div>
+      <div class="q">
+        <h3><span class="qn">08</span>Does it catch video face-swaps?<span class="who p">P</span></h3>
+        <p>Better than before. We benchmarked six published detectors on 75 research clips and added two of them. On 30 clips from two <b>datasets neither network was trained on</b>, fakes called synthetic went from <b>0 to 12 of 15</b>.</p>
+        <p class="honest hazard"><b>Honest</b>The AUC of 0.998 is optimistic: we chose the pair after seeing those clips, and with so few clips the plausible range is 0.87 to 1.00. Five of the 15 real clips now read suspicious, and only 2019-2020 methods were tested.</p>
+        <div class="show"><b>Show:</b> story <span class="kbd">6</span> <svg class="ar"><use href="#i-ar"/></svg> <svg class="ar"><use href="#i-ar"/></svg> (06·3)</div>
+      </div>
+      <div class="q">
+        <h3><span class="qn">09</span>Why is voice your weakest result?<span class="who p">P</span></h3>
+        <p>Voice detectors learn shortcuts. Ours partly learned which microphone and dataset a clip came from, not what makes a voice fake. On 10 outside clips all <b>4 real voices passed</b>, but only <b>2 of 6 fakes</b> were caught. New voice clones mostly get past it, and we show that on screen.</p>
+        <div class="show"><b>Show:</b> story <span class="kbd">6</span> <svg class="ar"><use href="#i-ar"/></svg> (06·2)</div>
+      </div>
+      <div class="q">
+        <h3><span class="qn">10</span>Can it catch tomorrow's AI tools? Can someone fool it?<span class="who">K</span></h3>
+        <p>Partly, and we can't prove it for tools that don't exist yet. Our image network learned from <b>4,803 generators</b>, so it knows general generator textures, not one model's quirks. But a new design can leave new fingerprints, so it needs regular updates, like antivirus. And yes, a skilled attacker could fool it with adversarial noise. We haven't run that attack on VERITAS, so we give no number.</p>
+        <p class="honest hazard"><b>Honest</b>The "94 to 11" on the Limits slide is an illustration, not a measurement.</p>
+      </div>
+      <div class="q">
+        <h3><span class="qn">11</span>What if the fake was sent on WhatsApp?<span class="who">K</span></h3>
+        <p>Every re-share blurs the traces, so we tested it on all 104 held-out images. After WhatsApp-style compression it still caught <b>43 of 55</b> fakes and flagged none of the 49 real photos. The neural network survives compression; the classic physics tests suffer most. Screenshots we haven't tested on their own.</p>
+        <div class="show"><b>Show:</b> story <span class="kbd">7</span>, the re-compress slider</div>
+      </div>
+      <div class="q">
+        <h3><span class="qn">12</span>Where does my photo go?<span class="who p">P</span></h3>
+        <p>Nowhere. At the booth the engine runs on this laptop and needs no internet. It reads the file, analyses it and keeps no copy. Live Cam's face tracking runs inside the browser; only when you press Capture does one frame go to the engine, on this same laptop.</p>
+        <p class="honest hazard"><b>Online</b>If we are using the online version, the file is sent to our online engine for that analysis. Say so.</p>
+      </div>
+    </div>
+
+    <div class="quick">
+      <h2 class="h">Quick answers</h2>
+      <p><b>Did you make deepfakes?</b> Only test fakes, with one rule: no one famous and no one we know. Faces of people who don't exist, stock text-to-speech voices, test clones of two public-domain audiobook readers (never shipped), and one lip-sync of a paid, consenting actor from Google's research dataset.</p>
+      <p><b>Can a live deepfake pass the liveness check?</b> Yes. The random order beats a photo or a recording, not a real-time face-swap. That's why it says "Challenge passed", not "Live human".</p>
+      <p><b>What does it cost?</b> Software: nothing, it is all open-source. It runs on an ordinary laptop with no graphics card, after one download of about 3.5 GB.</p>
+      <p><b>Who would use it?</b> People who check media: fact-checkers, newsrooms, school cyber-safety clubs, police cyber cells, bank fraud teams. It says "look closer, and here's why". It is a triage tool, not proof.</p>
+      <p><b>Six more months?</b> Test today's swap apps, add Indian voices recorded on phones and WhatsApp, verify Content Credentials, attack our own detector, and get a bigger test collected by someone else.</p>
+      <p><b>Why 468 points in the story but 478 in the lab?</b> The classic face mesh has 468 points; the newer tracker adds 10 iris points, 5 per eye.</p>
+      <p><b>Why "VERITAS"?</b> It's Latin for "truth".</p>
+    </div>
+  </main>
+  <footer class="pf"><span><b>VERITAS</b> · INFINIA 2026 · Khais Mohammed &amp; Prithvi</span><span>Name the limit before they find it</span></footer>
+</section>
+
+<!-- =========================================================== 7 · TROUBLE -->
+<section class="page" id="p7">
+  <i class="vf tl"></i><i class="vf tr"></i><i class="vf bl"></i><i class="vf br"></i>
+  <header class="rh"><span class="brand"><svg class="mark"><use href="#i-mark"/></svg>VERITAS<small>Field guide</small></span><span>Case VX-2611-21 · <b>07</b> / 07</span></header>
+  <div class="st">
+    <div class="no"><i></i>05 · Stay calm</div>
+    <h1>If something <em>goes wrong</em></h1>
+    <p>Most problems take 30 seconds to fix. Keep talking while you fix them.</p>
+  </div>
+  <main class="pm">
+    <table class="trouble">
+      <tr><th>Problem</th><th>What to do</th></tr>
+      <tr><td>"Engine offline" in the lab, or the black window was closed</td><td>Double-click <b>VERITAS</b> on the Desktop again, wait about 30 s, then click <b>Check again</b>. The story and Live Cam keep working meanwhile. Say: <span class="say">"The engine is restarting. The camera part still works."</span></td></tr>
+      <tr><td>A video takes a long time</td><td>Normal on a slow laptop: up to about 45 s. Keep talking and explain the timeline you are about to see. After 60 s press <span class="kbd">Esc</span> and show a photo or a voice instead.</td></tr>
+      <tr><td>A real face (you or a judge) comes out suspicious</td><td>Don't argue with the result. Say: <span class="say">"That's our known weak spot. Webcam frames are smoothed and compressed and can look too clean to the AI detector: in our test 5 of 12 real video stills were flagged. That's why a score is evidence, not a verdict."</span></td></tr>
+      <tr><td>A real phone or webcam video comes out suspicious</td><td>Say: <span class="say">"Grainy, compressed real video can look like blending to the face-swap detector: 11 of 39 webcam-quality real clips came out suspicious, and one synthetic. Suspicious means check the source, not fake."</span></td></tr>
+      <tr><td>A judge's own file is judged wrong</td><td><span class="say">"Thank you. That's exactly the kind of case we want to learn from."</span> Write down the file type, where it came from and the score.</td></tr>
+      <tr><td>The camera does not start</td><td>Close Teams, Zoom or any other camera app. Click the lock icon in the address bar <svg class="ar"><use href="#i-ar"/></svg> Camera <svg class="ar"><use href="#i-ar"/></svg> Allow, then reload. Check the camera's privacy shutter. Still nothing: skip Live Cam.</td></tr>
+      <tr><td>Live Cam says "Camera paused"</td><td>Click <b>Wake</b>. It rests when nobody is in view.</td></tr>
+      <tr><td>The story stutters on the TV</td><td>Press <span class="kbd">F</span> twice (leave and re-enter fullscreen).</td></tr>
+      <tr><td>Setup says "SETUP DID NOT FINISH"</td><td>Do what its <b>What to do</b> line says (usually: check the internet, then double-click <b>1 - SETUP (run once).bat</b> again; finished parts are kept). Still failing: take a photo of the window and use the online version below.</td></tr>
+      <tr class="big"><td>The laptop is broken, or VERITAS will not start at all</td><td>Use <b>VERITAS online</b> on any laptop, tablet or phone (it needs internet; a phone hotspot works): <a class="url" href="{{SITE_URL}}">{{SITE_URL}}</a>, or <a class="url" href="{{SPACE_URL}}">{{SPACE_URL}}</a>. Same story, same lab.</td></tr>
+    </table>
+
+    <div class="online">
+      <div>
+        <h3>VERITAS <em>online</em></h3>
+        <p>The online lab does <b>real analysis</b> on a free Hugging Face server. If that server is asleep or can't be reached, the lab switches to <b>showcase mode</b>: the 9 Evidence-locker exhibits open their real saved reports.</p>
+        <p>Open it a few minutes before you need it: a sleeping server can take a while to wake up. Online analysis can be slower than the laptop.</p>
+        <div class="limits"><b>ONLINE UPLOADS</b> photo up to 15 MB · voice up to 20 MB and 60 s · video up to 40 MB and 30 s</div>
+      </div>
+      <div class="qr"><!--QR:repo--><div class="cap">GitHub page<br>download &amp; setup</div><div class="sub">{{REPO_URL}}</div></div>
+      <div class="qr"><!--QR:online--><div class="cap">VERITAS online<br>story &amp; lab</div><div class="sub">{{ONLINE_URL}}</div></div>
+    </div>
+  </main>
+  <footer class="pf"><span><b>VERITAS</b> · INFINIA 2026 · Khais Mohammed &amp; Prithvi</span><span>A score is evidence, never a verdict</span></footer>
+</section>
+
+</body>
+</html>

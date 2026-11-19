@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from starlette.exceptions import HTTPException as StarletteHTTPException  # noqa: E402
 
+from . import online  # noqa: E402
 from .models import REGISTRY  # noqa: E402
 from .util import AnalysisError  # noqa: E402
 
@@ -30,6 +31,7 @@ for noisy in ("httpx", "urllib3", "matplotlib", "PIL", "transformers", "absl"):
 log = logging.getLogger("veritas")
 
 _analysis_lock = threading.Lock()  # one analysis at a time: predictable RAM on an 8 GB laptop
+_gate = online.AnalysisGate(_analysis_lock) if online.ONLINE else None   # online: same lock + a short queue
 
 
 def _warm_media() -> None:
@@ -65,6 +67,10 @@ def _warm_media() -> None:
 async def lifespan(app: FastAPI):
     log.info("VERITAS %s starting - loading models from %s (threads=%d)", config.VERSION, config.MODELS_DIR,
              config.torch_threads())
+    if online.ONLINE:
+        log.info("ONLINE mode: upload limits %s, one analysis at a time, face-swap mode %s, %d video frames",
+                 {k: v["max_mb"] for k, v in online.LIMITS.items()}, config.faceswap_mode(),
+                 config.video_sampled_frames())
     REGISTRY.load()
     REGISTRY.warmup()
     try:  # run one complete tiny analysis so fonts, charts and codecs are loaded before the first visitor
@@ -92,13 +98,22 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="VERITAS Deepfake Forensics Lab", version=config.VERSION, lifespan=lifespan,
               docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+if online.ONLINE:   # added BEFORE CORS = runs inside it, so even an early 413 carries the CORS headers
+    app.add_middleware(online.UploadLimitMiddleware)
+# Permissive CORS (any origin, no credentials) so the lab hosted elsewhere (ChatGPT site, GitHub Pages) can call the
+# online engine on the Hugging Face Space. Nothing is cookie- or login-protected, so this exposes nothing extra.
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"],
+                   allow_headers=["*"], expose_headers=["Retry-After"], max_age=600)
 
 
 # ------------------------------------------------------------------------------------------ errors
 @app.exception_handler(AnalysisError)
 async def _analysis_error(_: Request, exc: AnalysisError):
-    return JSONResponse({"error": str(exc)}, status_code=exc.status)
+    body, headers = {"error": str(exc)}, {}
+    if getattr(exc, "busy", False):
+        body.update(busy=True, retry_after=exc.retry_after)
+        headers["Retry-After"] = str(exc.retry_after)
+    return JSONResponse(body, status_code=exc.status, headers=headers)
 
 
 @app.exception_handler(RequestValidationError)
@@ -126,49 +141,65 @@ async def _unhandled(_: Request, exc: Exception):
 @app.get("/api/health")
 def health():
     h = REGISTRY.health()
-    return {"ok": REGISTRY.loaded, "version": config.VERSION,
-            "models": {"face_deepfake": h["face_deepfake"], "ai_generated": h["ai_generated"],
-                       "audio_deepfake": h["audio_deepfake"], "face_swap": h["face_swap"]},
-            "device": "cpu",
-            "detail": {"face_detector": h["face_detector"], "face_landmarker": h["face_landmarker"],
-                       "errors": REGISTRY.errors,
-                       "model_names": {**{k: getattr(getattr(REGISTRY, k), "repo", None)
-                                          for k in ("face_deepfake", "ai_generated", "audio_deepfake")},
-                                       "face_swap": FACESWAP_NAMES.get(getattr(REGISTRY.face_swap, "mode", None))}}}
+    out = {"ok": REGISTRY.loaded, "version": config.VERSION,
+           "models": {"face_deepfake": h["face_deepfake"], "ai_generated": h["ai_generated"],
+                      "audio_deepfake": h["audio_deepfake"], "face_swap": h["face_swap"]},
+           "device": "cpu",
+           "detail": {"face_detector": h["face_detector"], "face_landmarker": h["face_landmarker"],
+                      "errors": REGISTRY.errors,
+                      "model_names": {**{k: getattr(getattr(REGISTRY, k), "repo", None)
+                                         for k in ("face_deepfake", "ai_generated", "audio_deepfake")},
+                                      "face_swap": FACESWAP_NAMES.get(getattr(REGISTRY.face_swap, "mode", None))}}}
+    if online.ONLINE:   # the booth's health answer is unchanged
+        out["online"] = {"limits": online.public_limits(), "faceswap_mode": config.faceswap_mode(),
+                         "video_frames": config.video_sampled_frames(), **_gate.status()}
+    return out
 
 
 FACESWAP_NAMES = {"fp32": "GenD CLIP ViT-L/14 + DFDC-B7", "int8": "GenD CLIP ViT-L/14 (int8) + DFDC-B7",
                   "b7": "DFDC-B7"}
 
 
-async def _read_upload(request: Request, file: UploadFile) -> tuple[bytes, str]:
-    cl = request.headers.get("content-length")
-    if cl and cl.isdigit() and int(cl) > config.MAX_UPLOAD_BYTES + 1_000_000:
-        raise AnalysisError("File too large - the limit is 200 MB.", 413)
-    chunks, total = [], 0
-    while True:
-        chunk = await file.read(4 * 1024 * 1024)
-        if not chunk:
-            break
-        total += len(chunk)
-        if total > config.MAX_UPLOAD_BYTES:
+async def _read_upload(request: Request, file: UploadFile, kind: str = "") -> tuple[bytes, str]:
+    try:
+        cl = request.headers.get("content-length")
+        if cl and cl.isdigit() and int(cl) > config.MAX_UPLOAD_BYTES + 1_000_000:
             raise AnalysisError("File too large - the limit is 200 MB.", 413)
-        chunks.append(chunk)
+        chunks, total = [], 0
+        while True:
+            chunk = await file.read(4 * 1024 * 1024)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > config.MAX_UPLOAD_BYTES:
+                raise AnalysisError("File too large - the limit is 200 MB.", 413)
+            if online.ONLINE and kind:
+                online.check_size(kind, total)
+            chunks.append(chunk)
+    finally:
+        await file.close()   # the multipart spool (an anonymous temp file) is released now, not at end of request
     data = b"".join(chunks)
     if not data:
         raise AnalysisError("The uploaded file is empty.")
+    if online.ONLINE and kind:
+        online.check_duration(kind, data)
     return data, os.path.basename(file.filename or "upload")
 
 
 def _run(kind: str, fn, data: bytes, name: str) -> dict:
     t0 = time.perf_counter()
-    if not _analysis_lock.acquire(timeout=120):
-        raise AnalysisError("The lab is busy with another analysis - try again in a moment.", 503)
-    try:
-        rep = fn(data, name)
-    finally:
-        _analysis_lock.release()
-    log.info("%-5s %-28s %7.1f kB  -> %-10s %3d  (conf %.2f)  %5d ms", kind, name[:28], len(data) / 1024,
+    if _gate is not None:   # online: one at a time, refuse at once if the queue is too long
+        with _gate.slot(kind):
+            rep = fn(data, name)
+    else:
+        if not _analysis_lock.acquire(timeout=120):
+            raise AnalysisError("The lab is busy with another analysis - try again in a moment.", 503)
+        try:
+            rep = fn(data, name)
+        finally:
+            _analysis_lock.release()
+    log.info("%-5s %-28s %7.1f kB  -> %-10s %3d  (conf %.2f)  %5d ms", kind,
+             "(upload)" if online.ONLINE else name[:28], len(data) / 1024,
              rep["verdict"], rep["score"], rep["confidence"], (time.perf_counter() - t0) * 1000)
     return rep
 
@@ -179,7 +210,7 @@ async def analyze_image(request: Request, file: UploadFile = File(...)):
 
     from .pipeline import analyze_image as fn
 
-    data, name = await _read_upload(request, file)
+    data, name = await _read_upload(request, file, "image")
     return await run_in_threadpool(_run, "image", fn, data, name)
 
 
@@ -189,7 +220,7 @@ async def analyze_video(request: Request, file: UploadFile = File(...)):
 
     from .pipeline import analyze_video as fn
 
-    data, name = await _read_upload(request, file)
+    data, name = await _read_upload(request, file, "video")
     return await run_in_threadpool(_run, "video", fn, data, name)
 
 
@@ -199,7 +230,7 @@ async def analyze_audio(request: Request, file: UploadFile = File(...)):
 
     from .pipeline import analyze_audio as fn
 
-    data, name = await _read_upload(request, file)
+    data, name = await _read_upload(request, file, "audio")
     return await run_in_threadpool(_run, "audio", fn, data, name)
 
 

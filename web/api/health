@@ -1,0 +1,1 @@
+{"ok": false, "static": true, "note": "Static copy of the VERITAS website: no forensic engine at this address. The real engine answers /api/health itself (its API routes take precedence over this file). See web/js/lab/engine.js."}

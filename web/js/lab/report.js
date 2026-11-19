@@ -84,6 +84,7 @@ export function renderReport(entry, { fresh = false, onNew, onOpenTest } = {}) {
       </dl>
       <button class="btn btn-primary rp-new" type="button"><span class="btn-ic">＋</span>New case <kbd>N</kbd></button>
     </header>
+    ${entry.saved ? savedRibbon(entry.saved) : ''}
 
     <div class="rp-body">
       <section class="rp-left" aria-label="Evidence">
@@ -146,6 +147,15 @@ export function renderReport(entry, { fresh = false, onNew, onOpenTest } = {}) {
     setTimeout(() => tween(1500, (e) => setG(score * e, e >= 1)), 380);
   } else setG(score, true);
   return el;
+}
+
+/* Showcase mode: this report was opened from a file the real engine wrote earlier (web/samples/lab/reports/). */
+function savedRibbon(sv) {
+  const d = sv.saved_at ? new Date(sv.saved_at) : null;
+  const when = d && !isNaN(d) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  return `<p class="rp-saved" role="note"><span class="rp-saved-k">Saved report from our engine</span>
+    <span class="rp-saved-x">The real report VERITAS wrote for this exhibit${when ? `, recorded ${esc(when)}` : ''}${sv.where ? ` on ${esc(sv.where)}` : ''}, opened from a file.
+    Analysing your own files needs the engine: the booth laptop or the online engine.</span></p>`;
 }
 
 /* ------------------------------------------------------------------ gauge */

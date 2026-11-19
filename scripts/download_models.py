@@ -6,7 +6,8 @@
 
 Sizes: the three original networks + face tools about 530 MB; the face-swap detector (models/face_swap/) about
 1.5 GB (+0.3 GB for the optional int8 fallback). The face-swap ONNX files are our verified exports of published
-weights, so without a local copy they are REBUILT from the pinned originals (scripts/export_faceswap_onnx.py).
+MIT-licensed weights. Without a local copy they come from our public Hugging Face mirror (FACESWAP_MIRROR, SHA-256
+checked, resumable), and only if that fails are they REBUILT from the pinned originals (scripts/export_faceswap_onnx.py).
 
 Models were chosen by scripts/compare_models.py on our calibration split (see docs/MODEL_SELECTION.md).
 """
@@ -99,6 +100,14 @@ FACESWAP_FILES = {
         "optional": True, "licence": "MIT (derived from GenD)",
     },
 }
+# Public mirror of OUR verified ONNX exports of the MIT-licensed weights (GenD fp32 + int8, DFDC-B7). It holds no
+# other model (det_10g.onnx is InsightFace, non-commercial: always from the official zip) and no media.
+# VERITAS_MODEL_MIRROR=off skips it (e.g. to test the rebuild path); VERITAS_MODEL_MIRROR=user/repo points elsewhere.
+FACESWAP_MIRROR = "Ahamedinmotion42/veritas-models"
+MIRROR_FILES = ("gend_clip.onnx", "dfdc_b7.onnx", "gend_clip_int8.onnx")
+MIRROR_URL = "https://huggingface.co/{repo}/resolve/main/{file}"
+UA = {"User-Agent": "veritas-setup/1.1"}
+
 FACESWAP_TEXT = {   # tiny text files, written directly
     "clip_preprocessor/preprocessor_config.json": {   # openai/clip-vit-large-patch14 (MIT)
         "crop_size": 224, "do_center_crop": True, "do_normalize": True, "do_resize": True,
@@ -113,7 +122,97 @@ FACESWAP_TEXT = {   # tiny text files, written directly
 }
 
 
+def _mb(n: float) -> str:
+    return f"{n / 1e6:,.0f} MB"
+
+
+def download(url: str, out: Path, want_sha: str | None = None, label: str = "", tries: int = 6) -> None:
+    """Robust HTTPS download: writes <out>.part, resumes it after a dropped connection (HTTP Range), retries with
+    back-off, shows progress, checks the SHA-256 and only then renames to <out>. Raises on failure."""
+    import time
+    import urllib.error
+
+    label = label or out.name
+    part = out.with_name(out.name + ".part")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tty = sys.stdout.isatty()
+    for attempt in range(1, tries + 1):
+        have = part.stat().st_size if part.exists() else 0
+        req = urllib.request.Request(url, headers=dict(UA, **({"Range": f"bytes={have}-"} if have else {})))
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                if have and r.status != 206:      # server ignored the Range header: start again
+                    have = 0
+                total = r.headers.get("Content-Length")
+                total = int(total) + have if total and total.isdigit() else None
+                got, t0, last = have, time.monotonic(), 0.0
+                with open(part, "ab" if have else "wb") as f:
+                    while True:
+                        b = r.read(1 << 20)
+                        if not b:
+                            break
+                        f.write(b)
+                        got += len(b)
+                        now = time.monotonic()
+                        if now - last >= (0.5 if tty else 15):
+                            last = now
+                            rate = (got - have) / max(now - t0, 1e-3)
+                            pct = f"{100 * got / total:5.1f}%  " if total else ""
+                            msg = f"    {label}: {pct}{_mb(got)}{' of ' + _mb(total) if total else ''}  ({rate / 1e6:.1f} MB/s)"
+                            print(("\r" + msg.ljust(78)) if tty else msg, end="" if tty else "\n", flush=True)
+                if tty:
+                    print()
+                if total and got < total:
+                    raise urllib.error.URLError(f"connection closed at {_mb(got)} of {_mb(total)}")
+        except (urllib.error.URLError, OSError, TimeoutError) as e:
+            if isinstance(e, urllib.error.HTTPError) and e.code == 416:   # .part is already complete (or bad)
+                pass
+            elif isinstance(e, urllib.error.HTTPError) and e.code in (401, 403, 404):
+                raise RuntimeError(f"{url} -> HTTP {e.code}") from e
+            else:
+                if tty:
+                    print()
+                wait = min(60, 5 * attempt)
+                print(f"    {label}: download interrupted ({e}); retry {attempt}/{tries} in {wait} s "
+                      f"(it resumes where it stopped) ...", flush=True)
+                time.sleep(wait)
+                continue
+        if want_sha:
+            got_sha = sha256(part)
+            if got_sha != want_sha:
+                part.unlink(missing_ok=True)
+                if attempt < tries:
+                    print(f"    {label}: checksum mismatch - downloading again ...", flush=True)
+                    continue
+                raise RuntimeError(f"checksum mismatch for {label} ({got_sha[:12]}... != {want_sha[:12]}...)")
+        os.replace(part, out)
+        return
+    raise RuntimeError(f"could not download {label} after {tries} tries - check the internet connection and re-run")
+
+
+def mirror_repo() -> str | None:
+    m = os.environ.get("VERITAS_MODEL_MIRROR", FACESWAP_MIRROR).strip().strip("\"'")
+    return None if m.lower() in ("", "off", "0", "none") or m.startswith("HF_USER/") else m
+
+
+def fetch_from_mirror(fn: str, out: Path, spec: dict) -> bool:
+    repo = mirror_repo()
+    if not repo or fn not in MIRROR_FILES:
+        return False
+    url = MIRROR_URL.format(repo=repo, file=fn)
+    print(f"  downloading face_swap/{fn} from the VERITAS model mirror (huggingface.co/{repo}) ...", flush=True)
+    try:
+        download(url, out, spec["sha256"], label=fn)
+    except Exception as e:  # noqa: BLE001
+        print(f"  note: mirror download of {fn} failed ({e}); trying the next source")
+        return False
+    print(f"  ok  face_swap/{fn} (from the mirror, SHA-256 verified)")
+    return True
+
+
 def faceswap_sources(extra: str | None) -> list[Path]:
+    if os.environ.get("VERITAS_NO_LOCAL_COPIES") == "1":   # testing: force the mirror / rebuild path
+        return []
     c = [extra, os.environ.get("VERITAS_FACESWAP_SRC"),
          ROOT / "winkit" / "models" / "face_swap",                       # the offline kit copied into C:\veritas\winkit
          ROOT.parent / "_usb" / "winkit" / "models" / "face_swap",       # where build_winkit.sh writes it on the Mac
@@ -151,15 +250,15 @@ def fetch_faceswap(src_dir: str | None = None) -> bool:
                 break
         if copied:
             continue
+        if fetch_from_mirror(fn, out, spec):
+            continue
         try:
             if spec.get("zip_url"):
                 TMP_CACHE.mkdir(parents=True, exist_ok=True)
                 z = TMP_CACHE / spec["zip_url"].rsplit("/", 1)[-1]
                 if not z.exists():
                     print(f"  downloading {spec['zip_url']} (~280 MB, only {fn} is kept) ...", flush=True)
-                    req = urllib.request.Request(spec["zip_url"], headers={"User-Agent": "veritas-setup/1.0"})
-                    with urllib.request.urlopen(req, timeout=600) as r, open(z, "wb") as f:
-                        shutil.copyfileobj(r, f, 1 << 20)
+                    download(spec["zip_url"], z, None, label=z.name)
                 with zipfile.ZipFile(z) as zf:
                     name = next(n for n in zf.namelist() if n.rsplit("/", 1)[-1] == spec["zip_member"])
                     out.write_bytes(zf.read(name))
@@ -180,7 +279,7 @@ def fetch_faceswap(src_dir: str | None = None) -> bool:
                 if sha256(out) != spec["sha256"]:
                     print(f"  note: face_swap/{fn} differs byte-wise from the benchmarked file but passed the numeric check")
             elif spec.get("optional"):
-                print(f"  --  face_swap/{fn} not installed (optional RAM fallback; copy it from the USB stick if wanted)")
+                print(f"  --  face_swap/{fn} not installed (optional RAM fallback; re-run setup with internet if wanted)")
             else:
                 raise RuntimeError("no source")
         except Exception as e:  # noqa: BLE001
@@ -270,15 +369,27 @@ def check() -> bool:
 
 
 def main():
+    global MODELS, TMP_CACHE
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--faceswap-from", default=None, help="folder with verified face_swap model files (USB stick)")
+    ap.add_argument("--models-dir", default=None, help="install into this folder instead of models/ (testing)")
+    ap.add_argument("--faceswap-only", action="store_true", help="only the face-swap detector files (testing)")
     a = ap.parse_args()
+    if a.models_dir:
+        MODELS = Path(a.models_dir).resolve()
+        TMP_CACHE = MODELS / ".download_cache"
+        os.environ["VERITAS_FACESWAP_EXPORT_DIR"] = str(MODELS / "face_swap")
+        os.environ["VERITAS_DOWNLOAD_CACHE"] = str(TMP_CACHE)
     if a.check:
         sys.exit(0 if check() else 1)
     os.environ.pop("HF_HUB_OFFLINE", None)
     os.environ.pop("TRANSFORMERS_OFFLINE", None)
-    print("VERITAS model download -> models/")
+    print(f"VERITAS model download -> {MODELS}")
+    if a.faceswap_only:
+        ok = fetch_faceswap(a.faceswap_from)
+        shutil.rmtree(TMP_CACHE, ignore_errors=True)
+        sys.exit(0 if ok else 1)
     for role, spec in HF_MODELS.items():
         fetch_hf(role, spec)
     for rel, spec in URL_MODELS.items():

@@ -1,14 +1,59 @@
+# --- Python environment and caches ---
 .venv/
-models/*
-!models/.gitkeep
-eval_data/
-winkit/
+venv/
 __pycache__/
 *.pyc
-.DS_Store
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- AI models (about 2.4 GB, downloaded by setup / scripts/download_models.py) ---
+models/*
+!models/.gitkeep
+
+# --- evaluation data and research media: NEVER commit (licences do not allow redistribution) ---
+eval_data/
+_incoming/
+demo-clips/
+VERITAS demo clips/
+*ffpp*.mp4
+*celebdf*.mp4
+*dfd_*.mp4
+*wav2lip*.mp4
+*.y4m
+
+# --- build output (release zip, guide PDF, offline kit) ---
+dist/
+winkit/
+_usb/
+*.zip
+
+# --- secrets and local settings ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.netrc
+.hf_token
+*hf_token*
+*.token
+secrets/
+.secrets/
+.huggingface/
+
+# --- logs and temporary files ---
 *.log
 *.part
 *.tmp
 *.bak
-.pytest_cache/
-.ruff_cache/
+
+# --- OS and editor clutter ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+node_modules/

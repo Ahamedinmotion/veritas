@@ -1,0 +1,157 @@
+# Fresh-install test of the one-click Windows setup, exactly as a teammate would do it:
+# build VERITAS-Windows.zip, unzip it into a folder whose name has spaces and brackets, mark the files as
+# "downloaded from the internet", run "1 - SETUP (run once).bat", check the Desktop shortcuts, start the engine
+# the way the "VERITAS" shortcut does, and analyse Evidence-locker samples through the real HTTP API.
+# Nothing is cached on purpose (no pip/uv/model cache): a cache could hide a fresh-install bug.
+# Two installs run side by side: the default %USERPROFILE%\VERITAS, and a VERITAS_HOME with spaces and brackets.
+name: Windows one-click setup
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    name: setup (${{ matrix.install }})
+    runs-on: windows-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - install: default
+            home: ""
+          - install: spaces-and-brackets
+            home: 'C:\Users\runneradmin\VERITAS lab (CI test)'
+    env:
+      VERITAS_CI: "1"
+      DL_DIR: 'C:\Users\runneradmin\Downloads\VERITAS-Windows (1)'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build VERITAS-Windows.zip
+        shell: pwsh
+        run: |
+          python scripts/build_release_zip.py
+          if ($LASTEXITCODE -ne 0) { throw "zip build failed" }
+
+      - name: Unzip into a path with spaces and brackets, mark the files as downloaded
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:DL_DIR | Out-Null
+          Expand-Archive -LiteralPath dist\VERITAS-Windows.zip -DestinationPath $env:DL_DIR -Force
+          $root = Join-Path $env:DL_DIR 'VERITAS'
+          Get-ChildItem -LiteralPath $root | Format-Table Name, Length
+          foreach ($n in '1 - SETUP (run once).bat', '2 - START VERITAS.bat', 'app') {
+            if (-not (Test-Path -LiteralPath (Join-Path $root $n))) { throw "zip layout: $n missing" }
+          }
+          # Mark of the Web, as a browser download + Explorer "Extract All" would set it (setup must remove it)
+          Get-ChildItem -LiteralPath $root -Recurse -File | ForEach-Object {
+            Set-Content -LiteralPath $_.FullName -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3"
+          }
+          $vh = if ('${{ matrix.home }}') { '${{ matrix.home }}' } else { Join-Path $env:USERPROFILE 'VERITAS' }
+          if ('${{ matrix.home }}') { "VERITAS_HOME=${{ matrix.home }}" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV }
+          "VH=$vh" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "SETUP_BAT=$(Join-Path $root '1 - SETUP (run once).bat')" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "START_BAT=$(Join-Path $root '2 - START VERITAS.bat')" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          Get-Command uv -ErrorAction SilentlyContinue | Format-List Source
+
+      - name: Run "1 - SETUP (run once).bat" (VERITAS_CI=1)
+        shell: cmd
+        run: |
+          echo VERITAS_HOME=[%VERITAS_HOME%]  install dir=[%VH%]
+          call "%SETUP_BAT%"
+          if errorlevel 1 exit /b 1
+
+      - name: Check the install, the shortcuts and the demo clips
+        shell: pwsh
+        run: |
+          $desk = [Environment]::GetFolderPath('Desktop')
+          $w = New-Object -ComObject WScript.Shell
+          foreach ($n in 'VERITAS.lnk', 'VERITAS demo clips.lnk') {
+            $p = Join-Path $desk $n
+            if (-not (Test-Path -LiteralPath $p)) { throw "Desktop shortcut missing: $p" }
+            $s = $w.CreateShortcut($p)
+            "{0} -> {1}  (icon {2})" -f $n, $s.TargetPath, $s.IconLocation
+            if (-not (Test-Path -LiteralPath $s.TargetPath)) { throw "shortcut target missing: $($s.TargetPath)" }
+          }
+          $s = $w.CreateShortcut((Join-Path $desk 'VERITAS.lnk'))
+          if ($s.TargetPath -ne (Join-Path $env:VH 'scripts\start_windows.bat')) { throw "VERITAS shortcut points to $($s.TargetPath)" }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:VH 'scripts\assets\veritas.ico'))) { throw "icon missing" }
+          $zi = Get-Item -LiteralPath (Join-Path $env:VH 'scripts\start_windows.bat') -Stream Zone.Identifier -ErrorAction SilentlyContinue
+          if ($zi) { throw "start_windows.bat still carries the downloaded-file mark (Unblock-File did not run)" }
+          $clips = Join-Path $env:VH 'demo-clips'
+          Get-ChildItem -LiteralPath $clips -Recurse -File | Format-Table FullName, Length -AutoSize
+          if (-not (Test-Path -LiteralPath (Join-Path $clips 'Evidence locker samples\real-video.mp4'))) { throw "locker samples not copied" }
+          $n = (Get-ChildItem -LiteralPath $clips -Filter '*.mp4' -File).Count
+          "research demo clips downloaded: $n of 9 (non-fatal by design)"
+          if (Test-Path -LiteralPath (Join-Path $env:VH 'models\face_swap\gend_clip_int8.onnx')) { 'int8 face-swap file: present' } else { 'int8 face-swap file: MISSING (auto mode then stays on fp32)' }
+
+      - name: Start the engine like the Desktop shortcut, then analyse samples through the API
+        shell: pwsh
+        run: |
+          $desk = [Environment]::GetFolderPath('Desktop')
+          $s = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desk 'VERITAS.lnk'))
+          $out = Join-Path $env:RUNNER_TEMP 'server-log.txt'
+          $err = Join-Path $env:RUNNER_TEMP 'server-err.txt'
+          # cmd /s /c ""<target>"" keeps the quotes around a path with spaces and brackets
+          $p = Start-Process -FilePath $env:ComSpec -ArgumentList ('/d /s /c ""' + $s.TargetPath + '""') `
+                 -WorkingDirectory $s.WorkingDirectory -RedirectStandardOutput $out -RedirectStandardError $err -PassThru -NoNewWindow
+          try {
+            $t0 = Get-Date; $up = $false
+            while (((Get-Date) - $t0).TotalMinutes -lt 20) {
+              if ($p.HasExited) { break }
+              try { $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 http://127.0.0.1:8000/api/health; if ($r.StatusCode -eq 200) { $up = $true; break } } catch {}
+              Start-Sleep -Seconds 5
+            }
+            "engine up: $up after $([int]((Get-Date) - $t0).TotalSeconds) s"
+            if (-not $up) { Get-Content $out, $err -ErrorAction SilentlyContinue | Select-Object -Last 80; throw "engine did not answer /api/health" }
+            # a second start (the zip's "2 - START VERITAS.bat") must notice the running engine and just exit
+            $q = Start-Process -FilePath $env:ComSpec -ArgumentList ('/d /s /c ""' + $env:START_BAT + '""') -Wait -PassThru -NoNewWindow
+            if ($q.ExitCode -ne 0) { throw "2 - START VERITAS.bat did not detect the running engine (exit $($q.ExitCode))" }
+            python .github/scripts/check_api.py http://127.0.0.1:8000 (Join-Path $env:VH 'web\samples\lab')
+            if ($LASTEXITCODE -ne 0) { throw "API check failed" }
+          } finally {
+            taskkill /PID $p.Id /T /F 2>$null | Out-Null
+            Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'python.exe' -and $_.CommandLine -like '*uvicorn*server.app*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+            $global:LASTEXITCODE = 0   # taskkill's exit code must not decide the step; the checks above throw on failure
+          }
+
+      # (copied to a folder without brackets first: upload-artifact treats some characters in paths as glob syntax)
+      - name: Collect setup and server logs
+        if: always()
+        shell: pwsh
+        run: |
+          $d = Join-Path $env:RUNNER_TEMP 'veritas-logs'
+          New-Item -ItemType Directory -Force -Path $d | Out-Null
+          if ($env:VH) {
+            foreach ($f in 'setup-log.txt', 'setup-log-previous.txt', 'demo-clips\README.txt') {
+              $p = Join-Path $env:VH $f
+              if (Test-Path -LiteralPath $p) { Copy-Item -LiteralPath $p -Destination (Join-Path $d ($f -replace '\\', '_')) }
+            }
+          }
+          foreach ($f in 'server-log.txt', 'server-err.txt') {
+            $p = Join-Path $env:RUNNER_TEMP $f
+            if (Test-Path -LiteralPath $p) { Copy-Item -LiteralPath $p -Destination $d }
+          }
+          Get-ChildItem -LiteralPath $d | Format-Table Name, Length
+
+      - name: Upload setup and server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: veritas-windows-logs-${{ matrix.install }}
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/veritas-logs/
+
+      - name: Upload the tested zip
+        if: matrix.install == 'default'
+        uses: actions/upload-artifact@v4
+        with:
+          name: VERITAS-Windows-zip
+          path: dist/VERITAS-Windows.zip
+          retention-days: 14

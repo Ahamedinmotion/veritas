@@ -1,170 +1,255 @@
-# VERITAS: Deepfake Forensics Lab
+<p align="center">
+  <a href="https://ahamedinmotion.github.io/veritas/"><img src="docs/readme/banner.webp" width="100%" alt="VERITAS: Seeing is no longer believing. A deepfake forensics lab, shown here with the opening screen of its story: a 3-D face mesh next to the headline."></a>
+</p>
 
-A student-built deepfake detector that runs **completely offline** on one laptop.
-It is our entry for **INFINIA 2026** (South Zone Sahodaya inter-school science exhibition, Thiruvananthapuram):
-Category IV (Classes XI–XII), theme *Science for Tomorrow: Imagine – Innovate – Transform*,
-sub-theme *Intelligence Beyond Humans*. Team: Khais Mohammed and Prithvi.
+<h3 align="center">A deepfake detective you can run on any Windows laptop.<br>Give it a photo, a video or a voice clip, and it shows you, test by test, whether AI made it.</h3>
 
-VERITAS has two parts that share one look and one local server:
+<p align="center">
+  <a href="https://ahamedinmotion.github.io/veritas/"><img src="docs/readme/btn-site.png" width="260" alt="Open the live site"></a>
+  <a href="https://ahamedinmotion.github.io/veritas/lab.html"><img src="docs/readme/btn-lab.png" width="260" alt="Try the online lab"></a>
+  <a href="https://github.com/Ahamedinmotion/veritas/releases/latest/download/VERITAS-Windows.zip"><img src="docs/readme/btn-download.png" width="260" alt="Download for Windows (VERITAS-Windows.zip)"></a>
+</p>
 
-| Part | URL | What it is |
+<p align="center">
+  <a href="https://github.com/Ahamedinmotion/veritas/releases/latest/download/VERITAS-Guide.pdf"><b>Read the step-by-step guide (PDF)</b></a>
+  &nbsp;·&nbsp; Built by Khais Mohammed and Prithvi, CNPS, for INFINIA 2026
+</p>
+
+---
+
+## Not technical? Do just this
+
+You need a **Windows 10 or 11 laptop** with about **8 GB of free space**, and **internet once** for the setup.
+After that, VERITAS works with no internet at all.
+
+1. **Download it.** Click the **Download for Windows** button above. You get `VERITAS-Windows.zip`
+   (look in your **Downloads** folder). Right-click it, choose **Extract All…**, then click **Extract**.
+2. **Run the setup once.** Open the new **VERITAS** folder and double-click **`1 - SETUP (run once).bat`**.
+   A black window downloads everything VERITAS needs (about 3.5 GB, usually 15–30 minutes).
+   Leave it alone until it says **ALL DONE**. It also puts two icons on your Desktop.
+3. **Start VERITAS.** Double-click **VERITAS** on the Desktop. The story opens in your browser. A black engine
+   window opens too: leave it open (you can minimise it), because closing it stops VERITAS. The first start can take
+   a few minutes; after that about 30 seconds. No internet needed.
+
+> [!TIP]
+> **Windows says "Windows protected your PC"?** Click **More info**, then **Run anyway**. Windows shows this blue
+> box for every new program that is not from a big company. VERITAS is safe to run.
+
+> [!NOTE]
+> The second Desktop icon, **VERITAS demo clips**, is a folder of photos, videos and voices for the booth: drag any
+> of them into the lab. Setup downloads the research clips in it straight from the public research
+> collections they come from. They are never stored in this repository.
+>
+> If the Desktop icon is missing, open the **VERITAS** folder and double-click **`2 - START VERITAS.bat`**.
+> Stuck? The [guide (PDF)](https://github.com/Ahamedinmotion/veritas/releases/latest/download/VERITAS-Guide.pdf) explains every step.
+
+---
+
+## What VERITAS does
+
+<p align="center">
+  <img src="docs/readme/story-preview.webp" width="100%" alt="A 14-second preview of the VERITAS story: the opening headline, then a 3-D face mesh is turned into data, broken apart and scanned, and the story moves on to a real case of a fake video call.">
+  <br><sub>The opening of the story, the scroll-through presentation that replaces slides at our stand.</sub>
+</p>
+
+AI can now fake a face, a voice or a whole video call. VERITAS is our answer: a **forensics lab** that takes one
+file, runs a set of independent tests on it, and writes a **case report** that shows every piece of evidence,
+not just a yes or no.
+
+| You give it | What it checks |
+|---|---|
+| **A photo** | An AI-image network, run on the whole picture and again on every face, plus five classic forensic tests: error levels, camera grain, the frequency spectrum, the JPEG compression tables and the metadata. |
+| **A video** | A **face-swap detector** (two published networks), an AI-face check on every sampled frame, AI-made frames, how often the person blinks, unnatural shaking of the face, flicker, and the metadata. |
+| **A voice clip** | An AI-voice network and the breaths and silences between words. A spectrogram, a pitch track and the frequency cut-off are shown as evidence but not scored. |
+
+Every test gives a score from 0 to 100. VERITAS combines them into one verdict: below **35 authentic**,
+**35–65 suspicious**, above **65 synthetic**.
+
+```mermaid
+flowchart LR
+    F(["Your file"]) --> K{"Photo, video<br/>or voice?"}
+    K -->|photo| P["7 photo tests<br/>2 AI checks + 5 classic"]
+    K -->|video| V["7 video tests<br/>face-swap detector, blinks,<br/>face jitter, flicker ..."]
+    K -->|voice| A["AI-voice network<br/>+ breaths and silences"]
+    P --> X["Fusion<br/>weighted, calibrated"]
+    V --> X
+    A --> X
+    X --> R(["Verdict 0 to 100<br/>with every test shown"])
+```
+
+**How the scores are combined (fusion).** Each score is turned into odds, the odds are averaged with weights (the
+AI networks carry about 70% of the weight), and a calibration step, fitted on separate tuning files and never on the
+test files, turns the result back into a 0–100 score. A test that cannot run (no face, no speech) drops out. The face-swap detector is **one-sided**:
+it can raise an alarm but can never vouch for a video. Details: [`docs/ENGINE.md`](docs/ENGINE.md).
+
+**Three ways to use it**
+
+- **Analyze:** drop in a file, or open one of the 9 exhibits in the **Evidence locker** (each has a sealed answer
+  that the report reveals).
+- **Live Cam:** a 478-point face mesh, a blink counter and head pose, all worked out inside your browser, plus a
+  liveness check.
+- **Spot the Fake:** ten pictures, real or AI. Play against VERITAS and see who wins.
+
+**Online or offline?** On the booth laptop (the Windows version) VERITAS runs completely offline: nothing you
+analyse leaves the laptop. The [online lab](https://ahamedinmotion.github.io/veritas/lab.html) is different: when an online engine is running, the lab sends
+your file to it. That engine is the same VERITAS engine on a free shared computer at Hugging Face; it analyses your
+file in memory and does not save it. It is slower (a video can take a minute or two) and has upload limits:
+**photos up to 15 MB, voice clips up to 20 MB and 60 seconds, videos up to 40 MB and 30 seconds**. If no online
+engine is running, or it is asleep or cannot be reached, the lab switches to **showcase mode**: nothing is uploaded,
+and the 9 Evidence-locker exhibits still open their real, saved engine reports.
+
+---
+
+## Our results, honestly
+
+We tested VERITAS on files kept apart from tuning, and we wrote down where it fails, so please read "The catch" too.
+Full numbers:
+[`web/data/results.json`](web/data/results.json) (chapter 06 of the story draws its charts from this file) and
+[`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
+
+| | What we measured | The catch |
 |---|---|---|
-| **The story** | `http://127.0.0.1:8000/` (`web/index.html`) | A cinematic scroll-through presentation that replaces slides on the big TV. It covers the threat, how fakes are made and caught, our results and our limits. |
-| **The lab** | `http://127.0.0.1:8000/lab.html` (`web/lab.html`) | The working product: drop in evidence and get a forensic case report from the Python engine. |
+| **Photos**<br><sub>104 held-out images (49 real, 55 fake); no setting was tuned on them</sub> | **91.3%** correct, AUC **0.971**.<br>**0 of 49** real photos flagged.<br>**46 of 55** fakes caught: all 22 GAN faces, 22 of 24 diffusion images. | Our own face-swap photos: only **2 of 9** caught. The image network was trained on the same photo collections as 42 of our 49 real photos, so "0 false alarms" is optimistic. Stills of real people from compressed videos: **5 of 12** flagged. With so few images, the 95% range for accuracy is 84–96%. |
+| **Videos**<br><sub>30 clips from Celeb-DF and Google DFD (15 real, 15 fake), datasets neither face-swap network was trained on</sub> | AUC **0.60 → 0.998** after adding the face-swap detector.<br>Fakes called synthetic: **0 → 12 of 15** (the other 3: suspicious). | **0.998 is optimistic:** we ranked the 6 candidate detectors on these same clips and chose the pair after seeing them. With so few clips the plausible range is about 0.87 to 1.00, and only Google DFD (10 clips) is fully unseen: GenD's authors used Celeb-DF videos to pick their checkpoint. Real clips called suspicious went from 2 to **5 of 15**. Grainy, webcam-quality real video raises false alarms (11 of 39 suspicious, 1 synthetic). Only 2019–2020 fake methods were tested. |
+| **Voices**<br><sub>136 held-out clips: same datasets as our tuning, new speakers</sub> | **75.7%** correct, AUC **0.81**. | This is the optimistic number. On 10 outside clips only **2 of 6** fakes were caught. When a whole dataset was left out of tuning, **75%** of real voices recorded on everyday microphones were flagged. |
+| **Spot the Fake**<br><sub>the 30 pictures in the game</sub> | VERITAS gets **27 of 30** right. | In a 2022 study, people sorting real faces from AI faces were right only **48.2%** of the time. |
 
-The **engine** (`server/`) is a FastAPI app. It serves both pages and the analysis API. Every photo, video or
-voice clip goes through a battery of independent tests, and the engine combines their scores into one verdict:
+**Speed.** A photo takes about a second on our development laptop. A video takes about 5–6 seconds on our development Mac but **33–43 seconds
+on a slow 4-core laptop**. VERITAS uses about 3.7 GB of memory while it analyses a video.
 
-- **Photos:** AI-image network, AI-face network, error level analysis, noise residual, FFT spectrum, JPEG tables, metadata.
-- **Videos:** per-frame face model, **face-swap detector** (two pretrained published networks, GenD + the Deepfake
-  Detection Challenge winner, two of the 6 we benchmarked), blink rate (eye aspect ratio), landmark jitter, temporal
-  flicker, AI frames, container metadata.
-- **Voice:** wav2vec2 voice network and breath/silence analysis. A spectrogram, pitch track and spectral cut-off are shown but not scored.
+> [!IMPORTANT]
+> **What is ours and what is borrowed.** Every AI network in VERITAS is an open, pretrained model that we chose by
+> experiment (12 image candidates, 7 voice candidates, 6 face-swap detectors). We did **not** train them. We built
+> the classic forensic tests, the voice probe on top of the voice network, the calibration, the fusion rule, the
+> face-swap benchmark, the whole evaluation, the lab and the story.
 
-Verdict: score < 35 **authentic**, 35–65 **suspicious**, > 65 **synthetic**. Our measured accuracy, and where the
-engine fails, are in story chapter 06 and in `web/data/results.json`. Be honest about them at the booth.
+---
 
-## Run it
+## Screenshots
 
-You need internet **once** to install Python, the libraries and the models (models about 2.4 GB including the 1.5 GB
-face-swap detector, Python environment about 1.4 GB; keep 8 GB free). The engine uses about 3.6-3.7 GB of RAM while
-it analyses a video, and a video takes 5-6 s on the development Mac and 33-43 s on a slow 4-core laptop. After that, no internet is needed. No internet on the laptop at all? Use the offline
-kit (Route C in `docs/SETUP_WINDOWS.md`).
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/gallery-lab-dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="docs/readme/gallery-lab-light.webp">
+  <img src="docs/readme/gallery-lab-light.webp" width="100%" alt="Two lab reports. Left: a photo of a man who does not exist, made by a GAN, scored Synthetic 100. Right: an AI talking-photo video scored Synthetic 91, with a frame-by-frame score timeline.">
+</picture>
+<sub><b>01</b> A face made by a GAN (the person does not exist): the AI networks flag it, verdict Synthetic 100. &nbsp;
+<b>02</b> An AI "talking photo" video: a score for every sampled frame, keyframes and seven tests.</sub><br><br>
 
-### Windows (the booth laptop)
-1. Copy the `veritas` folder to `C:\veritas` (not inside OneDrive). **Leave out `.venv`, `eval_data` and `.git`.**
-   **Copy `models\`** (2.4 GB): the face-swap detector's verified files cannot simply be re-downloaded.
-2. With internet, double-click `scripts\setup_windows.bat` once. It takes 5–15 minutes, runs a self-test and ends
-   with `ALL PASS` and `SETUP COMPLETE`.
-3. Every time after that, double-click **`scripts\start_windows.bat`**. Keep the black window open and don't click
-   in it. Edge opens `http://127.0.0.1:8000/` by itself when the engine is ready (about 30 s; the very first start
-   after setup can take 2–4 minutes). Start it at least 2 minutes before visitors: video analysis warms up in the
-   background for another 20–30 s.
-4. Quick health check any time: `scripts\selftest_windows.bat` must say `ALL PASS`.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/gallery-live-dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="docs/readme/gallery-live-light.webp">
+  <img src="docs/readme/gallery-live-light.webp" width="100%" alt="Left: Live Cam tracking a face with a 478-point mesh, a blink counter, an eye-aspect-ratio graph and head pose. Right: Spot the Fake revealing that a photo of a pink scooter was AI-generated.">
+</picture>
+<sub><b>03</b> Live Cam: face mesh, blinks and head pose, worked out in the browser (shown here on a public-domain NASA
+video). &nbsp; <b>04</b> Spot the Fake: humans against VERITAS.</sub><br><br>
 
-The full checklist (Friday tests, speed table, troubleshooting) and the **fallback plan** (`emergency_browser.bat`,
-demo video, spare Mac) are in **`docs/SETUP_WINDOWS.md`**.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/gallery-results-dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="docs/readme/gallery-results-light.webp">
+  <img src="docs/readme/gallery-results-light.webp" width="100%" alt="Two results chapters of the story. Left: the photo test with accuracy 91.3%, a confusion matrix and an ROC curve. Right: face-swap videos before and after the face-swap detector.">
+</picture>
+<sub><b>05</b> The story's results chapter: the photo test. &nbsp; <b>06</b> Videos before and after the face-swap
+detector, with the caveats printed on the slide.</sub><br><br>
 
-### macOS / Linux (development)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/gallery-honest-dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="docs/readme/gallery-honest-light.webp">
+  <img src="docs/readme/gallery-honest-light.webp" width="100%" alt="Left: a voice report where VERITAS wrongly calls a fake voice authentic. Right: the Analyze start screen with a drop zone and the Evidence locker of nine exhibits.">
+</picture>
+<sub><b>07</b> A fake voice VERITAS misses: we show our failures too. &nbsp; <b>08</b> The Evidence locker: nine
+exhibits with sealed answers.</sub>
+
+---
+
+## The team
+
+- **Khais Mohammed** and **Prithvi**
+- CNPS
+- **INFINIA 2026**, South Zone Sahodaya inter-school science exhibition, Thiruvananthapuram.
+  Category IV (Classes XI–XII). Theme *Science for Tomorrow: Imagine – Innovate – Transform*, sub-theme
+  *Intelligence Beyond Humans*.
+
+**Ethics.** We never faked a celebrity, a politician or anyone we know. Every test fake comes from a public research
+dataset or was made by us from research material (for example GAN faces of people who do not exist), and exists only
+to test the detector.
+
+## Credits
+
+VERITAS stands on the work of many researchers. Every source and licence is listed in
+[`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) and [`docs/SOURCES_STORY.md`](docs/SOURCES_STORY.md).
+
+- **AI models (pretrained, not ours):** CommunityForensics ViT (Park & Owens, CVPR 2025) for AI images;
+  wav2vec2 fine-tuned on In-the-Wild deepfake speech (abhishtagatya) for voices; for face-swaps,
+  **GenD** (Yermakov et al., WACV 2026, built on OpenAI's CLIP) and the **Deepfake Detection Challenge winner**
+  (EfficientNet-B7, Seferbekov 2020). Faces are found with YuNet (OpenCV Zoo), MediaPipe Face Landmarker, SCRFD
+  (InsightFace) and MTCNN (facenet-pytorch).
+- **Test data:** FFHQ, MS-COCO, Wikimedia Commons phone photos, thispersondoesnotexist.com faces, the Rapidata
+  text-to-image set, LibriSpeech, LJ Speech, WaveFake, ASVspoof 2019, FLEURS and others; for video,
+  FaceForensics++, Celeb-DF v2 and Google's DeepFakeDetection (DFD).
+- **Research clips are not redistributed.** FaceForensics++, Celeb-DF, Google DFD and the Wav2Lip clip we made from
+  DFD footage are not in this repository, the website, the online lab or the Windows download. The Windows setup
+  downloads the booth demo clips directly from the public mirrors they came from.
+- **Software:** FastAPI, PyTorch, ONNX Runtime, OpenCV, librosa, three.js, GSAP, Lenis, MediaPipe; fonts IBM Plex
+  and Instrument Serif.
+
+<details>
+<summary><b>For developers</b> (run from source, architecture, experiments)</summary>
+
+### Run on macOS or Linux
+
 ```bash
-cd veritas
-uv sync --locked                          # once, with internet
-uv run python scripts/download_models.py  # once, with internet
-./scripts/start_mac.sh                    # opens http://localhost:8000/
-.venv/bin/python scripts/selftest.py      # every locker exhibit through the engine; ALL PASS = ready
-./scripts/build_winkit.sh                 # optional: offline Windows kit -> ../_usb/winkit (Route C)
-# or by hand:
+git clone https://github.com/Ahamedinmotion/veritas.git && cd veritas
+uv sync --locked                                         # Python 3.12 environment (once, with internet)
+uv run python scripts/download_models.py                 # AI models, about 2.4 GB (once, with internet)
+./scripts/start_mac.sh                                   # starts the engine, opens http://localhost:8000/
+HF_HUB_OFFLINE=1 .venv/bin/python scripts/selftest.py    # every locker exhibit; must say ALL PASS
+# or start the engine by hand:
 uv run uvicorn server.app:app --host 127.0.0.1 --port 8000
 ```
-Use Chrome or Edge. Health check: `http://127.0.0.1:8000/api/health` should show `"ok": true` with all four models
-`true` (`face_deepfake`, `ai_generated`, `audio_deepfake`, `face_swap`).
 
-## The three lab modes
+Use Chrome or Edge. `http://127.0.0.1:8000/api/health` should show `"ok": true` and all four models `true`.
+On Windows from a clone: `scripts\setup_windows.bat` once, then `scripts\start_windows.bat`
+(booth checklist and fallbacks: [`docs/SETUP_WINDOWS.md`](docs/SETUP_WINDOWS.md)).
 
-| Tab | Key | What visitors do |
-|---|---|---|
-| **01 Analyze** | `1` | Drop a file, click to choose one, paste with `Ctrl+V`, or pick an exhibit from the **Evidence locker**. The report shows the verdict gauge, every test card (click one for the science and its evidence picture), face boxes, a frame-by-frame video timeline with keyframes, a playable audio waveform and spectrogram, and the metadata. Locker exhibits carry a sealed ground truth that is revealed in the report. |
-| **02 Live cam** | `2` | 478-point face mesh, blink counter, eye-aspect-ratio graph and head pose, all computed in the browser. **Liveness check** asks for random blinks and head turns. **Capture & analyze** sends one frame to the engine; only the two AI networks are scored for webcam frames. |
-| **03 Spot the fake** | `3` | Ten random images, real or AI. The visitor answers with ← / →, then sees what VERITAS said. A booth scoreboard tracks humans against the AI. |
+### How it fits together
 
-## Controls
+- `server/`: the FastAPI engine. `pipeline.py`, `video_pipeline.py` and `audio_pipeline.py` run the tests in
+  `server/forensics/` (one module per test), `fusion.py` combines them. It also serves the web pages.
+- `web/index.html` is the story, `web/lab.html` the lab (`web/js/story/`, `web/js/lab/`). Fonts and libraries
+  are bundled, so the pages load nothing from other websites (apart from the online engine, when the lab uses one).
+- The lab looks for an engine in this order: the same server (`/api/health`), then
+  `window.VERITAS_CONFIG.onlineApi` from `web/js/config.js`, then showcase mode (saved reports).
+- API contract: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). How every test works and its limits:
+  [`docs/ENGINE.md`](docs/ENGINE.md). How the models were chosen: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
+  Booth script and judge questions: [`docs/PITCH.md`](docs/PITCH.md), [`docs/JUDGE_QA.md`](docs/JUDGE_QA.md).
 
-### Story (presenter mode, works with a USB clicker)
-| Key | Action |
-|---|---|
-| `→` · `Space` · `PageDown` | Next step (clickers send PageDown) |
-| `←` · `Shift+Space` · `PageUp` | Previous step |
-| `0`–`8` | Jump to a chapter (0 Opening … 6 Results … 8 Enter the Lab) |
-| `Home` · `End` | First · last step |
-| `F` | Fullscreen (the cursor hides after 2.6 s) |
-| `?` or `H` | Show the controls panel |
+### Re-run the experiments
 
-The mouse wheel and trackpad also work; the step counter re-syncs. Chapter 08 has three doors into the lab.
+The test files are not in the repository (`eval_data/` is ignored by git). Rebuild them first:
 
-### Lab (kiosk)
-| Key | Where | Action |
-|---|---|---|
-| `1` `2` `3` | anywhere except the game | Switch tab |
-| `F` | anywhere | Fullscreen |
-| `N` | Analyze report | New case |
-| `Esc` | Analyze scan | Cancel the analysis |
-| `←` / `→`, `Esc` | Test detail overlay | Previous/next test, close |
-| `C` or `Space` | Live cam | Capture & analyze |
-| `L` | Live cam | Liveness check |
-| `M` | Live cam | Mesh on/off |
-| `←` real · `→` AI | Spot the fake | Answer; `Enter` for the next exhibit; `Esc` back to the intro |
-| `Shift+R` twice | Spot the fake (not while typing a name) | **Reset the booth scoreboard** (the old board is kept in `localStorage` as `veritas.game.v1.bak`) |
-
-`← The story` (top right) or the VERITAS logo goes back to the story. The scoreboard is stored per browser and per
-address, so `localhost` and `127.0.0.1` keep separate boards. Use the address the start script opens.
-
-## Folder map
-```
-veritas/
-  README.md              this file
-  pyproject.toml uv.lock exact Python 3.12 dependencies (CPU-only PyTorch on Windows/Linux)
-  server/                FastAPI engine: app.py (API + static files), pipeline.py / video_pipeline.py /
-                         audio_pipeline.py, fusion.py (score fusion), forensics/ (one module per test; face_swap.py
-                         = the pretrained face-swap detector), vendor/ (MTCNN, MIT),
-                         calibration.json (fitted calibration, written by scripts/evaluate.py)
-  models/                downloaded AI models (gitignored; copy to the booth laptop); models/face_swap/ = 1.5 GB
-  scripts/               setup_windows.bat, start_windows.bat, selftest(.py/_windows.bat), emergency_browser.bat,
-                         start_windows_kit.bat + build_winkit.sh (offline kit), start_mac.sh, download_models.py,
-                         evaluate.py (the experiment), evaluate_video.py (75-clip video benchmark),
-                         evaluate_faceswap_images.py, export_faceswap_onnx.py, build_samples.py, build_eval_data.py, ...
-  eval_data/             evaluation images and audio (gitignored)
-  web/
-    index.html           THE STORY        css/story.css   js/story/
-    lab.html             THE LAB          css/lab.css     js/lab/
-    css/tokens.css       shared colours, fonts, motion
-    data/results.json    our measured results (read by story chapter 06)
-    samples/lab/         Evidence-locker exhibits + manifest.json
-    samples/game/        Spot-the-fake images + manifest.json
-    assets/              fonts (local woff2), favicon, story assets
-    vendor/              GSAP, Lenis, three.js, MediaPipe (all local, nothing loads from the internet)
-  docs/                  ARCHITECTURE.md (API contract), ENGINE.md (how each test works), SETUP_WINDOWS.md,
-                         DATA_SOURCES.md (every dataset and licence), MODEL_SELECTION.md, SOURCES_STORY.md
+```bash
+uv run --with pyarrow python scripts/build_eval_data.py # downloads the public test sets
+uv run python scripts/evaluate.py                       # photos + voices, about 45 min; writes web/data/results.json
+uv run python scripts/compare_models.py --kind image    # the model shoot-out (docs/MODEL_SELECTION.md)
+uv run python scripts/evaluate_video.py                 # 75-clip face-swap benchmark (needs the research clips)
+uv run python scripts/evaluate_faceswap_images.py       # why the face-swap detector is video-only
 ```
 
-## Before Saturday
-- Put the real school name into `web/index.html`: search for `[School Name]` in the credits. The line stays hidden until you do.
-- Run the Friday checklist in `docs/SETUP_WINDOWS.md` **on the booth laptop with Wi-Fi off**. Most important: Live Cam
-  captures and laptop-mic voice recordings of real classmates. Webcam frames and everyday microphones are where the
-  engine raises most of its false alarms.
-- Re-run the experiment (optional, ~45 min): `uv run python scripts/evaluate.py`. Chapter 06 updates by itself.
+### Keyboard shortcuts
 
-## Troubleshooting
-| Problem | Fix |
-|---|---|
-| Lab shows a red **Engine offline** banner | The server is not running. Start `scripts\start_windows.bat` and wait for the green light (top right). Live cam still works without it. |
-| "The engine is busy" | It is finishing the previous file. The lab retries by itself after 6 s. |
-| A video or voice clip is slow | The CPU is doing all the work. Plug in the charger and close other programs. Videos analyse only the first 20 s, voice the first 30 s. |
-| Camera does not start | Open the lab through `http://127.0.0.1:8000/lab.html`, not by double-clicking the file. Allow the camera (Chrome: lock icon → Camera → Allow). Close other apps that use the camera. |
-| Evidence locker is empty | `web/samples/lab/manifest.json` is missing. Run `uv run python scripts/build_samples.py --lab`. |
-| Results chapter says "Results pending" | `web/data/results.json` is missing. Run `uv run python scripts/evaluate.py`. |
-| Port 8000 already in use | Another copy is running. Close all black windows and start once. |
-| Story stutters on the TV | Set the TV to 1920×1080 at 100 % scaling, use Edge or Chrome with F11, and plug in the charger. |
-| Engine cannot run at all | `scripts\emergency_browser.bat`: story, Live Cam and Spot the Fake work without Python (see the fallback plan). |
-| A model shows `false` in `/api/health` | `models\` is incomplete. Copy it from the USB stick, or run `setup_windows.bat` again with internet. |
-| Video analysis runs out of memory or is too slow | Use the face-swap fallback ladder in `docs/SETUP_WINDOWS.md` (`set VERITAS_FACESWAP=int8`, `b7` or `off`). |
+| Story | | Lab | |
+|---|---|---|---|
+| <kbd>→</kbd> <kbd>Space</kbd> <kbd>PageDown</kbd> | next step (USB clickers work) | <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> | Analyze / Live Cam / Spot the Fake |
+| <kbd>←</kbd> <kbd>PageUp</kbd> | previous step | <kbd>N</kbd> | new case |
+| <kbd>0</kbd>–<kbd>8</kbd> | jump to a chapter | <kbd>Esc</kbd> | cancel a scan, close a test card |
+| <kbd>F</kbd> | fullscreen | <kbd>L</kbd> <kbd>C</kbd> <kbd>M</kbd> | Live Cam: liveness / capture / mesh |
+| <kbd>?</kbd> | show all keys | <kbd>←</kbd> real · <kbd>→</kbd> AI | Spot the Fake |
 
-More detail: `docs/SETUP_WINDOWS.md` (booth), `docs/ENGINE.md` (science and limits), `docs/ARCHITECTURE.md` (API).
+</details>
 
-## Ethics and licences
-We never faked a celebrity, a politician or anyone we know. Every test fake either comes from a public research
-dataset or was made by us from research-dataset material (GAN faces of people who do not exist pasted onto
-FFHQ/COCO photos, one consenting paid actor from Google DFD, public-domain audiobook readings), and exists only to
-test the detector.
+## Licence
 
-**What is pretrained, and what is ours.** Every AI network is an open, pretrained model we chose by experiment:
-CommunityForensics ViT (Park & Owens, CVPR 2025, MIT; best of 12 image candidates), wav2vec2-base-960h fine-tuned on
-In-the-Wild deepfake speech (abhishtagatya, Apache-2.0; best of 7 voice candidates), and for video face-swaps GenD
-(Yermakov et al., WACV 2026, MIT) plus the Deepfake Detection Challenge 1st-place EfficientNet-B7 (Seferbekov 2020,
-MIT), two of the 6 published detectors we benchmarked on 75 leak-free research clips we assembled (our
-pre-registered rule picked the DFDC winner alone; we added GenD after seeing the results). Faces are found by YuNet (OpenCV
-Zoo, MIT), MediaPipe Face Landmarker (Apache-2.0), SCRFD (InsightFace, non-commercial research licence) and MTCNN
-(facenet-pytorch, MIT). Ours: the classic tests, the voice probe on top of wav2vec2, the calibration, the fusion rule,
-the face-swap benchmark and its integration, the whole evaluation, the lab and the story.
-Analysis never leaves the laptop. Sources and licences are listed in `docs/DATA_SOURCES.md` and `docs/SOURCES_STORY.md`.
-Some evaluation material (FFHQ, research deepfake datasets) is non-commercial. Check those terms before publishing
-this repository or the samples anywhere public.
+The VERITAS code is released under the [MIT Licence](LICENSE), © 2026 the VERITAS team (Khais Mohammed, Prithvi).
+The third-party models, libraries, fonts and media keep their own licences, listed in
+[`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md). Some of them are for non-commercial research only (for example the
+SCRFD face detector and the FFHQ photos), so check those terms before reusing them.
